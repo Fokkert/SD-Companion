@@ -14,9 +14,9 @@ for (const f of [
 ])
   load(f);
 const SD = SDCompanion;
-assert.equal(SD.Constants.BUILD_VERSION, '2.3.0');
-assert.equal(SD.Constants.SCHEMA_VERSION, 33);
-assert.deepEqual(SD.Defaults.profile().schedules, [], 'fresh profiles must have zero named schedules');
+assert.equal(SD.Constants.BUILD_VERSION, '2.4.0');
+assert.equal(SD.Constants.SCHEMA_VERSION, 34);
+assert.deepEqual(SD.Defaults.profile().schedules, [], 'fresh profiles must have zero schedules');
 const base = SD.Defaults.state(),
   site = SD.Defaults.site({ id: 'site1', baseUrl: 'https://jira.example.test', name: 'Production Jira' }),
   stock = { ...SD.Defaults.schedule('Business Hours'), id: 'stock' },

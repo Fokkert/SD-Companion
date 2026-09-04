@@ -1,7 +1,7 @@
 {
   "format": "sd-companion-profile",
-  "version": 3,
-  "exportedAt": "2026-08-12T00:00:00.000Z",
+  "version": 4,
+  "exportedAt": "2026-09-05T00:00:00.000Z",
   "profile": {
     "id": "sample-profile",
     "siteId": "sample-site",
@@ -16,19 +16,6 @@
     },
     "schedules": [],
     "rules": [],
-    "alarmDefaults": {
-      "preset": "radar",
-      "useCustom": false,
-      "customDataUrl": "",
-      "customName": "",
-      "durationSeconds": 12,
-      "durationUnit": "seconds",
-      "volume": 0.8,
-      "loop": true,
-      "stopMethod": "duration-or-controls",
-      "showSystemNotification": true,
-      "showPagePopup": true
-    },
     "radar": {
       "enabled": true,
       "maxMarkers": 12,
@@ -43,7 +30,24 @@
       "lastDetectionKeys": [],
       "currentDetections": [],
       "currentDetectionsAt": null
-    }
+    },
+    "alarmProfiles": [
+      {
+        "id": "sample-alarm-default",
+        "name": "Default Alarm",
+        "preset": "radar",
+        "useCustom": false,
+        "customDataUrl": "",
+        "customName": "",
+        "durationSeconds": 12,
+        "durationUnit": "seconds",
+        "volume": 0.8,
+        "loop": true,
+        "stopMethod": "duration",
+        "keyboardShortcut": "Ctrl+Shift+S"
+      }
+    ],
+    "defaultAlarmProfileId": "sample-alarm-default"
   },
   "server": {
     "name": "Example Jira",
@@ -84,7 +88,19 @@
         "lastRunAt": null,
         "nextRunAt": null
       },
-      "transitionMethod": "workflow-designer"
+      "transitionMethod": "workflow-designer",
+      "excludedData": {
+        "projects": [],
+        "filters": [],
+        "users": [],
+        "fields": [],
+        "issueTypes": [],
+        "statuses": [],
+        "priorities": [],
+        "resolutions": [],
+        "transitions": []
+      },
+      "restoreExcludedOnRefresh": false
     },
     "behavior": {
       "autoRefreshJiraTabsOnDetection": false,

@@ -1,21 +1,25 @@
-# V2 Build 2.3.0 Test Report
+# V2 Build 2.4.0 Test Report
 
 ## Result
 
-- JavaScript regression files: 67/67 passed.
+- JavaScript regression files: 68/68 passed.
 - Static architecture/security test: passed.
-- JavaScript syntax validation: 107/107 passed.
+- JavaScript syntax validation: 108/108 passed.
 - JSON parsing validation: passed.
 
-## V2.3.0 focused coverage
+## V2.4.0 focused coverage
 
-- Add action options use one alphabetically sorted readable label source across normal Rules and Bulk Operations.
-- Home Monitoring renders MONITORING ON/OFF on one line, separates controls from Detected/Actions/Rules with a divider, and scopes the cubic switch geometry to Monitoring only.
-- Action Bell terminology is visible in Settings/Help while the persisted compatibility key remains unchanged.
-- Jira Server editing order and section labels are regression-covered, including removal of the consecutive failed-check status sentence.
-- Rule action helper copy is absent from the editor and its behavior remains documented in Help.
-- Extension action badges use a compact colored-dot glyph with a transparent badge background and status tooltip rather than multi-character status labels.
-- Release archives are validated after build to ensure `SD-Companion-v2.3.0/` is the sole top-level folder.
+- Show completed text is non-interactive; only its switch changes the completed-history filter.
+- Server discovery uses expandable project cards and the Transitions label is no longer constrained by the old table layout.
+- API Data categories use expandable details, persistent per-item exclusions, manual restore controls and optional restore-on-refresh behavior.
+- Alarm Profiles are profile-owned, are selectable by Alarm actions, migrate from legacy alarm settings, duplicate with remapped IDs, and are included in profile exports/backups.
+- Alarm stop methods are limited to Keyboard Shortcut, Duration, Click anywhere and Popup; Browser Notification remains a separate rule action.
+- Alarm test volume updates are applied live, custom-file selection is button-only, and Action Completion Tone terminology is restored.
+- All extension switches use cubic geometry and soft-select menus prefer below-button placement whenever sufficient space exists.
+- Rules use card-level enable switches, selectable cards and top-level duplication; enabled rule icons glow and runtime summary data lives in the expanded editor.
+- JQL and Visual Conditions are mutually exclusive detection methods; Visual Conditions support multiple Match all/Match any groups.
+- Rule and Bulk action chains render as collapsible action cards.
+- Release archives remain validated to ensure `SD-Companion-v2.4.0/` is the sole top-level folder.
 
 ## V2.2.1 focused coverage
 

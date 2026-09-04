@@ -32,7 +32,8 @@
     const usableBottom = Math.min(innerHeight - edge, Number.isFinite(navTop) ? navTop - gap : innerHeight - edge);
     const below = Math.max(0, usableBottom - rect.bottom - gap);
     const above = Math.max(0, rect.top - edge - gap);
-    const openAbove = below < 150 && above > below;
+    const desiredHeight = Math.min(320, Math.max(120, menu.scrollHeight || 220));
+    const openAbove = below < desiredHeight && above >= desiredHeight;
     const room = Math.max(96, Math.min(320, openAbove ? above : below));
     const desiredWidth = Math.max(rect.width, 180);
     const width = Math.min(desiredWidth, Math.max(180, innerWidth - edge * 2));

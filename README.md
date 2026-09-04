@@ -1,4 +1,4 @@
-# SD Companion
+# SD Companion (Service Desk Companion)
 
 SD Companion is a Chrome/Chromium browser extension for **Jira Server and Jira Data Center** that
 detects issues and automates Jira actions through the Jira API.
@@ -26,7 +26,7 @@ SD Companion can:
 - Schedule actions with configurable delays and dependencies.
 - Require explicit user approval for selected actions before they are allowed to execute.
 - Rate-limit local Alarm/Notification actions per rule to prevent alert floods.
-- Run named monitoring schedules.
+- Run configurable monitoring schedules.
 - Process matching issues immediately when requested.
 - Monitor Jira connectivity and report connection problems.
 - Maintain profiles for different Jira servers or automation configurations.
@@ -62,7 +62,7 @@ Extract the downloaded ZIP to a permanent location. The release archive contains
 top-level folder, for example:
 
 ```text
-C:\Users\<you>\Documents\SD-Companion-v2.3.0\
+C:\Users\<you>\Documents\SD-Companion-v2.4.0\
 ```
 
 Do not delete that folder while the extension is installed. Chrome/Edge loads the unpacked extension
@@ -147,8 +147,7 @@ organization-specific configuration to a public repository.
 
 Rules determine which Jira issues SD Companion should detect.
 
-A rule can use Jira/JQL constraints together with SD Companion conditions. Conditions can evaluate
-issue properties and discovered Jira metadata.
+Each rule chooses one detection method: **JQL** (saved filters and/or Additional JQL) or **Visual Conditions**. The two methods are not evaluated concurrently. Visual Conditions can be organized into condition groups, with Match all/Match any behavior both within groups and across groups.
 
 Rules can also be restricted by schedules so that monitoring or automation only applies during the
 intended operating periods.
@@ -199,10 +198,10 @@ notifications replace the previous one instead of building an unbounded stack.
 
 Profiles keep automation configuration separated.
 
-They can contain rules, schedules, monitoring settings and other profile-specific automation
+They can contain rules, schedules, monitoring settings, Alarm Profiles and other profile-specific automation
 configuration for a Jira server.
 
-Profiles can be exported and imported for migration or backup. Existing profiles can also be duplicated. A duplicate receives independent rule, schedule, action and condition identifiers, resets runtime state and starts with monitoring disabled so the copy cannot immediately double-run automation.
+Profiles can be exported and imported for migration or backup. Exports include Alarm Profiles and synchronized-data exclusion/refresh settings alongside the profile and related server configuration. Existing profiles can also be duplicated. A duplicate receives independent rule, schedule, action and condition identifiers, resets runtime state and starts with monitoring disabled so the copy cannot immediately double-run automation.
 
 For credential-bearing backups, use SD Companion's encrypted secure-backup option.
 

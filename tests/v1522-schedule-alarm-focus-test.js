@@ -12,8 +12,8 @@ const constants = read('src/shared/constants.js'),
   servers = read('src/ui/app/pages/servers.js'),
   worker = read('src/background/service-worker.js'),
   main = read('src/ui/app/app-main.js');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.3.0"'));
-assert(textIncludes(constants, 'SCHEMA_VERSION:33'));
+assert(textIncludes(constants, 'BUILD_VERSION:"2.4.0"'));
+assert(textIncludes(constants, 'SCHEMA_VERSION:34'));
 // Schedule editor must be staged, not autosave on field/day click.
 assert(textIncludes(core, 'scheduleDraft:null') && textIncludes(core, 'beginScheduleEdit') && textIncludes(core, 'discardScheduleEdit'));
 assert(textIncludes(schedules, 'data-action="save-schedule"') && textIncludes(schedules, 'data-action="cancel-schedule-editor"'));
@@ -28,7 +28,7 @@ const scheduleRuntime = read('src/shared/schedule.js'),
   engine = read('src/background/rule-engine.js');
 assert(textIncludes(scheduleRuntime, 'matchesAny'));
 assert(textIncludes(engine, 'root.Schedule.matchesAny(profile.schedules,s.scheduleIds,at)'));
-// Profile alarm settings keep a local draft inside Settings and live-switch a test alarm.
+// Alarm Profile settings keep a local draft inside Settings and live-switch a test alarm.
 assert(textIncludes(core, 'alarmDraft:null') && textIncludes(core, 'ensureAlarmDraft'));
 assert(textIncludes(alarms, 'A.ensureAlarmDraft'));
 assert(textIncludes(main, 'source:m.alarm?.source||""'));

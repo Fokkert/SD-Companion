@@ -130,6 +130,9 @@
     copy.updatedAt = now;
     copy.monitoring = { ...(copy.monitoring || {}), enabled: false };
     copy.runtime = structuredClone(SD.Defaults.profile(copy.name, { id: copy.siteId }).runtime);
+    const alarmProfileMap = new Map();
+    for (const alarmProfile of copy.alarmProfiles || []) { const oldId=alarmProfile.id; alarmProfile.id=crypto.randomUUID(); alarmProfileMap.set(oldId,alarmProfile.id); }
+    copy.defaultAlarmProfileId = alarmProfileMap.get(copy.defaultAlarmProfileId) || copy.alarmProfiles?.[0]?.id || '';
 
     for (const schedule of copy.schedules || []) {
       const previousId = schedule.id;
@@ -155,6 +158,7 @@
       for (const action of rule.actions || []) {
         action.id = crypto.randomUUID();
         if (action.randomPoolId) action.randomPoolId = poolMap.get(action.randomPoolId) || '';
+        if (action.alarmProfileId) action.alarmProfileId = alarmProfileMap.get(action.alarmProfileId) || copy.defaultAlarmProfileId;
         if (action.when?.logic) renewLogicIds(action.when.logic);
       }
       rule.runtime = structuredClone(SD.Defaults.rule(rule.name).runtime);
@@ -193,7 +197,7 @@
   const alarmConfigFromControls = () => {
     const p = A.profile(),
       settingsAlarm = A.page === 'settings' ? A.ensureSettingsDraft?.()?.alarm : null,
-      base = { ...(settingsAlarm || A.ensureAlarmDraft?.() || p?.alarmDefaults || {}) },
+      base = { ...(settingsAlarm || A.ensureAlarmDraft?.() || {}) },
       preset = A.$('alarmPreset'),
       duration = A.$('alarmDuration'),
       du = A.$('alarmDurationUnit'),
@@ -201,17 +205,17 @@
       loop = A.$('alarmLoop'),
       custom = A.$('alarmUseCustom'),
       stop = A.$('alarmStopMethod'),
-      notification = A.$('alarmSystemNotification'),
-      popup = A.$('alarmPagePopup');
+      shortcut = A.$('alarmKeyboardShortcut');
     if (preset) base.preset = preset.value;
+    base.id = A.alarmProfileDraftId || base.id || crypto.randomUUID();
+    if (A.$('alarmProfileName')) base.name = A.$('alarmProfileName').value.trim() || 'Alarm Profile';
     if (du) base.durationUnit = du.value;
     if (duration) base.durationSeconds = seconds(duration.value, base.durationUnit || 'seconds', 1, 86400);
     if (volume) base.volume = clamp(volume.value, 0, 1);
     if (loop) base.loop = loop.checked;
     if (custom) base.useCustom = custom.checked;
     if (stop) base.stopMethod = stop.value;
-    if (notification) base.showSystemNotification = notification.checked;
-    if (popup) base.showPagePopup = popup.checked;
+    if (shortcut) base.keyboardShortcut = shortcut.value.trim();
     return base;
   };
   const storeAlarmDraft = cfg => {
@@ -220,7 +224,7 @@
       const d = A.ensureSettingsDraft();
       d.alarm = { ...cfg };
     }
-    A.alarmDraft = { profileId: p?.id || '', config: { ...cfg } };
+    A.alarmDraft = { profileId: p?.id || '', alarmProfileId: cfg.id || A.alarmProfileDraftId || '', config: { ...cfg } };
     return A.alarmDraft.config;
   };
   const alarmTestMeta = () => {
@@ -245,7 +249,11 @@
     if (alarm && profileId) {
       const profile = latest.profiles?.find(x => x.id === profileId);
       if (!profile) throw new Error('Profile not found.');
-      profile.alarmDefaults = { ...profile.alarmDefaults, ...alarm };
+      profile.alarmProfiles = Array.isArray(profile.alarmProfiles) ? profile.alarmProfiles : [];
+      const i = profile.alarmProfiles.findIndex(x => x.id === alarm.id);
+      if (i >= 0) profile.alarmProfiles[i] = { ...profile.alarmProfiles[i], ...alarm };
+      else profile.alarmProfiles.push({ ...alarm, id: alarm.id || crypto.randomUUID(), name: alarm.name || 'Alarm Profile' });
+      if (!profile.defaultAlarmProfileId) profile.defaultAlarmProfileId = profile.alarmProfiles[0]?.id || '';
     }
     const saved = await A.send(MESSAGE.SAVE_STATE, { state: latest, baseRevision: latest.configRevision, validationScope: 'none' }),
       targetResult = await A.send(MESSAGE.SET_OPEN_TARGET, { openTarget: normalizedTarget });
@@ -366,6 +374,9 @@
       if (el.matches?.('input[type="range"]')) updateRangeOutput(el);
       if (el.matches?.('.glass-multi-search')) applyGlassMultiSearch(el);
       if (['alarmVolume', 'alarmDuration'].includes(el.id)) storeAlarmDraft(alarmConfigFromControls());
+      if (el.id === 'alarmVolume' && A.state?.runtime?.activeAlarm?.active) {
+        A.send(MESSAGE.UPDATE_ALARM_VOLUME, { volume: Number(el.value) }).catch(() => {});
+      }
       if (el.id === 'inventorySearch') {
         A.inventorySearch = el.value;
         clearTimeout(A.inventoryTimer);
@@ -464,7 +475,7 @@
           }
           return;
         }
-        if (['alarmPreset', 'alarmDurationUnit', 'alarmLoop', 'alarmUseCustom', 'alarmStopMethod', 'alarmSystemNotification', 'alarmPagePopup'].includes(el.id)) {
+        if (['alarmPreset', 'alarmDurationUnit', 'alarmLoop', 'alarmUseCustom', 'alarmStopMethod'].includes(el.id)) {
           const cfg = storeAlarmDraft(alarmConfigFromControls());
           if (el.id === 'alarmPreset' && A.state?.runtime?.activeAlarm?.active && A.state.runtime.activeAlarm.source === 'Alarm Settings Test') {
             await A.send(MESSAGE.PLAY_ALARM, { alarm: cfg, meta: alarmTestMeta() });
@@ -540,6 +551,16 @@
           applyRuleTime(el);
           await saveRule(r, true);
           return;
+        }
+        if (el.id === 'alarmProfileSelect') { A.alarmProfileDraftId = el.value; A.alarmDraft = null; const selected=A.profile()?.alarmProfiles?.find(x=>x.id===el.value); if (A.settingsDraft && selected) A.settingsDraft.alarm=structuredClone(selected); A.renderPage(); return; }
+        if (el.id === 'alarmStopMethod') { const cfg=alarmConfigFromControls(); A.alarmDraft={profileId:A.profile()?.id||'',alarmProfileId:cfg.id,config:cfg}; A.renderPage(); return; }
+        if (el.dataset.ruleRootOp) { const rr=activeRule(); if(!rr) return; rr.logic=rr.logic||{groups:[]}; rr.logic.operator=el.value==='OR'?'OR':'AND'; await saveRule(rr,true); return; }
+        if (el.dataset.ruleEnabledId) {
+          const stored = A.profile()?.rules?.find(x => x.id === el.dataset.ruleEnabledId);
+          if (!stored) return; stored.enabled = Boolean(el.checked); touchRule(stored); await A.save(false, 'none'); A.renderPage(); return;
+        }
+        if (el.dataset.groupOp) {
+          const r = activeRule(), g = r?.logic?.groups?.find(x => x.id === el.dataset.groupOp); if (!g) return; g.operator = el.value === 'OR' ? 'OR' : 'AND'; await saveRule(r,true); return;
         }
         if (el.dataset.ruleTimeUnit) {
           const r = activeRule();
@@ -1048,7 +1069,7 @@
               },
               behavior = { autoRefreshJiraTabsOnDetection: Boolean(A.$('autoRefreshOnDetection')?.checked), focusJiraTabOnDetection: Boolean(A.$('focusJiraTabOnDetection')?.checked), connectionLossAlarm },
               transitionMethod = A.$('transitionMethodEdit')?.value || s.inventorySettings?.transitionMethod || TRANSITION_METHOD.WORKFLOW_DESIGNER,
-              inventorySettings = { transitionMethod };
+              inventorySettings = { transitionMethod, restoreExcludedOnRefresh: Boolean(A.$('restoreExcludedOnRefresh')?.checked) };
             const urlChanged = baseUrl !== SD.Utils.normalizeBaseUrl(s.baseUrl),
               securityAuthToken = urlChanged ? await A.requestSecurityReauth('change the Jira server URL') : '';
             A.state = (await A.send(MESSAGE.UPDATE_SERVER, { siteId: s.id, baseUrl, name: A.$('serverNameEdit').value.trim() || s.name, icon, network, behavior, inventorySettings, securityAuthToken })).state;
@@ -1088,11 +1109,51 @@
             await A.load();
             return;
           }
+          if (act === 'exclude-inventory-item') {
+            e.preventDefault(); e.stopPropagation();
+            const type = b.dataset.type, key = String(b.dataset.key || '');
+            if (!type || !key) return;
+            const excludedData = structuredClone(s.inventorySettings?.excludedData || {});
+            excludedData[type] = [...new Set([...(excludedData[type] || []).map(String), key])];
+            A.state = (await A.send(MESSAGE.UPDATE_SERVER, { siteId: s.id, inventorySettings: { excludedData } })).state;
+            A.renderPage();
+            return;
+          }
+          if (act === 'restore-inventory-type') {
+            const type = b.dataset.type, excludedData = structuredClone(s.inventorySettings?.excludedData || {});
+            excludedData[type] = [];
+            A.state = (await A.send(MESSAGE.UPDATE_SERVER, { siteId: s.id, inventorySettings: { excludedData } })).state;
+            A.renderPage();
+            return;
+          }
           if (act === 'inventory-type') {
             A.inventoryType = b.dataset.type;
             A.inventorySearch = '';
             A.renderPage();
             return;
+          }
+          if (act === 'duplicate-selected-rule') {
+            const stored = p.rules.find(x => x.id === A.selectedRuleId);
+            if (!stored) throw new Error('Select a rule first.');
+            const copy = duplicateRuleObject(stored);
+            p.rules.push(copy);
+            await A.save(false, 'none');
+            A.selectedRuleId = copy.id;
+            A.toast(`Duplicated as ${copy.name}. The copy is disabled until you enable it.`);
+            A.renderPage();
+            return;
+          }
+          if (act === 'rule-source-mode') {
+            const r = activeRule(); if (!r) return;
+            r.source = r.source || {}; r.source.mode = b.dataset.value === 'jql' ? 'jql' : 'conditions';
+            if (r.source.mode === 'jql') { r.source.filterIds = []; } else { r.source.jql = ''; }
+            await saveRule(r, true); A.renderPage(); return;
+          }
+          if (act === 'add-condition-group') {
+            const r = activeRule(); if (!r) return; r.logic = r.logic || { operator:'AND', groups:[] }; r.logic.groups = r.logic.groups || []; r.logic.groups.push(SD.Defaults.group()); await saveRule(r,true); A.renderPage(); return;
+          }
+          if (act === 'delete-condition-group') {
+            const r = activeRule(); if (!r || (r.logic?.groups || []).length <= 1) return; r.logic.groups = r.logic.groups.filter(g => g.id !== b.dataset.id); await saveRule(r,true); A.renderPage(); return;
           }
           if (act === 'new-rule') {
             const nr = SD.Defaults.rule(`Rule ${(p.rules || []).length + 1}`);
@@ -1383,6 +1444,18 @@
             A.toast(sidePanelOpened ? 'Settings saved.' : 'Settings saved, but the side panel could not open.', sidePanelOpened ? 'success' : 'error');
             return;
           }
+          if (act === 'save-alarm') {
+            const profile=A.profile(); if(!profile) return; const cfg=alarmConfigFromControls(), file=A.$('alarmFile')?.files?.[0];
+            if(file){ if(file.size>L.CUSTOM_SOUND_MAX_BYTES) throw new Error(`Custom sound must be ${L.CUSTOM_SOUND_MAX_BYTES/1024/1024} MB or smaller.`); cfg.customDataUrl=await A.fileDataUrl(file); cfg.customName=file.name; cfg.useCustom=true; }
+            profile.alarmProfiles=profile.alarmProfiles||[]; const i=profile.alarmProfiles.findIndex(x=>x.id===cfg.id); if(i>=0) profile.alarmProfiles[i]={...profile.alarmProfiles[i],...cfg}; else profile.alarmProfiles.push(cfg); if(!profile.defaultAlarmProfileId) profile.defaultAlarmProfileId=cfg.id; A.alarmProfileDraftId=cfg.id; A.alarmDraft=null; A.settingsDraft=null; await A.save(false,'none'); A.renderPage(); A.toast('Alarm Profile saved.'); return;
+          }
+          if (act === 'choose-alarm-file') { A.$('alarmFile')?.click(); return; }
+          if (act === 'new-alarm-profile') {
+            const profile = A.profile(); if (!profile) return; const next = { ...(SD.Defaults.profile().alarmProfiles?.[0] || {}), id: crypto.randomUUID(), name: `Alarm Profile ${(profile.alarmProfiles || []).length + 1}` }; profile.alarmProfiles = [...(profile.alarmProfiles || []), next]; A.alarmProfileDraftId = next.id; A.alarmDraft = null; await A.save(false,'none'); A.renderPage(); return;
+          }
+          if (act === 'delete-alarm-profile') {
+            const profile=A.profile(); if (!profile || (profile.alarmProfiles||[]).length<=1) return; profile.alarmProfiles = profile.alarmProfiles.filter(x=>x.id!==A.alarmProfileDraftId); if (profile.defaultAlarmProfileId===A.alarmProfileDraftId) profile.defaultAlarmProfileId=profile.alarmProfiles[0]?.id||''; for (const rule of profile.rules||[]) for (const action of rule.actions||[]) if(action.alarmProfileId===A.alarmProfileDraftId) action.alarmProfileId=profile.defaultAlarmProfileId; A.alarmProfileDraftId=profile.defaultAlarmProfileId; A.alarmDraft=null; await A.save(false,'none'); A.renderPage(); return;
+          }
           if (act === 'test-alarm') {
             const file = A.$('alarmFile')?.files?.[0], cfg = alarmConfigFromControls();
             if (file) {
@@ -1508,7 +1581,7 @@
             return;
           }
           if (act === 'automation-settings-section') {
-            A.settingsAutomationSection = ['sync', 'safety', 'alarm'].includes(b.dataset.section) ? b.dataset.section : 'sync';
+            A.settingsAutomationSection = ['sync', 'safety'].includes(b.dataset.section) ? b.dataset.section : 'sync';
             A.renderPage();
             return;
           }

@@ -31,7 +31,7 @@ A.state = {
 };
 (async () => {
   const normal = await A.profileBundle(false);
-  assert.equal(normal.version, 3);
+  assert.equal(normal.version, 4);
   assert.deepEqual(normal.profile, profile);
   assert.deepEqual(normal.server.fields, site.fields);
   assert.deepEqual(normal.server.transitionCatalog, site.transitionCatalog);

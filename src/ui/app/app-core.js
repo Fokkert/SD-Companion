@@ -219,12 +219,13 @@
     A.selectedScheduleId = "";
   };
   A.makeAlarmDraft = () => {
-    const p = A.profile();
-    return { profileId: p?.id || "", config: structuredClone(p?.alarmDefaults || {}) };
+    const p = A.profile(), profiles = p?.alarmProfiles || [], selected = profiles.find(x => x.id === A.alarmProfileDraftId) || profiles.find(x => x.id === p?.defaultAlarmProfileId) || profiles[0] || null;
+    if (selected) A.alarmProfileDraftId = selected.id;
+    return { profileId: p?.id || "", alarmProfileId: selected?.id || "", config: structuredClone(selected || {}) };
   };
   A.ensureAlarmDraft = () => {
     const p = A.profile(), pid = p?.id || "";
-    if (!A.alarmDraft || A.alarmDraft.profileId !== pid) A.alarmDraft = A.makeAlarmDraft();
+    if (!A.alarmDraft || A.alarmDraft.profileId !== pid || A.alarmDraft.alarmProfileId !== A.alarmProfileDraftId) A.alarmDraft = A.makeAlarmDraft();
     return A.alarmDraft.config;
   };
   A.resetAlarmDraft = () => {
@@ -247,7 +248,9 @@
         completionToneEnabled: sys.completionToneEnabled !== false
       },
       autoSync: structuredClone(auto),
-      alarm: structuredClone(profile?.alarmDefaults || SD.Defaults.profile().alarmDefaults)
+      alarmProfiles: structuredClone(profile?.alarmProfiles || []),
+      defaultAlarmProfileId: profile?.defaultAlarmProfileId || "",
+      alarm: structuredClone((profile?.alarmProfiles || []).find(x => x.id === (A.alarmProfileDraftId || profile?.defaultAlarmProfileId)) || (profile?.alarmProfiles || [])[0] || {})
     };
   };
   A.ensureSettingsDraft = () => {
@@ -504,7 +507,7 @@
     if (server.auth) delete server.auth.token;
     const bundle = {
       format: "sd-companion-profile",
-      version: 3,
+      version: 4,
       exportedAt: new Date().toISOString(),
       profile: structuredClone(p),
       server,

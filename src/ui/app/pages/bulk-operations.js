@@ -65,6 +65,7 @@
 
     const rule = A.ensureBulkDraft(),
       group = rule.logic?.groups?.[0] || SD.Defaults.group(),
+      sourceMode = rule.source?.mode === 'jql' ? 'jql' : 'conditions',
       filters = site.filters || [],
       chain = { cancelled: 'continue', skipped: 'continue', failed: 'continue', ...(rule.chainDependency || {}) };
 
@@ -76,28 +77,8 @@
       `</div>` +
       `<div class="card rule-inline-editor editor-card">` +
       `<div class="rule-section detection-source-section">` +
-      `<div class="section-title">Filter</div>` +
-      `<div class="grid-2 section-gap">` +
-      `<div class="field">` +
-      `<label>Saved Jira filters</label>` +
-      `${A.glassMulti(filters, x => String(x.id || ''), x => x.name || x.id || 'Filter', rule.source?.filterIds || [], 'data-multi-scope="rule" data-multi-prop="source.filterIds"', 'No saved filters synchronized.', 'Search filters')}` +
-      `</div>` +
-      `<div class="field">` +
-      `<label>Additional JQL</label>` +
-      `<textarea class="textarea mono" maxlength="${SD.Constants.LIMITS.JQL_MAX_CHARS}" data-rule-prop="source.jql" placeholder="project = IT AND status = Open">${A.esc(rule.source?.jql || '')}</textarea>` +
-      `</div>` +
-      `</div>` +
-      `<div class="row-between section-gap">` +
-      `<div>` +
-      `<div class="section-title small-section-title">Conditions</div>` +
-      `<div class="list-meta">Use the same issue conditions available to normal rules.</div>` +
-      `</div>` +
-      `<div class="detection-view-toggle" role="group">` +
-      `<button type="button" class="${group.operator !== 'OR' ? 'active' : ''}" data-action="condition-match" data-value="AND">Match all</button>` +
-      `<button type="button" class="${group.operator === 'OR' ? 'active' : ''}" data-action="condition-match" data-value="OR">Match any</button>` +
-      `</div>` +
-      `</div>` +
-      `<div class="stack section-gap">${conditionEditor(group, site)}</div>` +
+      `<div class="row-between"><div class="section-title">Detection method</div><div class="condition-match-toggle"><button type="button" class="${sourceMode === 'conditions' ? 'active' : ''}" data-action="rule-source-mode" data-value="conditions">Visual Conditions</button><button type="button" class="${sourceMode === 'jql' ? 'active' : ''}" data-action="rule-source-mode" data-value="jql">JQL</button></div></div>` +
+      `${sourceMode === 'jql' ? `<div class="grid-2 section-gap"><div class="field"><label>Saved Jira filters</label>${A.glassMulti(filters, x => String(x.id || ''), x => x.name || x.id || 'Filter', rule.source?.filterIds || [], 'data-multi-scope="rule" data-multi-prop="source.filterIds"', 'No saved filters synchronized.', 'Search filters')}</div><div class="field"><label>Additional JQL</label><textarea class="textarea mono" maxlength="${SD.Constants.LIMITS.JQL_MAX_CHARS}" data-rule-prop="source.jql" placeholder="project = IT AND status = Open">${A.esc(rule.source?.jql || '')}</textarea></div></div>` : `<div class="row-between section-gap"><div><div class="section-title small-section-title">Condition groups</div></div><button class="btn btn-small" data-action="add-condition-group">+ Group</button></div><div class="condition-groups section-gap">${(rule.logic?.groups || []).map((g,i)=>`<div class="condition-group-card"><div class="row-between"><div class="row"><span class="sequence-number">${i+1}</span><strong>Group ${i+1}</strong><select class="select compact-select" data-group-op="${g.id}"><option value="AND" ${g.operator !== 'OR' ? 'selected' : ''}>Match all</option><option value="OR" ${g.operator === 'OR' ? 'selected' : ''}>Match any</option></select></div>${(rule.logic?.groups||[]).length>1?`<button class="btn btn-small btn-danger" data-action="delete-condition-group" data-id="${g.id}">Delete</button>`:''}</div>${conditionEditor(g,site)}</div>`).join('')}</div>`}` +
       `</div>` +
       `<div class="rule-section rule-editor-focus">` +
       `<div class="row-between">` +

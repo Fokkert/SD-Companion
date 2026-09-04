@@ -78,11 +78,17 @@
     if (!p?.siteId) errors.push('Profile must be bound to a Jira server.');
     num(p?.monitoring?.intervalSeconds, L.POLL_MIN_SECONDS, L.POLL_MAX_SECONDS, 'Polling interval', errors);
     num(p?.monitoring?.pollJitterPercent, 0, L.POLL_JITTER_MAX, 'Polling jitter', errors);
-    const alarm = p?.alarmDefaults || {};
-    num(alarm.durationSeconds ?? 12, 1, 86400, 'Profile alarm duration', errors);
-    num(alarm.volume ?? .8, 0, 1, 'Profile alarm volume', errors);
-    if (!root.Constants.ALARM_PRESETS.some(x => x.id === (alarm.preset || 'radar'))) errors.push('Profile alarm sound is invalid.');
-    if (!root.Constants.ALARM_STOP_METHODS.some(x => x.id === (alarm.stopMethod || 'duration-or-controls'))) errors.push('Profile alarm stop method is invalid.');
+    const alarmProfiles = Array.isArray(p?.alarmProfiles) ? p.alarmProfiles : [];
+    if (!alarmProfiles.length) errors.push('Profile must contain at least one alarm profile.');
+    for (const alarm of alarmProfiles) {
+      if (!String(alarm.id || '').trim()) errors.push('Alarm profile ID is required.');
+      if (!String(alarm.name || '').trim()) errors.push('Alarm profile name is required.');
+      num(alarm.durationSeconds ?? 12, 1, 86400, 'Alarm profile duration', errors);
+      num(alarm.volume ?? .8, 0, 1, 'Alarm profile volume', errors);
+      if (!root.Constants.ALARM_PRESETS.some(x => x.id === (alarm.preset || 'radar'))) errors.push('Alarm profile sound is invalid.');
+      if (!root.Constants.ALARM_STOP_METHODS.some(x => x.id === (alarm.stopMethod || 'duration'))) errors.push('Alarm profile stop method is invalid.');
+      if (alarm.stopMethod === 'keyboard' && !String(alarm.keyboardShortcut || '').trim()) errors.push('Keyboard Shortcut stop method requires a shortcut.');
+    }
     const scheduleIds = new Set((p?.schedules || []).map(s => s.id));
     for (const s of p?.schedules || []) {
       if (!s?.name?.trim()) errors.push('Schedule name is required.');

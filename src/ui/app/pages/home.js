@@ -182,7 +182,7 @@
       `${approvals ? `<button type="button" class="btn btn-small btn-primary" data-action="approve-all-jobs">Approve all (${approvals})</button>` : ''}` +
       `${pending ? `<button type="button" class="btn btn-small btn-primary" data-action="process-all-jobs">Process all (${pending})</button>` : ''}` +
       `${upcoming ? `<button type="button" class="btn btn-small btn-danger" data-action="cancel-all-jobs">Cancel all upcoming (${upcoming})</button>` : ''}` +
-      `<label class="row control-label show-completed-control" title="Hide issue groups whose actions are all complete. Active issue groups keep their completed action context.">Show completed <span class="master-switch"><input id="homeShowCompletedActions" type="checkbox" ${A.homeShowCompletedActions ? 'checked' : ''}><span></span></span></label>` +
+      `<div class="row control-label show-completed-control" title="Hide issue groups whose actions are all complete. Active issue groups keep their completed action context."><span>Show completed</span><label class="master-switch" aria-label="Show completed"><input id="homeShowCompletedActions" type="checkbox" ${A.homeShowCompletedActions ? 'checked' : ''}><span></span></label></div>` +
       `<span class="freshness-chip">Auto refresh · ${activityRefreshLabel()}</span>` +
       `</div>` +
       `<div class="issue-activity-list">${issueActivity(site, profile, view, current, recent)}</div>` +

@@ -55,8 +55,23 @@
     generic: '<circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/>'
   }[type] || '');
   const metaIcon = (type, url = '') => `<span class="metadata-icon ${type}">${url ? `<img data-entity-icon src="${A.esc(url)}" alt="">` : ''}<svg viewBox="0 0 24 24" aria-hidden="true">${iconSvg(type)}</svg></span>`;
+
+  const itemKey = (x, type) => {
+    if (type === 'projects') return String(x.key || x.id || x.name || '');
+    if (type === 'users') return String(SD.Utils.userKey(x) || x.id || x.displayName || '');
+    if (type === 'transitions') return String(x.contextId || '') + ':' + String(x.id || x.name || '');
+    return String(x.id || x.key || x.name || x.statusName || '');
+  };
+  const excludedSet = (s, type) => new Set((s.inventorySettings?.excludedData?.[type] || []).map(String));
+  const visibleInventoryItems = (s, type) => inventoryItems(s, type).filter(x => !excludedSet(s, type).has(itemKey(x, type)));
+  const detailPairs = (x, type) => {
+    const omit = new Set(['avatarUrls','iconUrl','self','customDataUrl']);
+    return Object.entries(x || {}).filter(([k,v]) => !omit.has(k) && v !== null && v !== '' && v !== undefined && typeof v !== 'object').slice(0, 12)
+      .map(([k,v]) => `<div><span>${A.esc(k.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase()))}</span><strong>${A.esc(String(v))}</strong></div>`).join('');
+  };
+  const genericDetailsRow = (x, type, iconType, title, meta, iconUrl = '') => `<details class="metadata-detail-card"><summary>${metaIcon(iconType, iconUrl)}<span class="metadata-detail-title"><strong>${A.esc(title)}</strong><small>${A.esc(meta)}</small></span><button type="button" class="btn btn-small metadata-remove" data-action="exclude-inventory-item" data-type="${A.esc(type)}" data-key="${A.esc(itemKey(x,type))}">Remove</button></summary><div class="metadata-detail-body"><div class="metadata-detail-grid">${detailPairs(x,type) || '<div><span>Details</span><strong>No additional fields</strong></div>'}</div></div></details>`;
   const filteredInventory = (s, type, query = '') => {
-    const items = inventoryItems(s, type),
+    const items = visibleInventoryItems(s, type),
       q = String(query || '').trim().toLowerCase(),
       matched = q ? items.filter(x => JSON.stringify(x).toLowerCase().includes(q)) : items;
     return { items, filtered: matched.slice(0, 400), matchedCount: matched.length };
@@ -86,13 +101,11 @@
     document.querySelectorAll('#inventoryResults [data-entity-icon]').forEach(img => img.addEventListener('error', () => img.remove(), { once: true }));
   };
   const row = (x, type) => {
-    if (type === 'projects') return `<div class="list-item entity-row">${projectLogo(x)}<div><div class="list-title">${A.esc(x.name)}</div><div class="list-meta">${A.esc(x.key)} · ${A.esc(x.projectTypeKey || 'project')}</div></div></div>`;
-    if (type === 'users') return `<div class="list-item entity-row">${avatar(x)}<div><div class="list-title">${A.esc(x.displayName)}</div><div class="list-meta">${A.esc(x.key || x.accountId || x.name || '')}</div></div></div>`;
-    if (type === 'filters') return `<div class="list-item entity-row">${metaIcon('filter')}<div><div class="list-title">${A.esc(x.name)}</div><div class="list-meta">#${A.esc(x.id)} · ${A.esc(x.owner?.displayName || 'Accessible filter')}</div></div></div>`;
-    if (type === 'issueTypes') return `<div class="list-item entity-row">${metaIcon('issueType', x.iconUrl || '')}<div><div class="list-title">${A.esc(x.name)}</div><div class="list-meta">${A.esc(x.projectKey || 'Global')} · ${A.esc(x.id)}</div></div></div>`;
-    if (type === 'statuses') return `<div class="list-item entity-row">${metaIcon('status')}<div>` +
-      `<div class="list-title">${A.esc(x.statusName || x.name)} · ${A.esc(x.projectKey)}</div>` +
-      `<div class="list-meta">${A.esc(x.issueTypeName || '')} · ${A.esc(x.statusCategory || '')}</div></div></div>`;
+    if (type === 'projects') return genericDetailsRow(x, type, 'generic', x.name || x.key, `${x.key || ''} · ${x.projectTypeKey || 'project'}`);
+    if (type === 'users') return genericDetailsRow(x, type, 'generic', x.displayName || x.name || 'User', x.key || x.accountId || x.name || '');
+    if (type === 'filters') return genericDetailsRow(x, type, 'filter', x.name || 'Filter', `#${x.id || ''} · ${x.owner?.displayName || 'Accessible filter'}`);
+    if (type === 'issueTypes') return genericDetailsRow(x, type, 'issueType', x.name || 'Issue Type', `${x.projectKey || 'Global'} · ${x.id || ''}`, x.iconUrl || '');
+    if (type === 'statuses') return genericDetailsRow(x, type, 'status', x.statusName || x.name || 'Status', `${x.projectKey || ''} · ${x.issueTypeName || ''} · ${x.statusCategory || ''}`);
     if (type === 'transitions') {
       const required = (x.requiredFields || []).length,
         sourceBase = x.workflowSource === 'issue-extraction' ? 'Issue extraction sample' : 'Jira read-only workflow',
@@ -104,6 +117,7 @@
         `<small>${A.esc(x.issueTypeName || x.issueTypeId || 'Issue type')} · ${A.esc(x.fromStatusName || x.fromStatusId || 'Status')} → ${A.esc(x.toStatusName || x.toStatusId || 'Status')}</small>` +
         `</span>` +
         `<span class="transition-project-chip">${A.esc(x.projectKey || 'Project')}</span>` +
+        `<button type="button" class="btn btn-small metadata-remove" data-action="exclude-inventory-item" data-type="transitions" data-key="${A.esc(itemKey(x, type))}">Remove</button>` +
         `</summary>` +
         `<div class="transition-card-body">` +
         `<div class="transition-detail-grid">` +
@@ -128,8 +142,8 @@
         `<strong>${A.esc(sourceTitle)}</strong>` +
         `<small>${A.esc(sourceDetail || 'Complete workflow topology')}</small></div>${required ? `<div class="transition-required"><span>Required transition fields</span><div>${(x.requiredFields || []).map(f => `<span class="freshness-chip">${A.esc(f.name || f.id)}</span>`).join('')}</div></div>` : ''}</div></details>`;
     }
-    if (type === 'fields') return `<div class="list-item entity-row">${metaIcon('field')}<div><div class="list-title">${A.esc(x.name || x.id)}</div><div class="list-meta mono">${x.custom ? 'Custom' : 'System'} · ${A.esc(x.id)}</div></div></div>`;
-    return `<div class="list-item entity-row">${metaIcon('generic')}<div><div class="list-title">${A.esc(x.name || x.id)}</div><div class="list-meta">${A.esc(x.id || '')}</div></div></div>`;
+    if (type === 'fields') return genericDetailsRow(x, type, 'field', x.name || x.id, `${x.custom ? 'Custom' : 'System'} · ${x.id || ''}`);
+    return genericDetailsRow(x, type, 'generic', x.name || x.statusName || x.id || type, x.id || x.key || '');
   };
   A.pageData = () => {
     const s = A.site();
@@ -168,11 +182,11 @@
       `</table>` +
       `</div>` +
       `<div class="data-workspace">` +
-      `<aside class="data-catalog">${defs.map(([k, n]) => `<button class="data-catalog-item ${A.inventoryType === k ? 'active' : ''}" data-action="inventory-type" data-type="${k}"><span><b>${n}</b></span><strong>${inventoryItems(s, k).length}</strong></button>`).join('')}</aside>` +
+      `<aside class="data-catalog">${defs.map(([k, n]) => `<button class="data-catalog-item ${A.inventoryType === k ? 'active' : ''}" data-action="inventory-type" data-type="${k}"><span><b>${n}</b></span><strong>${visibleInventoryItems(s, k).length}</strong></button>`).join('')}</aside>` +
       `<div class="data-content">` +
       `<div class="data-content-head">` +
       `<div class="section-title">${active[1]}</div>` +
-      `<span class="freshness-chip">${A.esc(freshness(s, A.inventoryType))}</span>` +
+      `<div class="row"><span class="freshness-chip">${A.esc(freshness(s, A.inventoryType))}</span>${(s.inventorySettings?.excludedData?.[A.inventoryType] || []).length ? `<button class="btn btn-small" data-action="restore-inventory-type" data-type="${A.esc(A.inventoryType)}">Restore removed (${(s.inventorySettings.excludedData[A.inventoryType] || []).length})</button>` : ''}</div>` +
       `</div>` +
       `<input id="inventorySearch" class="input" placeholder="Search ${A.esc(active[1])}" value="${A.esc(A.inventorySearch || '')}" autocomplete="off">` +
       `<div class="card inventory-list ${A.inventoryType === 'transitions' ? 'transition-inventory' : ''}">` +

@@ -10,6 +10,8 @@
     selectedProjectKeys: [],
     projectDatasets: {},
     globalDatasets: { priorities: true, resolutions: true },
+    excludedData: { projects: [], filters: [], users: [], issueTypes: [], statuses: [], transitions: [], fields: [], priorities: [], resolutions: [] },
+    restoreExcludedOnRefresh: false,
     scopeRevision: 0,
     autoSync: { enabled: false, intervalSeconds: 3600, unit: "hours", lastRunAt: null, nextRunAt: null }
   });
@@ -134,7 +136,7 @@
     if (type === ACTION.EDIT_FIELDS) return { ...base, fieldsJson: "{}" };
     if (type === ACTION.LABELS) return { ...base, add: [], remove: [] };
     if (type === ACTION.PRIORITY) return { ...base, priorityId: "" };
-    if (type === ACTION.ALARM) return { ...base };
+    if (type === ACTION.ALARM) return { ...base, alarmProfileId: "" };
     if (type === ACTION.NOTIFICATION) return { ...base, title: "SD Companion · {{issue.key}}", message: "{{issue.summary}}" };
     return base;
   };
@@ -144,7 +146,7 @@
     enabled: false,
     priority: 100,
     schedule: { mode: "always", scheduleIds: [] },
-    source: { filterIds: [], jql: "" },
+    source: { mode: "conditions", filterIds: [], jql: "" },
     logic: { operator: "AND", groups: [group()] },
     executionPolicy: { mode: EXECUTION_POLICY.ONCE_ISSUE, repeatSeconds: 3600, repeatUnit: "minutes" },
     conflict: { mode: CONFLICT_MODE.CONTINUE, group: "" },
@@ -157,7 +159,9 @@
     actions: [],
     runtime: { counters: { cycles: 0, matches: 0, planned: 0, skippedSchedule: 0, skippedLedger: 0, skippedConflict: 0, errors: 0 }, lastRunAt: null, lastMatchAt: null }
   });
-  const profile = (name = "Default Profile", boundSite = null) => ({
+  const profile = (name = "Default Profile", boundSite = null) => {
+    const alarmProfile = { id: crypto.randomUUID(), name: "Default Alarm", preset: "radar", useCustom: false, customDataUrl: "", customName: "", durationSeconds: 12, durationUnit: "seconds", volume: 0.8, loop: true, stopMethod: "duration", keyboardShortcut: "Ctrl+Shift+S" };
+    return ({
     id: crypto.randomUUID(),
     siteId: boundSite?.id || "",
     name,
@@ -166,22 +170,12 @@
     monitoring: { enabled: false, intervalSeconds: 60, intervalUnit: "minutes", pollJitterPercent: 10 },
     schedules: [],
     rules: [],
-    alarmDefaults: {
-      preset: "radar",
-      useCustom: false,
-      customDataUrl: "",
-      customName: "",
-      durationSeconds: 12,
-      durationUnit: "seconds",
-      volume: 0.8,
-      loop: true,
-      stopMethod: "duration-or-controls",
-      showSystemNotification: true,
-      showPagePopup: true
-    },
+    alarmProfiles: [alarmProfile],
+    defaultAlarmProfileId: alarmProfile.id,
     radar: { enabled: true, maxMarkers: 12, retentionMinutes: 45 },
     runtime: { lastCycleAt: null, nextCycleAt: null, lastIssueCount: 0, lastDetectionCount: 0, lastPlanCount: 0, currentDetections: [], currentDetectionsAt: null, lastDetectionKeys: [] }
   });
+  };
   const state = () => {
     const p = profile();
     return {

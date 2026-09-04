@@ -3,7 +3,7 @@
   "name": "SD Companion",
   "short_name": "SD Companion",
   "description": "API-first Jira Service Desk automation with profiles, rules, schedules, alarms and multi-server monitoring.",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "version_name": "V2",
   "minimum_chrome_version": "116",
   "permissions": [
@@ -43,13 +43,5 @@
   },
   "side_panel": {
     "default_path": "src/ui/app/sidepanel.html"
-  },
-  "commands": {
-    "stop-alarm": {
-      "suggested_key": {
-        "default": "Alt+Shift+S"
-      },
-      "description": "Stop the active SD Companion alarm"
-    }
   }
 }

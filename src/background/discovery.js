@@ -828,33 +828,57 @@
         projectStatusMatrix: projectMeta.matrix,
         transitionCatalog
       },
+      excluded = settings.excludedData || {},
+      keyFor = (item, type, context = null) => {
+        if (type === 'projects') return String(item?.key || item?.id || item?.name || '');
+        if (type === 'users') return String(root.Utils.userKey(item) || item?.id || item?.displayName || '');
+        if (type === 'transitions') return `${String(context?.id || '')}:${String(item?.id || item?.name || '')}`;
+        return String(item?.id || item?.key || item?.name || item?.statusName || '');
+      },
+      omitExcluded = (items, type) => {
+        const blocked = new Set((excluded[type] || []).map(String));
+        return blocked.size ? (items || []).filter(item => !blocked.has(keyFor(item, type))) : items;
+      };
+    inventory.projects = omitExcluded(inventory.projects, 'projects');
+    inventory.filters = omitExcluded(inventory.filters, 'filters');
+    inventory.users = omitExcluded(inventory.users, 'users');
+    inventory.issueTypes = omitExcluded(inventory.issueTypes, 'issueTypes');
+    inventory.statuses = omitExcluded(inventory.statuses, 'statuses');
+    inventory.fields = omitExcluded(inventory.fields, 'fields');
+    inventory.priorities = omitExcluded(inventory.priorities, 'priorities');
+    inventory.resolutions = omitExcluded(inventory.resolutions, 'resolutions');
+    const blockedTransitions = new Set((excluded.transitions || []).map(String));
+    if (blockedTransitions.size) inventory.transitionCatalog = inventory.transitionCatalog.map(context => ({
+      ...context, transitions: (context.transitions || []).filter(item => !blockedTransitions.has(keyFor(item, 'transitions', context)))
+    })).filter(context => (context.transitions || []).length);
+    const visibleTransitionCount = contextualTransitionCount(inventory.transitionCatalog),
       counts = {
-        projects: allProjects.length,
+        projects: inventory.projects.length,
         selectedProjects: selectedProjects.length,
         issueTypes: inventory.issueTypes.length,
         statuses: inventory.statuses.length,
-        filters: filters.length,
-        users: users.length,
+        filters: inventory.filters.length,
+        users: inventory.users.length,
         fields: inventory.fields.length,
         priorities: priorities.length,
         resolutions: resolutions.length,
-        transitions: transitionCount,
-        transitionContexts: transitionCatalog.length
+        transitions: visibleTransitionCount,
+        transitionContexts: inventory.transitionCatalog.length
       },
       permissions = await fetchStage('Permissions', () => client.myPermissions(), {}),
       browser = await root.JiraTabs.browserStatus(site),
       syncedAt = nowIso();
     root.Operations?.throwIfCancelled(operationId);
     const fresh = {
-      projects: freshness(syncedAt, allProjects.length, 'global'),
-      filters: freshness(syncedAt, filters.length, 'global'),
-      users: freshness(syncedAt, users.length, scope),
+      projects: freshness(syncedAt, inventory.projects.length, 'global'),
+      filters: freshness(syncedAt, inventory.filters.length, 'global'),
+      users: freshness(syncedAt, inventory.users.length, scope),
       issueTypes: freshness(syncedAt, inventory.issueTypes.length, scope),
       statuses: freshness(syncedAt, inventory.statuses.length, scope),
-      transitions: freshness(syncedAt, transitionCount, scope),
+      transitions: freshness(syncedAt, visibleTransitionCount, scope),
       fields: freshness(syncedAt, inventory.fields.length, 'global-visible'),
-      priorities: freshness(syncedAt, priorities.length, 'global'),
-      resolutions: freshness(syncedAt, resolutions.length, 'global')
+      priorities: freshness(syncedAt, inventory.priorities.length, 'global'),
+      resolutions: freshness(syncedAt, inventory.resolutions.length, 'global')
     },
       coverage = client.filterCoverage || site.inventory?.filterCoverage || 'unknown';
     const state = await root.Storage.updateState(latest => {

@@ -272,7 +272,7 @@
       `<label>Priority</label>` +
       `<select class="select" data-searchable="true" data-action-id="${a.id}" data-aprop="priorityId">` +
       `<option value="">Select priority</option>${s.priorities.map(x => A.option(String(x.id), x.name, String(a.priorityId) === String(x.id))).join('')}</select></div>`;
-    else if (a.type === ACTION.ALARM) body = `<div class="alarm-action-simple"><strong>Play configured alarm</strong><span>Uses the current profile alarm from Settings → Automation.</span></div>`;
+    else if (a.type === ACTION.ALARM) { const profiles = p?.alarmProfiles || []; body = `<div class="field"><label>Alarm profile</label><select class="select" data-action-id="${a.id}" data-aprop="alarmProfileId"><option value="">Default alarm profile</option>${profiles.map(x => A.option(x.id, x.name, a.alarmProfileId === x.id)).join('')}</select></div>`; }
     else if (a.type === ACTION.NOTIFICATION) body = `<div class="field">` +
       `<label>Title</label>` +
       `<input class="input" maxlength="160" data-action-id="${a.id}" data-aprop="title" value="${A.esc(a.title || '')}">` +
@@ -301,8 +301,7 @@
       `</span>` +
       `</label>` +
       `</div>${a.when?.enabled ? (A.RuleViews.actionConditionEditor?.(a, s) || '') : ''}`;
-    return `<div class="action-card configured-object">` +
-      `<div class="action-head">` +
+    return `<details class="action-card configured-object" ${index === 0 ? 'open' : ''}><summary class="action-head">` +
       `<div class="row">` +
       `<span class="sequence-number">${index + 1}</span>` +
       `<span class="action-type">${A.esc(actionLabel(a.type))}</span>` +
@@ -313,10 +312,10 @@
       `</span>` +
       `</label>` +
       `</div>` +
-      `<div class="row">` +
+      `<div class="row action-summary-controls">` +
       `<button class="btn btn-small" data-action="move-action-up" data-id="${a.id}" ${index === 0 ? 'disabled' : ''}>↑</button>` +
       `<button class="btn btn-small" data-action="move-action-down" data-id="${a.id}">↓</button>` +
-      `<button class="btn btn-small btn-danger" data-action="delete-action" data-id="${a.id}">Delete</button></div></div>${body}${poolEditor}${approval}${when}${delayEditor(a, index)}</div>`;
+      `<button class="btn btn-small btn-danger" data-action="delete-action" data-id="${a.id}">Delete</button></div></summary><div class="action-card-body">${body}${poolEditor}${approval}${when}${delayEditor(a, index)}</div></details>`;
   };
   A.RuleViews = { ...(A.RuleViews || {}), actionEditor, actionLabel, actionOptions, transitionChoices, relevantTransitionRows, targetStatusChoices, transitionMethod };
 })();

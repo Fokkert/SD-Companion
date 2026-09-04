@@ -1,3 +1,16 @@
+# Changelog
+
+## 2.4.0
+
+- Added profile-owned Alarm Profiles and per-Alarm-action profile selection; migrated the legacy single alarm configuration forward.
+- Reduced Alarm stop methods to Keyboard Shortcut, Duration, Click anywhere and Popup; Browser Notification remains its own rule action.
+- Added persistent synchronized-data exclusions with optional restore-on-refresh behavior and expandable API Data entries.
+- Reworked server discovery into expandable per-project cards, made all extension toggles cubic, and corrected dropdown placement.
+- Made visual conditions and JQL mutually exclusive rule detection methods, added multiple condition groups, and made Actions collapsible.
+- Simplified rule cards with card-level selection, top-level duplication, card toggles, larger status-aware icons, and moved runtime details into the editor.
+- Restored the Action Completion Tone label and refined Settings spacing and alarm file selection behavior.
+- Fixed Show completed so only its switch toggles, and updated README naming to explain Service Desk Companion.
+
 ## V2 · Build 2.3.0 — Monitoring, action, server and packaging refinement
 
 - Fixed release packaging so the runtime ZIP contains the versioned `SD-Companion-vX.Y.Z/` top-level folder instead of placing runtime files at ZIP root.
@@ -286,7 +299,7 @@
   requested during issue search.
 - Added **Duplicate** for rules. Duplicates receive fresh rule/group/condition/action/pool
   identifiers, retain configuration, reset runtime state, and start disabled.
-- Home now displays active named schedules as the active shift, or **No active shift**.
+- Home now displays active schedules as the active shift, or **No active shift**.
 - Hardened contextual status/transition presentation so duplicate rows are removed by exact
   contextual identity rather than transition name.
 - Added **After previous action** timing. Dependent actions wait for the immediately preceding
@@ -318,7 +331,7 @@
 
 - Schedule editors now use explicit Save Schedule / Cancel drafts; field/day toggles no longer
   persist on click.
-- Rules explicitly support one or more named schedules with OR eligibility semantics.
+- Rules explicitly support one or more schedules with OR eligibility semantics.
 - Alarm Studio preserves the selected sound during Test Alarm and hot-switches the active test alarm
   when the preset changes.
 - Added per-server Focus Jira Tab On Detection behavior.
@@ -641,7 +654,7 @@
 - Removed the execution-mode switch; enabled rules now execute live.
 - Moved safety limits to global Automation settings and strengthened same-cycle hourly cap
   enforcement.
-- Removed automatic/default named schedules; rules explicitly choose Always On or user-created
+- Removed automatic/default schedules; rules explicitly choose Always On or user-created
   schedules.
 - Added selectable time units across human-facing timing controls.
 - Added periodic transactional project-metadata synchronization.
@@ -737,7 +750,7 @@
   revision checks.
 - Added optimistic configuration revisions so stale UI/background writes are rejected instead of
   overwriting newer settings.
-- Added explicit Always On / Named Schedule rule gates and fail-closed scheduled-rule semantics.
+- Added explicit Always On / Schedule rule gates and fail-closed scheduled-rule semantics.
 - Added incremental rule polling cursors with overlap windows.
 - Added adaptive per-server REST scheduling: spacing, jitter, requests/minute, concurrency, timeout,
   retries, backoff and health heartbeat.

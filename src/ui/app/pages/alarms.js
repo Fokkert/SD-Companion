@@ -7,12 +7,12 @@
   A.pageAlarms = () => {
     const p = A.profile();
     if (!p) return noServer();
-    const a = A.ensureAlarmDraft?.() || p.alarmDefaults || {},
+    const a = A.ensureAlarmDraft?.() || (p.alarmProfiles || [])[0] || {},
       active = A.state?.runtime?.activeAlarm?.active,
       perm = A.state?.runtime?.notificationPermission || "unknown",
       permLabel = perm === "granted" ? "Allowed" : perm === "denied" ? "Blocked" : "Unchecked",
       du = a.durationUnit || 'seconds';
-    return `<section class="page">${head("Alarm Studio", "", active ? `<button class="btn btn-stop-alarm" data-action="stop-alarm">STOP ALARM</button>` : "")}
+    return `<section class="page">${head("Alarm Profiles", "", active ? `<button class="btn btn-stop-alarm" data-action="stop-alarm">STOP ALARM</button>` : "")}
 <div class="card alarm-studio-card">
   <div class="alarm-studio-section">` +
       `<div class="section-kicker">Sound & playback</div>` +
@@ -71,35 +71,9 @@
       `</div>` +
       `</div>` +
       `</div>
-  <div class="alarm-studio-section">` +
-      `<div class="section-kicker">Attention</div>` +
-      `<div class="toggle-card-grid compact-toggle-grid">` +
-      `<div class="toggle-card">` +
-      `<label class="master-switch">` +
-      `<input id="alarmSystemNotification" type="checkbox" ${a.showSystemNotification !== false ? "checked" : ""}>` +
-      `<span>` +
-      `</span>` +
-      `</label>` +
-      `<span>` +
-      `<strong>Browser notification</strong>` +
-      `<small>${permLabel}</small>` +
-      `</span>` +
-      `</div>` +
-      `<div class="toggle-card">` +
-      `<label class="master-switch">` +
-      `<input id="alarmPagePopup" type="checkbox" ${a.showPagePopup !== false ? "checked" : ""}>` +
-      `<span>` +
-      `</span>` +
-      `</label>` +
-      `<span>` +
-      `<strong>Jira alarm card</strong>` +
-      `</span>` +
-      `</div>` +
-      `</div>` +
-      `</div>
   <div class="alarm-studio-actions">` +
       `<button class="btn btn-primary" data-action="test-alarm">Test Alarm</button>` +
-      `<button class="btn" data-action="save-alarm">Save Alarm Settings</button>${a.customDataUrl ? `<button class="btn" data-action="clear-custom-alarm">Clear Custom Audio</button>` : ""}</div>` +
+      `<button class="btn" data-action="save-alarm">Save Alarm Profile</button>${a.customDataUrl ? `<button class="btn" data-action="clear-custom-alarm">Clear Custom Audio</button>` : ""}</div>` +
       `<div class="input-limit">Custom audio maximum: ${Math.round(L.CUSTOM_SOUND_MAX_BYTES / 1024 / 1024)} MB</div>
 </div></section>`;
   };

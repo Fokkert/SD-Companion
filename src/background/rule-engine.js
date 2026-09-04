@@ -118,18 +118,10 @@
     else if (action.type === ACTION.EDIT_FIELDS) payload.fieldsJson = action.fieldsJson || "{}";
     else if (action.type === ACTION.LABELS) payload.labels = { add: action.add || [], remove: action.remove || [] };
     else if (action.type === ACTION.PRIORITY) payload.priorityId = action.priorityId || "";
-    else if (action.type === ACTION.ALARM) payload.alarm = {
-      preset: profile.alarmDefaults?.preset || "radar",
-      useCustom: Boolean(profile.alarmDefaults?.useCustom),
-      customDataUrl: profile.alarmDefaults?.useCustom ? (profile.alarmDefaults?.customDataUrl || "") : "",
-      customName: profile.alarmDefaults?.customName || "",
-      durationSeconds: Number(profile.alarmDefaults?.durationSeconds ?? 12),
-      volume: Number(profile.alarmDefaults?.volume ?? .8),
-      loop: profile.alarmDefaults?.loop !== false,
-      stopMethod: profile.alarmDefaults?.stopMethod || "duration-or-controls",
-      showSystemNotification: profile.alarmDefaults?.showSystemNotification !== false,
-      showPagePopup: profile.alarmDefaults?.showPagePopup !== false
-    };
+    else if (action.type === ACTION.ALARM) {
+      const alarmProfiles = profile.alarmProfiles || [], selected = alarmProfiles.find(x => x.id === action.alarmProfileId) || alarmProfiles.find(x => x.id === profile.defaultAlarmProfileId) || alarmProfiles[0] || {};
+      payload.alarm = { ...selected, alarmProfileId: selected.id || '' };
+    }
     else if (action.type === ACTION.NOTIFICATION) payload.notification = { title: template(action.title || "SD Companion · {{issue.key}}", issue), message: template(action.message || "{{issue.summary}}", issue) };
     return { action: action.type, actionId: action.id, offsetSeconds, payload, ruleId: rule.id, reason: `Rule matched: ${rule.name}` };
   };

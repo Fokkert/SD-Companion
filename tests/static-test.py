@@ -23,7 +23,7 @@ def source_in(source, expected):
 manifest = json.loads(read('manifest.json'))
 
 assert manifest['manifest_version'] == 3
-assert manifest['version'] == '2.3.0'
+assert manifest['version'] == '2.4.0'
 assert manifest['version_name'] == 'V2'
 assert 'content_scripts' not in manifest
 assert 'options_page' not in manifest
@@ -194,7 +194,10 @@ assert 'projectLogo' in data
 assert 'x.iconUrl' in data
 
 assert 'ALL groups' not in rules
-assert '+ Group' not in rules
+assert '+ Group' in rules
+assert 'Condition groups' in rules
+assert 'Match all groups' in rules
+assert 'Match any group' in rules
 assert 'Match all' in rules
 assert 'Match any' in rules
 assert 'filterCoverage' in discovery

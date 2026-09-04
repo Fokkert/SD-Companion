@@ -1,4 +1,4 @@
-let ctx = null, active = [], stopTimer = null, repeatTimer = null, audio = null;
+let ctx = null, masterGain = null, active = [], stopTimer = null, repeatTimer = null, audio = null, currentCfg = null;
 const catalog = globalThis.SDCompanion?.AlarmCatalog || {};
 const notifyEnded = () => {
   try {
@@ -24,11 +24,9 @@ const stop = (notify = false) => {
   clearLocal();
   if (notify) notifyEnded();
 };
-const timed = cfg => ["duration", "duration-or-controls", "notification-controls", "any-interaction"].includes(cfg.stopMethod || "duration-or-controls");
+const timed = cfg => (cfg.stopMethod || "duration") === "duration";
 const scheduleTone = (cfg, preset) => {
-  const rawVolume = Number(cfg.volume),
-    volume = Math.max(0, Math.min(1, Number.isFinite(rawVolume) ? rawVolume : .8)),
-    boost = Math.max(.25, Number(preset.gainBoost) || 1),
+  const boost = Math.max(.25, Number(preset.gainBoost) || 1),
     start = ctx.currentTime + .01;
   let cursor = start;
   for (const step of preset.sequence || []) {
@@ -46,12 +44,12 @@ const scheduleTone = (cfg, preset) => {
     else {
       o.frequency.setValueAtTime(Number(step.frequency) || 660, cursor);
     }
-    const peak = Math.max(.001, Math.min(.42, volume * .17 * boost));
+    const peak = Math.max(.001, Math.min(.42, .17 * boost));
     g.gain.setValueAtTime(.0001, cursor);
     g.gain.exponentialRampToValueAtTime(peak, cursor + .012);
     g.gain.setValueAtTime(peak, Math.max(cursor + .013, cursor + seconds - .035));
     g.gain.exponentialRampToValueAtTime(.0001, cursor + seconds);
-    o.connect(g).connect(ctx.destination);
+    o.connect(g).connect(masterGain || ctx.destination);
     o.start(cursor);
     o.stop(cursor + seconds + .03);
     active.push(o);
@@ -65,6 +63,9 @@ const scheduleTone = (cfg, preset) => {
 };
 const tone = async cfg => {
   ctx = ctx || new AudioContext();
+  masterGain = masterGain || ctx.createGain();
+  if (!masterGain.__connected) { masterGain.connect(ctx.destination); masterGain.__connected = true; }
+  const rawVolume = Number(cfg.volume); masterGain.gain.value = Math.max(0, Math.min(1, Number.isFinite(rawVolume) ? rawVolume : .8));
   await ctx.resume();
   const preset = catalog[cfg.preset] || catalog.radar || catalog.beacon;
   if (!preset) return;
@@ -130,6 +131,13 @@ chrome.runtime.onMessage.addListener(m => {
     actionBell().catch(() => {});
     return;
   }
+  if (m?.type === "SD_OFFSCREEN_VOLUME") {
+    const v = Math.max(0, Math.min(1, Number(m.volume) || 0));
+    if (currentCfg) currentCfg.volume = v;
+    if (masterGain) masterGain.gain.setTargetAtTime(v, masterGain.context.currentTime, .015);
+    if (audio) audio.volume = v;
+    return;
+  }
   if (m?.type === "SD_OFFSCREEN_STOP") {
     stop(false);
     return;
@@ -137,6 +145,7 @@ chrome.runtime.onMessage.addListener(m => {
   if (m?.type === "SD_OFFSCREEN_PLAY") {
     stop(false);
     const cfg = m.alarm || {};
+    currentCfg = cfg;
     cfg.useCustom && cfg.customDataUrl ? custom(cfg) : tone(cfg);
   }
 });

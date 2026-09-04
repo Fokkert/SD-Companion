@@ -15,28 +15,27 @@ const manifest = JSON.parse(read('manifest.json')),
   migrations = read('src/shared/migrations.js'),
   css = read('src/ui/app/app.css'),
   servers = read('src/ui/app/pages/servers.js');
-assert.equal(manifest.version, '2.3.0');
+assert.equal(manifest.version, '2.4.0');
 assert.equal(manifest.version_name, 'V2');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.3.0"'));
-// Alarm configuration is centralized at profile Settings level.
-assert(textIncludes(settings, 'Profile alarm'));
+assert(textIncludes(constants, 'BUILD_VERSION:"2.4.0"'));
+// Alarm configuration is profile-owned and actions reference Alarm Profiles.
+assert(textIncludes(settings, 'Alarm Profiles'));
 assert(textIncludes(settings, 'id="alarmPreset"'));
-assert(textIncludes(settings, 'id="alarmSystemNotification"'));
-assert(textIncludes(settings, 'id="alarmPagePopup"'));
-assert(!textIncludes(settings, "link('alarms','Alarm Studio')"));
+assert(!textIncludes(settings, 'id="alarmSystemNotification"'));
+assert(!textIncludes(settings, 'id="alarmPagePopup"'));
 assert(!textIncludes(pages, 'alarms:A.pageAlarms'));
-assert(textIncludes(actions, 'Play configured alarm'));
-assert(!textIncludes(actions, 'data-aprop="showSystemNotification"'));
-assert(!textIncludes(actions, 'data-aprop="showPagePopup"'));
-assert(textIncludes(engine, 'profile.alarmDefaults?.preset'));
-assert(!textIncludes(engine, 'action.preset||profile.alarmDefaults'));
-assert(textIncludes(defaults, 'if(type===ACTION.ALARM)return{...base};'));
-assert(textIncludes(migrations, "'showSystemNotification','showPagePopup'"));
+assert(textIncludes(actions, 'Alarm profile'));
+assert(textIncludes(actions, 'data-aprop="alarmProfileId"'));
+assert(textIncludes(engine, 'profile.alarmProfiles||[]'));
+assert(textIncludes(engine, 'action.alarmProfileId'));
+assert(textIncludes(defaults, 'alarmProfileId:""'));
+assert(textIncludes(migrations, 'delete profile.alarmDefaults'));
 // Detection Source belongs to Conditions, not Setup.
 const setup = compactSlice(rules, "if(section==='setup')", "else if(section==='conditions')");
 const cond = compactSlice(rules, "else if(section==='conditions')", "else if(section==='actions')");
 assert(!textIncludes(setup, 'Detection source'));
-assert(textIncludes(cond, 'Detection source'));
+assert(textIncludes(cond, 'Detection method'));
+assert(textIncludes(cond, 'Visual Conditions'));
 assert(textIncludes(cond, 'Saved filters · optional'));
 // Conditional action header and shared switches have bounded geometry / spacing.
 assert(textIncludes(conditions, 'action-condition-head'));
@@ -79,7 +78,9 @@ st.profiles = [profile];
 st.activeSiteId = site.id;
 st.activeProfileId = profile.id;
 const migrated = SD.Migrations.migrateState(st).state.profiles[0];
-assert.equal(migrated.alarmDefaults.preset, 'radar');
+assert.equal(migrated.alarmProfiles.length, 1);
+assert.equal(migrated.alarmProfiles[0].preset, 'radar');
+assert.equal(migrated.rules[0].actions[0].alarmProfileId, migrated.defaultAlarmProfileId);
 assert(!('preset' in migrated.rules[0].actions[0]));
 assert(!('volume' in migrated.rules[0].actions[0]));
 console.log('v204-alarm-layout-server-url-test: OK');

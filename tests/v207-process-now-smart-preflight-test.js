@@ -7,8 +7,8 @@ load('src/shared/constants.js');
 load('src/shared/utils.js');
 load('src/shared/defaults.js');
 const SD = SDCompanion, { ACTION, JOB } = SD.Constants;
-assert.equal(SD.Constants.BUILD_VERSION, '2.3.0');
-assert.equal(SD.Constants.SCHEMA_VERSION, 33);
+assert.equal(SD.Constants.BUILD_VERSION, '2.4.0');
+assert.equal(SD.Constants.SCHEMA_VERSION, 34);
 assert.equal(SD.Defaults.rule('R').manualProcess.relativeSchedule, 'update');
 (async () => {
   let jobs = [], ledger = {}, audits = [], validateOptions = [], notifications = 0;

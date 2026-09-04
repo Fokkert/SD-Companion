@@ -60,15 +60,10 @@
     [TRANSITION_METHOD.MANUAL_NAME, 'Manual Transition Name']
   ];
   const cfg = (s, key) => ({ ...SD.Defaults.projectDatasets(false), ...(s.inventorySettings?.projectDatasets?.[key] || {}) });
-  const projectMatrix = s => `<div class="discovery-matrix">` +
-    `<div class="discovery-matrix-head">` +
-    `<span>Project</span>${datasetDefs.map(([, l]) => `<span>${l}</span>`).join('')}</div>${(s.projects || []).map(p => {
-      const c = cfg(s, p.key);
-      return `<div class="discovery-project-row" data-project-row="${A.esc(p.key)}">` +
-        `<div class="discovery-project-name" title="${A.esc(p.key)} · ${A.esc(p.name)}">${projectLogo(p)}<span>` +
-        `<b>${A.esc(p.key)}</b>` +
-        `<small>${A.esc(p.name)}</small></span></div>${datasetDefs.map(([k, l]) => `<label class="circle-check dataset-check" title="${A.esc(l)}"><input type="checkbox" data-project-key="${A.esc(p.key)}" data-project-dataset="${k}" ${c[k] ? 'checked' : ''}><span></span></label>`).join('')}</div>`;
-    }).join('') || `<div class="glass-choice-empty">No projects discovered.</div>`}</div>`;
+  const projectMatrix = s => `<div class="discovery-project-cards">${(s.projects || []).map(p => {
+    const c = cfg(s, p.key), enabledCount = datasetDefs.filter(([k]) => c[k]).length;
+    return `<details class="discovery-project-card" data-project-row="${A.esc(p.key)}"><summary>${projectLogo(p)}<span class="discovery-project-card-title"><b>${A.esc(p.key)}</b><small>${A.esc(p.name)}</small></span><span class="freshness-chip">${enabledCount}/${datasetDefs.length}</span></summary><div class="discovery-project-card-body"><div class="dataset-card-grid">${datasetDefs.map(([k,l]) => `<div class="toggle-card"><span><strong>${A.esc(l)}</strong></span><label class="master-switch"><input type="checkbox" data-project-key="${A.esc(p.key)}" data-project-dataset="${k}" ${c[k] ? 'checked' : ''}><span></span></label></div>`).join('')}</div></div></details>`;
+  }).join('') || `<div class="glass-choice-empty">No projects discovered.</div>`}</div>`;
   const scopeCount = s => SD.Utils.discoveryProjectKeys(s.inventorySettings).length;
   const editor = s => {
     const hasPat = Boolean(A.credentialStatus?.[s.id]),
@@ -214,6 +209,7 @@
       `<input type="checkbox" data-global-dataset="resolutions" ${global.resolutions !== false ? 'checked' : ''}>` +
       `<span></span>Resolutions</label>` +
       `</div>` +
+      `<div class="toggle-card restore-excluded-toggle"><span><strong>Restore removed data on refresh</strong><small>When off, items removed from API Data stay excluded after synchronization.</small></span><label class="master-switch"><input type="checkbox" id="restoreExcludedOnRefresh" ${s.inventorySettings?.restoreExcludedOnRefresh ? 'checked' : ''}><span></span></label></div>` +
       `<div class="row server-discovery-footer">` +
       `<button id="syncSelectedDataBtn" class="btn btn-primary" data-action="sync-data" ${selected && hasPat ? '' : 'disabled'}>Sync Configured Data</button>` +
       `<span id="discoverySelectedCount" class="freshness-chip">${selected}/${s.projects.length} projects configured</span>` +

@@ -261,7 +261,8 @@
         if (!rule.schedule.scheduleIds.length) rule.enabled = false;
       }
       const intervalSeconds = clamp(Number(old.monitoring?.intervalSeconds) || Number(old.monitoring?.intervalMinutes) * 60 || 60, LIMITS.POLL_MIN_SECONDS, LIMITS.POLL_MAX_SECONDS, 60);
-      const alarmDefaults = { ...d.alarmDefaults, ...old.alarmDefaults, preset: normalizeAlarmPreset(old.alarmDefaults?.preset || d.alarmDefaults.preset) };
+      const baseAlarm = d.alarmProfiles?.[0] || { preset: 'radar', durationSeconds: 12, durationUnit: 'seconds', volume: .8, loop: true, stopMethod: 'duration' },
+        alarmDefaults = { ...baseAlarm, ...(old.alarmDefaults || {}), preset: normalizeAlarmPreset(old.alarmDefaults?.preset || baseAlarm.preset) };
       delete alarmDefaults.escalationEnabled;
       delete alarmDefaults.repeatEveryMinutes;
       delete alarmDefaults.repeatEveryUnit;
@@ -313,6 +314,25 @@
     s.system.completionToneEnabled = s.system.completionToneEnabled !== false;
     delete s.system.dryRun;
     s.configRevision = Math.max(1, Number(s.configRevision) || 1);
+    // v2.4.0: alarm profiles, synchronized-data exclusions and exclusive rule source mode.
+    for (const site of s.jiraSites || []) {
+      site.inventorySettings = { ...root.Defaults.inventorySettings(), ...(site.inventorySettings || {}) };
+      site.inventorySettings.excludedData = { ...root.Defaults.inventorySettings().excludedData, ...(site.inventorySettings.excludedData || {}) };
+      site.inventorySettings.restoreExcludedOnRefresh = Boolean(site.inventorySettings.restoreExcludedOnRefresh);
+    }
+    for (const profile of s.profiles || []) {
+      if (!Array.isArray(profile.alarmProfiles) || !profile.alarmProfiles.length) {
+        const old = profile.alarmDefaults || {}, alarm = { id: crypto.randomUUID(), name: 'Default Alarm', preset: normalizeAlarmPreset(old.preset || 'radar'), useCustom: Boolean(old.useCustom), customDataUrl: old.customDataUrl || '', customName: old.customName || '', durationSeconds: Number(old.durationSeconds) || 12, durationUnit: old.durationUnit || 'seconds', volume: Number.isFinite(Number(old.volume)) ? Number(old.volume) : .8, loop: old.loop !== false, stopMethod: ['keyboard','duration','click-anywhere','popup'].includes(old.stopMethod) ? old.stopMethod : 'duration', keyboardShortcut: old.keyboardShortcut || 'Ctrl+Shift+S' };
+        profile.alarmProfiles = [alarm]; profile.defaultAlarmProfileId = alarm.id;
+      }
+      if (!profile.defaultAlarmProfileId || !profile.alarmProfiles.some(x => x.id === profile.defaultAlarmProfileId)) profile.defaultAlarmProfileId = profile.alarmProfiles[0]?.id || '';
+      delete profile.alarmDefaults;
+      for (const rule of profile.rules || []) {
+        rule.source = { mode: rule.source?.mode === 'jql' || String(rule.source?.jql || '').trim() ? 'jql' : 'conditions', ...(rule.source || {}) };
+        if (rule.source.mode === 'jql') rule.source.filterIds = []; else rule.source.jql = '';
+        for (const action of rule.actions || []) if (action.type === root.Constants.ACTION.ALARM && !action.alarmProfileId) action.alarmProfileId = profile.defaultAlarmProfileId;
+      }
+    }
     s.schemaVersion = SCHEMA_VERSION;
     s.appVersion = "V2";
     if (!s.activeProfileId || !s.profiles.some(p => p.id === s.activeProfileId)) s.activeProfileId = s.profiles[0].id;

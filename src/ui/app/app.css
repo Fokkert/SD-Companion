@@ -7270,7 +7270,7 @@ n.connection-policy-note {
   }
 }
 
-/* V2.3.0 monitoring and Jira Server settings refinement ------------------ */
+/* V2.4.0 monitoring and Jira Server settings refinement ------------------ */
 
 /* Monitoring status and controls occupy one row; statistics are a separate deck. */
 .monitor-status-line {
@@ -7480,3 +7480,20 @@ n.connection-policy-note {
     margin-left: 0;
   }
 }
+
+/* v2.4.0 interaction and configuration refinements */
+.master-switch>span{border-radius:7px!important}.master-switch>span::after{border-radius:4px!important}
+.show-completed-control{cursor:default!important}.show-completed-control>span:first-child{pointer-events:none}.show-completed-control .master-switch{cursor:pointer}
+.metadata-detail-card,.discovery-project-card{border:1px solid var(--line);border-radius:16px;background:var(--surface-soft);overflow:hidden}
+.metadata-detail-card+ .metadata-detail-card,.discovery-project-card+.discovery-project-card{margin-top:8px}
+.metadata-detail-card>summary,.discovery-project-card>summary{display:flex;align-items:center;gap:11px;padding:12px 14px;cursor:pointer;list-style:none}
+.metadata-detail-card>summary::-webkit-details-marker,.discovery-project-card>summary::-webkit-details-marker,.action-card>summary::-webkit-details-marker{display:none}
+.metadata-detail-title,.discovery-project-card-title{min-width:0;flex:1;display:grid;gap:3px}.metadata-detail-title small,.discovery-project-card-title small{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.metadata-detail-body,.discovery-project-card-body{padding:0 14px 14px}.metadata-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.metadata-detail-grid>div{padding:9px;border:1px solid var(--line);border-radius:11px;display:grid;gap:3px}.metadata-detail-grid span{font-size:10px;color:var(--muted);text-transform:uppercase}.metadata-detail-grid strong{font-size:12px;word-break:break-word}
+.metadata-remove{margin-left:auto}.discovery-project-cards{display:grid;gap:8px}.dataset-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.dataset-card-grid .toggle-card{min-height:54px}
+.restore-excluded-toggle{margin-top:12px}.alarm-file-picker{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface-input)}.alarm-file-picker .file-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.alarm-profile-toolbar{align-items:center}.alarm-profile-toolbar .sd-soft-select,.alarm-profile-toolbar>.select{flex:1}.settings-card.alarm-settings-card{padding-block:15px}.setting-line-card{min-height:48px;padding-block:8px}
+.rule-entry-icon{align-self:stretch;width:64px!important;min-height:58px!important;border-radius:14px!important}.rule-entry-icon svg{width:34px!important;height:34px!important}.rule-card.enabled .rule-entry-icon{color:var(--success)!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--success) 55%,transparent),0 0 20px color-mix(in srgb,var(--success) 25%,transparent)!important}.rule-card-main{cursor:pointer}.rule-editor-stats{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}.rule-editor-stats span{padding:5px 8px;border:1px solid var(--line);border-radius:999px;font-size:10px;color:var(--muted)}
+.condition-groups{display:grid;gap:12px}.condition-group-card{border:1px solid var(--line2);border-radius:16px;padding:12px;background:var(--surface-soft)}.rule-section-inner{border-top:1px solid var(--line);padding-top:12px}
+.action-card{padding:0!important;overflow:hidden}.action-card>summary.action-head{padding:12px 14px;cursor:pointer;list-style:none}.action-card-body{padding:0 14px 14px;border-top:1px solid var(--line)}.action-summary-controls button{position:relative;z-index:2}
+@media(max-width:620px){.metadata-detail-grid,.dataset-card-grid{grid-template-columns:1fr}}
+.discovery-project-card summary{min-width:0}.dataset-card-grid strong{white-space:normal}.metadata-detail-card summary{min-width:0}

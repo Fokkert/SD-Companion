@@ -17,8 +17,8 @@ const help = fs.readFileSync('src/ui/app/pages/help.js', 'utf8');
 const worker = fs.readFileSync('src/background/service-worker.js', 'utf8');
 const css = fs.readFileSync('src/ui/app/app.css', 'utf8');
 
-assert.equal(manifest.version, '2.3.0');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.3.0"'));
+assert.equal(manifest.version, '2.4.0');
+assert(textIncludes(constants, 'BUILD_VERSION:"2.4.0"'));
 
 // Action choosers share one readable alphabetically sorted option source.
 assert(actions.includes('const actionOptions = () => Object.values(ACTION)'));
@@ -26,16 +26,16 @@ assert(actions.includes('.sort((a, b) => a.label.localeCompare(b.label))'));
 assert(textIncludes(rules, '${actionOptions()}'));
 assert(textIncludes(bulk, '${actionOptions()}'));
 
-// Monitoring status is inline, statistics are separated, and only this switch is cubic.
+// Monitoring status is inline, statistics are separated, and toggles use cubic geometry.
 assert(home.includes('class="monitor-status-line">Monitoring <span data-home-monitor-state>'));
 assert(home.includes('class="monitor-section-divider"'));
 assert(css.includes('.radar-monitor-controls .master-switch > span::after'));
 assert(textIncludes(css, 'border-radius:4px!important'));
 
-// Action Bell wording replaces the old visible label.
-assert(settings.includes('<span>Action Bell</span>'));
-assert(help.includes('optional Action Bell'));
-assert(!settings.includes('Action completion tone'));
+// Action Completion Tone is the user-facing terminology.
+assert(settings.includes('<span>Action Completion Tone</span>'));
+assert(help.includes('Action Completion Tone'));
+assert(!settings.includes('<span>Action Bell</span>'));
 
 // Server settings are deliberately grouped and no longer show the low-value failure counter copy.
 for (const label of ['Connection & behavior', 'Discovery & synchronized data', 'API pacing & health', 'Credentials & deletion'])

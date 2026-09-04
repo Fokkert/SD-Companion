@@ -25,7 +25,8 @@
         ruleName: m.alarm?.ruleName || "",
         source: m.alarm?.source || "",
         stopMethod: m.alarm?.stopMethod || "",
-        preset: m.alarm?.preset || ""
+        preset: m.alarm?.preset || "",
+        keyboardShortcut: m.alarm?.keyboardShortcut || ""
       } : { active: false };
       A.renderShell?.();
       if (A.page === "home") A.renderPage?.();
@@ -79,3 +80,20 @@
   pre.textContent = String(e?.stack || e);
   document.body.appendChild(pre);
 });
+
+(() => {
+  const A=globalThis.SDApp, SD=globalThis.SDCompanion; if(!A||!SD) return;
+  const norm=e=>[e.ctrlKey?'CTRL':'',e.altKey?'ALT':'',e.shiftKey?'SHIFT':'',e.metaKey?'META':'',String(e.key||'').toUpperCase()].filter(Boolean).join('+');
+  document.addEventListener('keydown', e=>{ const a=A.state?.runtime?.activeAlarm; if(!a?.active||a.stopMethod!=='keyboard'||!a.keyboardShortcut) return; const wanted=String(a.keyboardShortcut).toUpperCase().replace(/CONTROL/g,'CTRL').replace(/CMD|COMMAND/g,'META').replace(/\s+/g,''); if(norm(e).replace(/\s+/g,'')===wanted){e.preventDefault();A.send(SD.Constants.MESSAGE.STOP_ALARM).catch(()=>{});} }, true);
+})();
+
+(() => {
+  const A = globalThis.SDApp, SD = globalThis.SDCompanion;
+  if (!A || !SD) return;
+  document.addEventListener('click', () => {
+    const alarm = A.state?.runtime?.activeAlarm;
+    if (alarm?.active && alarm.stopMethod === 'click-anywhere') {
+      A.send(SD.Constants.MESSAGE.STOP_ALARM).catch(() => {});
+    }
+  }, true);
+})();

@@ -3,6 +3,27 @@ const SD = globalThis.SDCompanion, { MESSAGE, ALARMS, LEVEL } = SD.Constants;
 const log = (level, message, details = {}, extra = {}) => SD.Storage.appendLog({ level, message, details, ...extra });
 const audit = (event, details = {}, extra = {}) => SD.Storage.appendAudit({ event, details, ...extra });
 const securityAlwaysAllowed = new Set([MESSAGE.GET_SECURITY_STATUS, MESSAGE.VERIFY_SECURITY, MESSAGE.LOCK_EXTENSION, MESSAGE.STOP_ALARM, 'SD_OFFSCREEN_ENDED', 'SD_SYNC_PROGRESS', 'SD_SYNC_DONE', 'SD_ALARM_STATE']);
+const inventoryDataKey = (item, type, context = null) => {
+  if (type === 'projects') return String(item?.key || item?.id || item?.name || '');
+  if (type === 'users') return String(SD.Utils.userKey(item) || item?.id || item?.displayName || '');
+  if (type === 'transitions') return `${String(context?.id || '')}:${String(item?.id || item?.name || '')}`;
+  return String(item?.id || item?.key || item?.name || item?.statusName || '');
+};
+const applyInventoryExclusions = site => {
+  const excluded = site?.inventorySettings?.excludedData || {};
+  for (const type of ['projects','filters','users','issueTypes','statuses','fields','priorities','resolutions']) {
+    const blocked = new Set((excluded[type] || []).map(String));
+    if (blocked.size && Array.isArray(site[type])) site[type] = site[type].filter(item => !blocked.has(inventoryDataKey(item, type)));
+  }
+  const blockedTransitions = new Set((excluded.transitions || []).map(String));
+  if (blockedTransitions.size && Array.isArray(site.transitionCatalog)) {
+    site.transitionCatalog = site.transitionCatalog.map(context => ({
+      ...context,
+      transitions: (context.transitions || []).filter(item => !blockedTransitions.has(inventoryDataKey(item, 'transitions', context)))
+    })).filter(context => (context.transitions || []).length);
+  }
+  return site;
+};
 const enforceExtensionUnlock = async type => {
   const status = await SD.Storage.securityStatus();
   if (status.enabled && !status.unlocked && !securityAlwaysAllowed.has(type)) {
@@ -47,12 +68,11 @@ const setAlarmRuntime = async (active, alarm = {}, meta = {}) => SD.Storage.upda
     summary: meta.summary || "",
     ruleName: meta.ruleName || "",
     source: meta.source || "Jira detection",
-    stopMethod: alarm.stopMethod || "duration-or-controls",
+    stopMethod: alarm.stopMethod || "duration",
     preset: alarm.preset || "radar",
     volume: Number(alarm.volume ?? .8),
     loop: alarm.loop !== false,
-    showSystemNotification: alarm.showSystemNotification !== false,
-    showPagePopup: alarm.showPagePopup !== false
+    keyboardShortcut: alarm.keyboardShortcut || ""
   } : { active: false, startedAt: null, siteId: "", profileId: "", issueKey: "", summary: "", ruleName: "", source: "", stopMethod: "", preset: "" };
 });
 const setNotificationPermission = level => SD.Storage.updateState(state => {
@@ -156,6 +176,14 @@ const jiraAlarmPopupScript = payload => {
   shadow.querySelector("[data-issue]").textContent = payload.issueKey ? `${payload.issueKey}${payload.summary ? ` · ${payload.summary}` : ""}` : (payload.summary || "Alarm test");
   shadow.querySelector("[data-rule]").textContent = payload.ruleName || payload.source || "Alarm";
   shadow.querySelector("[data-server]").textContent = payload.serverName || location.host;
+  const stopAlarm = async () => {
+    try { const response = await chrome.runtime.sendMessage({ type: "STOP_ALARM" }); if (response?.ok === false) throw new Error(response?.error?.message || "Stop failed"); root.remove(); return true; } catch { return false; }
+  };
+  if (payload.clickAnywhere) {
+    const clickStop = e => { if (e.target === root || !root.contains(e.target)) { document.removeEventListener("click", clickStop, true); stopAlarm(); } };
+    setTimeout(() => document.addEventListener("click", clickStop, true), 0);
+    root.style.pointerEvents = "none";
+  }
   shadow.querySelector(".stop").addEventListener("click", async e => {
     e.preventDefault();
     e.stopPropagation();
@@ -163,9 +191,7 @@ const jiraAlarmPopupScript = payload => {
     btn.disabled = true;
     btn.textContent = "Stopping…";
     try {
-      const response = await chrome.runtime.sendMessage({ type: "STOP_ALARM" });
-      if (response?.ok === false) throw new Error(response?.error?.message || "Stop failed");
-      root.remove();
+      if (!await stopAlarm()) throw new Error("Stop failed");
     } catch {
       btn.disabled = false;
       btn.textContent = "Stop alarm";
@@ -173,6 +199,21 @@ const jiraAlarmPopupScript = payload => {
   });
   (document.documentElement || document.body).appendChild(root);
   return true;
+};
+const jiraAlarmClickStopScript = () => {
+  const handler = async e => { document.removeEventListener('click',handler,true); try { await chrome.runtime.sendMessage({type:'STOP_ALARM'}); } catch {} };
+  setTimeout(()=>document.addEventListener('click',handler,true),0); return true;
+};
+const installAlarmClickStop = async siteId => { if(!siteId)return false; const state=await SD.Storage.ensureState(),site=state.jiraSites.find(x=>x.id===siteId); if(!site)return false; const tabs=await SD.JiraTabs.candidateTabs(site); let installed=0; for(const tab of tabs){if(!tab.id)continue;try{await chrome.scripting.executeScript({target:{tabId:tab.id,frameIds:[0]},world:'ISOLATED',func:jiraAlarmClickStopScript});installed++;}catch{}} return installed>0; };
+const jiraAlarmKeyboardStopScript = shortcut => {
+  const normalize = e => [e.ctrlKey?'CTRL':'',e.altKey?'ALT':'',e.shiftKey?'SHIFT':'',e.metaKey?'META':'',String(e.key||'').toUpperCase()].filter(Boolean).join('+');
+  const wanted = String(shortcut || '').toUpperCase().replace(/CONTROL/g,'CTRL').replace(/CMD|COMMAND/g,'META').replace(/\s+/g,'');
+  const handler = async e => { if (normalize(e).replace(/\s+/g,'') !== wanted) return; e.preventDefault(); document.removeEventListener('keydown', handler, true); try { await chrome.runtime.sendMessage({type:'STOP_ALARM'}); } catch {} };
+  document.addEventListener('keydown', handler, true);
+  return true;
+};
+const installAlarmKeyboardStop = async (siteId, shortcut) => {
+  if (!siteId || !shortcut) return false; const state=await SD.Storage.ensureState(), site=state.jiraSites.find(x=>x.id===siteId); if(!site) return false; const tabs=await SD.JiraTabs.candidateTabs(site); let installed=0; for(const tab of tabs){ if(!tab.id) continue; try{ await chrome.scripting.executeScript({target:{tabId:tab.id,frameIds:[0]},world:'ISOLATED',func:jiraAlarmKeyboardStopScript,args:[shortcut]}); installed++; }catch{} } return installed>0;
 };
 const removeJiraAlarmPopupScript = () => {
   document.getElementById("sd-companion-jira-alarm-popup")?.remove();
@@ -191,7 +232,8 @@ const showJiraAlarmPopup = async (alarm, meta = {}) => {
     source: meta.source || "",
     kind: meta.source === "Connection monitor" ? "API Unreachable" : "Jira issue detected",
     serverName: site.name,
-    palette: alarmThemePalette(state.appearance?.theme)
+    palette: alarmThemePalette(state.appearance?.theme),
+    clickAnywhere: Boolean(alarm.clickAnywhere)
   };
   let shown = 0;
   for (const tab of tabs) {
@@ -232,9 +274,10 @@ SD.Audio = Object.freeze({
     try {
       chrome.runtime.sendMessage({ type: "SD_ALARM_STATE", active: true, alarm: { ...alarm, ...meta } }).catch(() => {});
     } catch {}
-    await showAlarmNotification(alarm, meta);
-    await showJiraAlarmPopup(alarm, meta);
-    const timed = ["duration", "duration-or-controls", "notification-controls", "any-interaction"].includes(alarm.stopMethod || "duration-or-controls");
+    if (alarm.stopMethod === "popup") await showJiraAlarmPopup({ ...alarm, showPagePopup: true }, meta);
+    else if (alarm.stopMethod === "click-anywhere") await installAlarmClickStop(meta.siteId);
+    else if (alarm.stopMethod === "keyboard") await installAlarmKeyboardStop(meta.siteId, alarm.keyboardShortcut);
+    const timed = alarm.stopMethod === "duration";
     if (timed) await chrome.alarms.create(ALARMS.ALARM_STOP, { when: Date.now() + Math.max(1, Number(alarm.durationSeconds) || 12) * 1000 });
     if (alarm.preset !== "system") {
       await ensureOffscreen();
@@ -265,13 +308,19 @@ SD.Audio = Object.freeze({
       chrome.runtime.sendMessage({ type: "SD_ALARM_STATE", active: false }).catch(() => {});
     } catch {}
   },
+  updateVolume: async volume => {
+    const v = Math.max(0, Math.min(1, Number(volume) || 0));
+    await chrome.runtime.sendMessage({ type: "SD_OFFSCREEN_VOLUME", volume: v }).catch(() => {});
+    await SD.Storage.updateState(state => { if (state.runtime?.activeAlarm?.active) state.runtime.activeAlarm.volume = v; });
+    return v;
+  },
   completion: async () => {
     try {
       await ensureOffscreen();
       await chrome.runtime.sendMessage({ type: "SD_OFFSCREEN_COMPLETION" });
       return true;
     } catch (e) {
-      await log(LEVEL.DEBUG, "Action Bell could not be played.", SD.Utils.safeError(e));
+      await log(LEVEL.DEBUG, "Action completion tone could not be played.", SD.Utils.safeError(e));
       return false;
     }
   }
@@ -426,7 +475,7 @@ const maybePlayConnectionLossAlarm = async siteId => {
   if (!site || !await SD.Storage.hasCredential(siteId) || !monitoringEnabledForSite(state, siteId) || site.runtime?.connectionLossAlarmFiredAt || !connectionLossDue(site) || state.runtime?.activeAlarm?.active) return false;
   const profile = state.profiles.find(p => p.id === site.activeProfileId && p.siteId === site.id && p.monitoring?.enabled) || state.profiles.find(p => p.siteId === site.id && p.monitoring?.enabled);
   if (!profile) return false;
-  const cfg = { ...profile.alarmDefaults },
+  const cfg = { ...((profile.alarmProfiles || []).find(x => x.id === profile.defaultAlarmProfileId) || (profile.alarmProfiles || [])[0] || {}) },
     started = site.runtime.connectionLossStartedAt,
     failures = Number(site.runtime.connectionLossFailures) || 0;
   await SD.Audio.play(cfg, {
@@ -1091,15 +1140,6 @@ chrome.alarms.onAlarm.addListener(async a => {
     await log(LEVEL.ERROR, 'Alarm handler failed', SD.Utils.safeError(e));
   }
 });
-chrome.commands?.onCommand?.addListener(command => {
-  if (command === 'stop-alarm') stopAllUserAlarms().catch(() => {});
-});
-chrome.notifications.onButtonClicked.addListener((id, index) => {
-  if (id === 'sd-companion-active-alarm' && index === 0) stopAllUserAlarms().catch(() => {});
-});
-chrome.notifications.onClicked.addListener(id => {
-  if (id === 'sd-companion-active-alarm') chrome.action.openPopup?.().catch(() => {});
-});
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type === 'SD_OFFSCREEN_ENDED') {
     SD.Audio.stop().catch(() => {});
@@ -1373,12 +1413,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 ...message.inventorySettings,
                 transitionMethod: nextMethod,
                 projectDatasets: { ...(s.inventorySettings.projectDatasets || {}), ...(message.inventorySettings.projectDatasets || {}) },
-                globalDatasets: { ...(s.inventorySettings.globalDatasets || {}), ...(message.inventorySettings.globalDatasets || {}) }
+                globalDatasets: { ...(s.inventorySettings.globalDatasets || {}), ...(message.inventorySettings.globalDatasets || {}) },
+                excludedData: { ...(s.inventorySettings.excludedData || {}), ...(message.inventorySettings.excludedData || {}) }
               };
               const selected = SD.Utils.discoveryProjectKeys(s.inventorySettings);
               s.inventorySettings.selectedProjectKeys = selected;
               if (discoveryScopeSignature(s.inventorySettings) !== oldScope)
                 s.inventorySettings.scopeRevision = (Number(s.inventorySettings.scopeRevision) || 0) + 1;
+              if (message.inventorySettings.excludedData) applyInventoryExclusions(s);
             }
           }, { configWrite: true });
           const updatedSite = state.jiraSites.find(x => x.id === message.siteId),
@@ -1509,6 +1551,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case MESSAGE.TEST_CONNECTION: return await withOperation(message, 'test-connection', async (operationId) => ({ ok: true, ...await testConnection(message.siteId, { operationId }) }));
         case MESSAGE.DISCOVER_PROJECTS: return await withOperation(message, 'discover-projects', async (operationId) => ({ ok: true, site: await SD.Discovery.discoverProjects(message.siteId, { operationId }) }));
         case MESSAGE.SYNC_SITE: return await withOperation(message, 'sync-site', async (operationId) => {
+          const beforeSync = await SD.Storage.ensureState(), beforeSite = beforeSync.jiraSites.find(x => x.id === message.siteId);
+          if (beforeSite?.inventorySettings?.restoreExcludedOnRefresh) await SD.Storage.updateState(st => { const x = st.jiraSites.find(v => v.id === message.siteId); if (x) x.inventorySettings.excludedData = { projects: [], filters: [], users: [], issueTypes: [], statuses: [], transitions: [], fields: [], priorities: [], resolutions: [] }; }, { configWrite: true });
           const site = await SD.Discovery.syncSite(message.siteId, { operationId }),
             interval = Math.max(SD.Constants.LIMITS.METADATA_SYNC_MIN_SECONDS, Number(site.inventorySettings?.autoSync?.intervalSeconds) || 3600);
           if (site.inventorySettings?.autoSync?.enabled)
@@ -1552,6 +1596,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             const state = await SD.Storage.ensureState();
             return { ok: true, alarm: state.runtime?.activeAlarm || { active: false } };
           }
+        case MESSAGE.UPDATE_ALARM_VOLUME:
+          return { ok: true, volume: await SD.Audio.updateVolume(message.volume) };
         case MESSAGE.STOP_ALARM: {
           const result = await stopAllUserAlarms();
           return { ok: true, result };

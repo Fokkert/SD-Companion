@@ -44,13 +44,17 @@
   };
   const stripOrder = jql => String(jql || "").replace(/\s+ORDER\s+BY\s+[\s\S]*$/i, "").trim();
   const baseJql = rule => {
-    const parts = [];
-    const ids = (rule.source?.filterIds || []).filter(Boolean);
-    if (ids.length) parts.push(`(${ids.map(id => `filter = ${quote(id)}`).join(" OR ")})`);
-    const raw = stripOrder(rule.source?.jql);
-    if (raw) parts.push(`(${raw})`);
-    const derived = conditionJql(rule.logic);
-    if (derived) parts.push(`(${derived})`);
+    const parts = [], mode = rule?.source?.mode === "jql" ? "jql" : "conditions";
+    if (mode === "jql") {
+      const ids = (rule.source?.filterIds || []).filter(Boolean);
+      if (ids.length) parts.push(`(${ids.map(id => `filter = ${quote(id)}`).join(" OR ")})`);
+      const raw = stripOrder(rule.source?.jql);
+      if (raw) parts.push(`(${raw})`);
+    }
+    else {
+      const derived = conditionJql(rule.logic);
+      if (derived) parts.push(`(${derived})`);
+    }
     return parts.join(" AND ");
   };
   const cursorJql = (base, cursor, overlapSeconds = 600) => {

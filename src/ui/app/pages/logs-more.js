@@ -39,7 +39,7 @@
       profile = A.profile(),
       safe = { ...SD.Defaults.safety(), ...(draft.system?.safety || {}) },
       auto = { ...SD.Defaults.inventorySettings().autoSync, ...(draft.autoSync || {}) },
-      alarm = { ...SD.Defaults.profile().alarmDefaults, ...(draft.alarm || {}) };
+      alarm = { ...(draft.alarm || {}) };
     const icon = id => ({
       general: '<svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/><circle cx="7" cy="6" r="2"/><circle cx="17" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>',
       automation: '<svg viewBox="0 0 24 24"><path d="M7 4v4M17 16v4M4 7h6M14 17h6"/><rect x="8" y="7" width="8" height="10" rx="3"/><path d="M10.5 10.5h3M10.5 13.5h3"/></svg>',
@@ -74,7 +74,23 @@
         `</button>` +
         `</div>` +
         `</div>` +
-        `<div class="settings-tile-grid">${link('appearance', 'Appearance')}${link('profiles', 'Profiles')}</div>`;
+        `<div class="settings-tile-grid">${link('appearance', 'Appearance')}${link('profiles', 'Profiles')}</div>` +
+        `${profile ? (() => {
+          const profiles = profile.alarmProfiles || [], selectedAlarm = profiles.find(x => x.id === A.alarmProfileDraftId) || profiles.find(x => x.id === profile.defaultAlarmProfileId) || profiles[0] || {};
+          A.alarmProfileDraftId = selectedAlarm.id || '';
+          const du = selectedAlarm.durationUnit || 'seconds';
+          return `<div class="settings-card alarm-settings-card">` +
+            `<div class="settings-card-head"><span class="settings-card-icon">${icon('general')}</span><b>Alarm Profiles</b><span class="freshness-chip">${profiles.length}</span></div>` +
+            `<div class="row alarm-profile-toolbar"><select id="alarmProfileSelect" class="select" data-searchable="true">${profiles.map(x => A.option(x.id, x.name, x.id === selectedAlarm.id)).join('')}</select><button class="btn btn-small" data-action="new-alarm-profile">+ Alarm Profile</button>${profiles.length > 1 ? `<button class="btn btn-small btn-danger" data-action="delete-alarm-profile">Delete</button>` : ''}</div>` +
+            `<div class="grid-2 section-gap"><div class="field"><label>Name</label><input id="alarmProfileName" class="input" maxlength="80" value="${A.esc(selectedAlarm.name || '')}"></div><div class="field"><label>Sound</label><select id="alarmPreset" class="select" data-searchable="true">${SD.Constants.ALARM_PRESETS.map(x => A.option(x.id, x.name, selectedAlarm.preset === x.id)).join('')}</select></div>` +
+            `<div class="field"><label>Stop method</label><select id="alarmStopMethod" class="select">${SD.Constants.ALARM_STOP_METHODS.map(x => A.option(x.id, x.name, selectedAlarm.stopMethod === x.id)).join('')}</select></div>` +
+            `${selectedAlarm.stopMethod === 'keyboard' ? `<div class="field"><label>Keyboard shortcut</label><input id="alarmKeyboardShortcut" class="input" value="${A.esc(selectedAlarm.keyboardShortcut || '')}" placeholder="Ctrl+Shift+S"></div>` : ''}` +
+            `${selectedAlarm.stopMethod === 'duration' ? `<div class="field"><label>Duration</label><div class="duration-control"><input id="alarmDuration" class="input" type="number" min="1" value="${A.esc(SD.Utils.timeFromSeconds(selectedAlarm.durationSeconds || 12, du))}"><select id="alarmDurationUnit" class="select">${unitOptions(du)}</select></div></div>` : ''}` +
+            `<div class="field"><label>Volume · <strong id="alarmVolumeValue">${Math.round((Number(selectedAlarm.volume) || 0) * 100)}%</strong></label><input id="alarmVolume" class="range" data-range-key="alarm-volume" type="range" min="0" max="1" step="0.01" value="${Number(selectedAlarm.volume) || 0}"></div></div>` +
+            `<div class="toggle-card-grid compact-toggle-grid"><div class="toggle-card"><span><strong>Loop sound</strong></span><label class="master-switch"><input id="alarmLoop" type="checkbox" ${selectedAlarm.loop !== false ? 'checked' : ''}><span></span></label></div><div class="toggle-card"><span><strong>Use custom audio</strong></span><label class="master-switch"><input id="alarmUseCustom" type="checkbox" ${selectedAlarm.useCustom ? 'checked' : ''}><span></span></label></div></div>` +
+            `<div class="field alarm-file-field"><label>Custom audio</label><div class="alarm-file-picker"><span class="file-name">${A.esc(selectedAlarm.customName || 'No custom file')}</span><button class="btn btn-small" type="button" data-action="choose-alarm-file">Choose File</button><input id="alarmFile" type="file" accept="audio/*" hidden></div></div>` +
+            `<div class="row alarm-settings-actions"><button class="btn btn-primary" data-action="save-alarm">Save Alarm Profile</button><button class="btn" data-action="test-alarm">Test Alarm</button>${selectedAlarm.customDataUrl ? `<button class="btn btn-small" data-action="clear-custom-alarm">Clear Custom Audio</button>` : ''}</div></div>`;
+        })() : ''}`;
     }
     else if (section === 'automation') {
       title = 'Automation';
@@ -127,7 +143,7 @@
           `</div>` +
           `</div>` +
           `<div class="setting-line setting-line-card">` +
-          `<span>Action Bell</span>` +
+          `<span>Action Completion Tone</span>` +
           `<label class="master-switch">` +
           `<input type="checkbox" data-settings-prop="system.completionToneEnabled" ${draft.system.completionToneEnabled !== false ? 'checked' : ''}>` +
           `<span></span>` +
@@ -152,34 +168,11 @@
           `</div>` +
           `</div>`;
       }
-      else {
-        automationBody = `<div class="settings-card alarm-settings-card">` +
-          `<div class="settings-card-head">` +
-          `<span class="settings-card-icon">${icon('automation')}</span><b>Profile alarm</b>${profile ? `<span class="freshness-chip">${A.esc(profile.name)}</span>` : ''}</div>` +
-          `<div class="grid-2">` +
-          `<div class="field"><label>Sound</label><select id="alarmPreset" class="select" data-searchable="true">${SD.Constants.ALARM_PRESETS.map(x => A.option(x.id, x.name, alarm.preset === x.id)).join('')}</select></div>` +
-          `<div class="field"><label>Stop method</label><select id="alarmStopMethod" class="select">${SD.Constants.ALARM_STOP_METHODS.map(x => A.option(x.id, x.name, alarm.stopMethod === x.id)).join('')}</select></div>` +
-          `</div>` +
-          `<div class="alarm-duration-grid">` +
-          `<div class="field"><label>Duration</label><input id="alarmDuration" class="input" type="number" min="1" max="86400" step="1" value="${A.esc(SD.Utils.timeFromSeconds(alarm.durationSeconds || 12, alarm.durationUnit || 'seconds'))}"></div>` +
-          `<div class="field time-unit-field"><label>Unit</label><select id="alarmDurationUnit" class="select">${unitOptions(alarm.durationUnit || 'seconds')}</select></div>` +
-          `<div class="field"><label>Volume · <strong id="alarmVolumeValue">${Math.round((Number(alarm.volume) || 0) * 100)}%</strong></label><input id="alarmVolume" class="range" data-range-key="alarm-volume" type="range" min="0" max="1" step="0.01" value="${Number(alarm.volume) || 0}"></div>` +
-          `</div>` +
-          `<div class="toggle-card-grid alarm-toggle-grid">` +
-          `<div class="toggle-card"><label class="master-switch"><input id="alarmLoop" type="checkbox" ${alarm.loop !== false ? 'checked' : ''}><span></span></label><span><strong>Loop sound</strong></span></div>` +
-          `<div class="toggle-card"><label class="master-switch"><input id="alarmSystemNotification" type="checkbox" ${alarm.showSystemNotification !== false ? 'checked' : ''}><span></span></label><span><strong>Browser notification</strong></span></div>` +
-          `<div class="toggle-card"><label class="master-switch"><input id="alarmPagePopup" type="checkbox" ${alarm.showPagePopup !== false ? 'checked' : ''}><span></span></label><span><strong>Jira popup</strong></span></div>` +
-          `<div class="toggle-card"><label class="master-switch"><input id="alarmUseCustom" type="checkbox" ${alarm.useCustom ? 'checked' : ''}><span></span></label><span><strong>Use custom audio</strong></span></div>` +
-          `</div>` +
-          `<div class="field"><label>Custom audio</label><input id="alarmFile" class="input file-input" type="file" accept="audio/*"><span class="file-name">${A.esc(alarm.customName || 'No custom file')}</span></div>` +
-          `<div class="row alarm-settings-actions"><button class="btn" data-action="test-alarm">Test Alarm</button>${alarm.customDataUrl ? `<button class="btn btn-small" data-action="clear-custom-alarm">Clear Custom Audio</button>` : ''}</div>` +
-          `</div>`;
-      }
+      else automationBody = '';
 
       body = `<div class="settings-subpage-nav" role="tablist" aria-label="Automation settings sections">` +
         `${automationTab('sync', 'Sync & Refresh')}` +
         `${automationTab('safety', 'Safety Limits')}` +
-        `${automationTab('alarm', 'Alarm')}` +
         `</div>` +
         `<div class="settings-subpage">${automationBody}</div>`;
     }

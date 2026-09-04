@@ -3,8 +3,8 @@
   root.Constants = Object.freeze({
     APP_NAME: "SD Companion",
     DISPLAY_VERSION: "V2",
-    BUILD_VERSION: "2.3.0",
-    SCHEMA_VERSION: 33,
+    BUILD_VERSION: "2.4.0",
+    SCHEMA_VERSION: 34,
     STORAGE_KEYS: Object.freeze({
       STATE: "sdCompanionState",
       LOGS: "sdCompanionLogs",
@@ -56,6 +56,7 @@
       CANCEL_OPERATION: "CANCEL_OPERATION",
       SET_OPEN_TARGET: "SET_OPEN_TARGET",
       PLAY_ALARM: "PLAY_ALARM",
+      UPDATE_ALARM_VOLUME: "UPDATE_ALARM_VOLUME",
       STOP_ALARM: "STOP_ALARM",
       REFRESH_TAB_STATUS: "REFRESH_TAB_STATUS",
       GET_ALARM_STATE: "GET_ALARM_STATE",
@@ -184,12 +185,10 @@
       { "id": "system", "name": "System Notification Sound" }
     ]),
     ALARM_STOP_METHODS: Object.freeze([
-      { id: "duration", name: "Auto-stop after duration" },
-      { id: "controls", name: "Manual Stop controls only" },
-      { id: "duration-or-controls", name: "Duration or Stop controls" },
-      { id: "notification-controls", name: "Notification Stop or duration" },
-      { id: "any-interaction", name: "Any interaction or duration" },
-      { id: "keyboard", name: "Keyboard shortcut only" }
+      { id: "keyboard", name: "Keyboard Shortcut" },
+      { id: "duration", name: "Duration" },
+      { id: "click-anywhere", name: "Click anywhere" },
+      { id: "popup", name: "Popup" }
     ])
   });
 })();

@@ -4,9 +4,9 @@
 
 Every rule explicitly chooses one of:
 - **Always On**
-- **Named schedule(s)**
+- **Schedule(s)**
 
-No named schedule is created automatically. An enabled rule configured for named schedules with no
+No schedule is created automatically. An enabled rule configured for schedules with no
 selected schedule fails validation / fails closed.
 
 ## Detection source
