@@ -3,8 +3,8 @@
   root.Constants = Object.freeze({
     APP_NAME: "SD Companion",
     DISPLAY_VERSION: "V2",
-    BUILD_VERSION: "2.0.12",
-    SCHEMA_VERSION: 32,
+    BUILD_VERSION: "2.1.0",
+    SCHEMA_VERSION: 33,
     STORAGE_KEYS: Object.freeze({
       STATE: "sdCompanionState",
       LOGS: "sdCompanionLogs",
@@ -49,6 +49,10 @@
       CANCEL_JOBS: "CANCEL_JOBS",
       PROCESS_JOB: "PROCESS_JOB",
       PROCESS_JOBS: "PROCESS_JOBS",
+      APPROVE_JOB: "APPROVE_JOB",
+      APPROVE_JOBS: "APPROVE_JOBS",
+      PREVIEW_BULK_OPERATION: "PREVIEW_BULK_OPERATION",
+      RUN_BULK_OPERATION: "RUN_BULK_OPERATION",
       CANCEL_OPERATION: "CANCEL_OPERATION",
       SET_OPEN_TARGET: "SET_OPEN_TARGET",
       PLAY_ALARM: "PLAY_ALARM",
@@ -126,9 +130,11 @@
       CONNECTION_LOSS_FAILURES_MAX: 500,
       SECURITY_SESSION_MINUTES_MIN: 1,
       SECURITY_SESSION_MINUTES_MAX: 10080,
-      SECURITY_PASSWORD_MAX_CHARS: 128
+      SECURITY_PASSWORD_MAX_CHARS: 128,
+      ALERT_THROTTLE_MAX_ALERTS: 100,
+      ALERT_THROTTLE_WINDOW_MAX_MINUTES: 1440
     }),
-    JOB: Object.freeze({ PENDING: "pending", RUNNING: "running", SUCCEEDED: "succeeded", FAILED: "failed", CANCELLED: "cancelled", SKIPPED: "skipped" }),
+    JOB: Object.freeze({ AWAITING_APPROVAL: "awaiting-approval", PENDING: "pending", RUNNING: "running", SUCCEEDED: "succeeded", FAILED: "failed", CANCELLED: "cancelled", SKIPPED: "skipped" }),
     EXECUTION_POLICY: Object.freeze({ ONCE_ISSUE: "once-per-issue", ONCE_STATUS: "once-per-status", ONCE_UPDATE: "once-per-update", REPEAT: "repeat-after" }),
     CONFLICT_MODE: Object.freeze({ CONTINUE: "continue", STOP_LOWER: "stop-lower", EXCLUSIVE: "exclusive-group" }),
     DAYS: Object.freeze([

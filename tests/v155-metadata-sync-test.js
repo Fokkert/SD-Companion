@@ -31,7 +31,7 @@ site.inventory.freshness = { fields: { at: 'x', count: 4, scope: 'old' }, transi
 state.jiraSites = [site];
 state.schemaVersion = 22;
 const migrated = SD.Migrations.migrateState(state).state, s = migrated.jiraSites[0];
-assert.equal(migrated.schemaVersion, 32);
+assert.equal(migrated.schemaVersion, 33);
 assert.deepEqual(s.fields.map(f => f.id), ['summary', 'customfield_10000'], 'cached contextual field duplicates must be collapsed by Jira field id');
 assert(!('projectKey' in s.fields[0]) && !('issueTypeId' in s.fields[0]), 'cached fields must be canonical global field records');
 assert.equal(s.inventory.counts.fields, 2);

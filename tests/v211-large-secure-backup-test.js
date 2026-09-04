@@ -11,7 +11,7 @@ load('src/shared/defaults.js');
 SDCompanion.Storage = { getCredential: async () => '' };
 load('src/ui/app/app-core.js');
 (async () => {
-  assert.equal(SDCompanion.Constants.BUILD_VERSION, '2.0.12');
+  assert.equal(SDCompanion.Constants.BUILD_VERSION, '2.1.0');
   const large = { format: 'sd-companion-profile', version: 3, server: { baseUrl: 'https://jira.example.test' }, profile: { name: 'Large secure backup', inventoryBlob: 'x'.repeat(750000) } };
   const password = 'correct horse battery staple';
   const encrypted = await SDApp.encrypt(large, password);

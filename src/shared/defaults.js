@@ -123,6 +123,7 @@
       id: crypto.randomUUID(),
       type,
       enabled: true,
+      needsApproval: false,
       delay: { mode: "inherit", minSeconds: 2, maxSeconds: 12, unit: "seconds" },
       when: { enabled: false, logic: { operator: "AND", groups: [group()] } },
       randomPoolId: ""
@@ -151,6 +152,7 @@
     randomDelay: { minSeconds: 2, maxSeconds: 12, unit: "seconds" },
     chainDependency: { cancelled: "continue", skipped: "continue", failed: "continue" },
     manualProcess: { relativeSchedule: "update" },
+    alertThrottle: { enabled: false, maxAlerts: 1, windowMinutes: 5 },
     actionRandomness: { enabled: false, pools: [] },
     actions: [],
     runtime: { counters: { cycles: 0, matches: 0, planned: 0, skippedSchedule: 0, skippedLedger: 0, skippedConflict: 0, errors: 0 }, lastRunAt: null, lastMatchAt: null }

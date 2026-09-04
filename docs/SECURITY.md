@@ -13,6 +13,8 @@
 - Interrupted writes are marked uncertain when Jira may have received the request; they are not
   blindly replayed.
 - Global safety limits bound comments, assignments, transitions, issues and actions.
+- Individual actions can require explicit approval. Approval is a persisted queue state enforced by the background worker, not only a UI confirmation.
+- Per-rule local-alert throttling and global queued-alarm cancellation reduce runaway Alarm/Notification behavior.
 - Jira REST traffic originates only from the extension service worker; no Jira tab is used as an
   alternate API transport.
 - SD Companion does not disable or bypass Chromium network or TLS validation. Chrome/Edge determine
@@ -40,3 +42,14 @@ main UI session is unlocked.
 
 This is an extension-level access control, not an OS security boundary. A user who controls the
 browser profile or can uninstall/debug the extension is outside this threat model.
+
+## TLS certificate validation
+
+SD Companion cannot provide a per-server **Ignore invalid certificate** switch. Jira requests use the
+browser extension Fetch stack, and Chromium does not expose an ordinary Manifest V3 extension API
+that disables server-certificate verification for one host. The extension therefore fails closed when
+TLS trust fails.
+
+For Jira instances using an internal/private certificate authority, install/trust the issuing CA in the
+operating system/browser trust store, deploy a certificate chaining to a trusted CA, or correct the Jira
+TLS configuration. Do not depend on an extension-level certificate bypass.

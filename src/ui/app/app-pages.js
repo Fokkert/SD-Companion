@@ -5,6 +5,7 @@
     const host = A.$("pageHost");
     const fn = {
       home: A.pageHome,
+      bulk: A.pageBulkOperations,
       servers: A.pageServers,
       data: A.pageData,
       rules: A.pageRules,

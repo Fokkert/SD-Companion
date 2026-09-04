@@ -34,11 +34,14 @@
     `</div>` +
     `<span class="detection-time">${A.esc(SD.Utils.formatDateTime(e.at))}</span></div>`).join('') || `<div class="empty compact-empty">No detections.</div>`;
   const actionName = a => ({ assign: 'Assignment', comment: 'Comment', transition: 'Transition', 'edit-fields': 'Edit fields', labels: 'Labels', priority: 'Priority', alarm: 'Alarm', notification: 'Notification' }[a] || a || 'Action');
-  const dependencyWaiting = j => j.status === 'pending' && Boolean(j.dependsOnJobId) && !j.dependencyScheduled;
-  const actionStatus = j => j.status === 'succeeded' ? 'Done' : j.status === 'pending' ? (dependencyWaiting(j) ? 'Waiting' : 'Pending') : j.status === 'running' ? (j.cancelRequestedAt ? 'Cancelling' : 'Running') : j.status === 'failed' ? 'Failed' : j.status === 'cancelled' ? 'Cancelled' : j.status === 'skipped' ? 'Skipped' : j.status || 'Queued';
+  const dependencyWaiting = j => j.status === JOB.PENDING && Boolean(j.dependsOnJobId) && !j.dependencyScheduled;
+  const terminalStatus = status => [JOB.SUCCEEDED, JOB.FAILED, JOB.CANCELLED, JOB.SKIPPED].includes(status);
+  const actionRank = j => j.status === JOB.AWAITING_APPROVAL ? 0 : j.status === JOB.RUNNING ? 1 : j.status === JOB.PENDING ? 2 : j.status === JOB.FAILED ? 3 : 4;
+  const actionStatus = j => j.status === JOB.SUCCEEDED ? 'Done' : j.status === JOB.AWAITING_APPROVAL ? 'Awaiting approval' : j.status === JOB.PENDING ? (dependencyWaiting(j) ? 'Waiting' : 'Pending') : j.status === JOB.RUNNING ? (j.cancelRequestedAt ? 'Cancelling' : 'Running') : j.status === JOB.FAILED ? 'Failed' : j.status === JOB.CANCELLED ? 'Cancelled' : j.status === JOB.SKIPPED ? 'Skipped' : j.status || 'Queued';
   const actionTime = j => {
-    if (j.status === 'pending' && dependencyWaiting(j)) return `Waiting for previous · estimated ${SD.Utils.formatDateTime(j.scheduledAt)}`;
-    return SD.Utils.formatDateTime(j.status === 'pending' ? j.scheduledAt : (j.completedAt || j.startedAt || j.createdAt));
+    if (j.status === JOB.AWAITING_APPROVAL) return `Approval required · planned ${SD.Utils.formatDateTime(j.scheduledAt)}`;
+    if (j.status === JOB.PENDING && dependencyWaiting(j)) return `Waiting for previous · estimated ${SD.Utils.formatDateTime(j.scheduledAt)}`;
+    return SD.Utils.formatDateTime(j.status === JOB.PENDING ? j.scheduledAt : (j.completedAt || j.startedAt || j.createdAt));
   };
   const actionDetail = (j, site) => {
     const p = j.payload || {}, r = j.result || {};
@@ -76,12 +79,15 @@
       if (j.ruleName) x.rules.add(j.ruleName);
       if (new Date(j.createdAt || 0) > new Date(x.at || 0)) x.at = j.createdAt;
     }
-    const rows = [...map.values()].sort((a, b) => new Date(b.at || 0) - new Date(a.at || 0)).slice(0, 30);
+    const hasActive = row => row.jobs.some(j => !terminalStatus(j.status)),
+      rows = [...map.values()].sort((a, b) => Number(hasActive(b)) - Number(hasActive(a)) || new Date(b.at || 0) - new Date(a.at || 0)).slice(0, 30);
     return rows.map(x => {
-      const ordered = x.jobs.sort((a, b) => new Date(a.historyOrderAt || a.createdAt || a.scheduledAt || 0) - new Date(b.historyOrderAt || b.createdAt || b.scheduledAt || 0) || new Date(a.createdAt || 0) - new Date(b.createdAt || 0) || String(a.id || '').localeCompare(String(b.id || ''))),
-        done = ordered.filter(j => j.status === 'succeeded').length,
-        pendingJobs = ordered.filter(j => j.status === JOB.PENDING),
-        pending = ordered.filter(j => [JOB.PENDING, JOB.RUNNING].includes(j.status)).length;
+      const allOrdered = [...x.jobs].sort((a, b) => actionRank(a) - actionRank(b) || new Date(b.historyOrderAt || b.completedAt || b.startedAt || b.createdAt || b.scheduledAt || 0) - new Date(a.historyOrderAt || a.completedAt || a.startedAt || a.createdAt || a.scheduledAt || 0) || String(b.id || '').localeCompare(String(a.id || ''))),
+        ordered = A.homeShowCompletedActions ? allOrdered : allOrdered.filter(j => !terminalStatus(j.status)),
+        done = allOrdered.filter(j => j.status === JOB.SUCCEEDED).length,
+        pendingJobs = allOrdered.filter(j => j.status === JOB.PENDING),
+        approvals = allOrdered.filter(j => j.status === JOB.AWAITING_APPROVAL).length,
+        pending = allOrdered.filter(j => [JOB.AWAITING_APPROVAL, JOB.PENDING, JOB.RUNNING].includes(j.status)).length;
       return `<details class="activity-issue" data-issue-key="${A.esc(x.issueKey)}">` +
         `<summary>` +
         `<span class="detection-key">${A.esc(x.issueKey)}</span>` +
@@ -96,7 +102,8 @@
           `<div class="row activity-bulk-actions">` +
           `<button type="button" class="btn btn-small btn-primary" data-action="process-issue-jobs" data-issue-key="${A.esc(x.issueKey)}">Process all</button>` +
           `<button type="button" class="btn btn-small btn-danger" data-action="cancel-issue-jobs" data-issue-key="${A.esc(x.issueKey)}">Cancel all</button></div></div>` : ''}${ordered.length ? ordered.map(j => {
-            const cancellable = [JOB.PENDING, JOB.RUNNING].includes(j.status),
+            const approvable = j.status === JOB.AWAITING_APPROVAL,
+              cancellable = [JOB.AWAITING_APPROVAL, JOB.PENDING, JOB.RUNNING].includes(j.status),
               processable = j.status === JOB.PENDING,
               requested = j.status === JOB.RUNNING && Boolean(j.cancelRequestedAt);
             return `<div class="activity-action status-${A.esc(j.status)}${requested ? ' cancel-requested' : ''}">` +
@@ -105,7 +112,7 @@
               `<div class="activity-action-copy">` +
               `<b>${A.esc(actionName(j.action))}</b>` +
               `<small>${A.esc(actionStatus(j))} · ${A.esc(actionTime(j))}</small>` +
-              `<span class="activity-detail">${A.esc(actionDetail(j, site))}</span>${j.error?.message ? `<em>${A.esc(j.error.message)}</em>` : ''}</div>${cancellable || processable ? `<div class="queue-action-buttons">${processable ? `<button type="button" class="btn btn-small queue-process-btn" data-action="process-job" data-job-id="${A.esc(j.id)}">Process</button>` : ''}${cancellable ? `<button type="button" class="btn btn-small queue-cancel-btn" data-action="cancel-job" data-job-id="${A.esc(j.id)}" ${requested ? 'disabled' : ''}>${requested ? 'Cancelling…' : 'Cancel'}</button>` : ''}</div>` : ''}</div>`;
+              `<span class="activity-detail">${A.esc(actionDetail(j, site))}</span>${j.error?.message ? `<em>${A.esc(j.error.message)}</em>` : ''}</div>${cancellable || processable || approvable ? `<div class="queue-action-buttons">${approvable ? `<button type="button" class="btn btn-small btn-primary" data-action="approve-job" data-job-id="${A.esc(j.id)}">Approve</button>` : ''}${processable ? `<button type="button" class="btn btn-small queue-process-btn" data-action="process-job" data-job-id="${A.esc(j.id)}">Process</button>` : ''}${cancellable ? `<button type="button" class="btn btn-small queue-cancel-btn" data-action="cancel-job" data-job-id="${A.esc(j.id)}" ${requested ? 'disabled' : ''}>${requested ? 'Cancelling…' : 'Cancel'}</button>` : ''}</div>` : ''}</div>`;
           }).join('') : '<div class="empty compact-empty">Detected; no actions queued for this issue.</div>'}</div></details>`;
     }).join('') || '<div class="empty compact-empty">No issue activity yet.</div>';
   };
@@ -132,12 +139,16 @@
     return sec < 60 ? `${sec}s` : `${Math.round(sec / 60)}m`;
   };
   const activityCard = (s, p, recent, current) => {
-    const pending = (A.jobs || []).filter(j => j.siteId === s.id && j.profileId === p.id && j.status === JOB.PENDING).length;
+    const scoped = (A.jobs || []).filter(j => j.siteId === s.id && j.profileId === p.id),
+      pending = scoped.filter(j => j.status === JOB.PENDING).length,
+      approvals = scoped.filter(j => j.status === JOB.AWAITING_APPROVAL).length,
+      upcoming = scoped.filter(j => [JOB.AWAITING_APPROVAL, JOB.PENDING].includes(j.status)).length;
     return `<div id="homeIssueActivityCard" class="card issue-activity-card home-live-card">` +
       `<div class="row-between activity-card-head">` +
       `<div class="section-title">Issue Action History</div>` +
-      `<div class="row activity-card-controls">${pending ? `<button type="button" class="btn btn-small btn-primary" data-action="process-all-jobs">Process all (${pending})</button>` +
-        `<button type="button" class="btn btn-small btn-danger" data-action="cancel-all-jobs">Cancel all upcoming (${pending})</button>` : ''}<span class="freshness-chip">Auto refresh · ${activityRefreshLabel()}</span>` +
+      `<div class="row activity-card-controls">${approvals ? `<button type="button" class="btn btn-small btn-primary" data-action="approve-all-jobs">Approve all (${approvals})</button>` : ''}${pending ? `<button type="button" class="btn btn-small btn-primary" data-action="process-all-jobs">Process all (${pending})</button>` : ''}${upcoming ? `<button type="button" class="btn btn-small btn-danger" data-action="cancel-all-jobs">Cancel all upcoming (${upcoming})</button>` : ''}` +
+      `<label class="row list-meta" title="Show or hide completed, failed, cancelled and skipped actions">Show completed <span class="master-switch"><input id="homeShowCompletedActions" type="checkbox" ${A.homeShowCompletedActions ? 'checked' : ''}><span></span></span></label>` +
+      `<span class="freshness-chip">Auto refresh · ${activityRefreshLabel()}</span>` +
       `</div>` +
       `</div>` +
       `<div class="issue-activity-list section-gap">${issueActivity(s, p, recent, current)}</div></div>`;
@@ -341,6 +352,6 @@
       view = A.homeDetectionView === 'recent' ? 'recent' : 'current',
       current = pr.currentDetections || [],
       recent = (st.radarEvents || []).filter(e => !e.profileId || e.profileId === p.id);
-    return `<section class="page home-page">${head('Operations')}${monitorCard(s, p)}${shiftCard(p)}${healthCards(s, p)}${alarmCard()}${detectionCard(pr, st, view, current, recent)}${activityCard(s, p, recent, current)}</section>`;
+    return `<section class="page home-page">${head('Operations', '', `<button class="btn btn-primary btn-small" data-page="bulk">Bulk Operations</button>`)}${monitorCard(s, p)}${shiftCard(p)}${healthCards(s, p)}${alarmCard()}${detectionCard(pr, st, view, current, recent)}${activityCard(s, p, recent, current)}</section>`;
   };
 })();

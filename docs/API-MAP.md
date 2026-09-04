@@ -1,4 +1,4 @@
-# Jira REST/API Map — V1 build 1.5.14
+# Jira REST/API Map — V2 build 2.1.0
 
 Normal Jira REST/API endpoints are called relative to the configured Jira base URL with the user's
 PAT. The sole browser-session request exists only in the default **Full Workflow Map (Recommended)**
@@ -59,8 +59,10 @@ Roles, versions and components are not synchronized.
 
 ## Issue querying
 
-Issues are fetched only for constrained enabled rules and for bounded transition metadata work
-required by the selected protocol. There is no generic issue inventory crawl and no
+Issues are fetched only for constrained enabled rules, explicit one-time Bulk Operations, and bounded
+transition metadata work required by the selected protocol. Bulk Operations use the same bounded Jira
+search path and require a saved filter, JQL, or queryable typed condition; they do not open a generic
+issue crawl. There is no generic issue inventory crawl and no
 `Number.MAX_SAFE_INTEGER`/unbounded transition scan.
 
 During continuous monitoring, cursor-based constrained searches are used for action planning. A

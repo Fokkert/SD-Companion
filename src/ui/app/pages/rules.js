@@ -125,6 +125,19 @@
         `<div class="chain-policy-card section-gap">` +
         `<div class="row-between">` +
         `<div>` +
+        `<div class="section-title small-section-title">Local alert rate limit</div>` +
+        `<div class="list-meta">Limits Alarm and Notification actions from this rule within a rolling time window.</div>` +
+        `</div>` +
+        `<label class="master-switch">` +
+        `<input type="checkbox" data-rule-prop="alertThrottle.enabled" ${r.alertThrottle?.enabled ? 'checked' : ''}>` +
+        `<span></span>` +
+        `</label>` +
+        `</div>${r.alertThrottle?.enabled ? `<div class="grid-2 chain-policy-grid section-gap">` +
+          `<div class="field"><label>Maximum alerts</label><input class="input" type="number" min="1" max="${SD.Constants.LIMITS.ALERT_THROTTLE_MAX_ALERTS}" step="1" data-rule-prop="alertThrottle.maxAlerts" value="${A.esc(r.alertThrottle?.maxAlerts || 1)}"></div>` +
+          `<div class="field"><label>Window (minutes)</label><input class="input" type="number" min="1" max="${SD.Constants.LIMITS.ALERT_THROTTLE_WINDOW_MAX_MINUTES}" step="1" data-rule-prop="alertThrottle.windowMinutes" value="${A.esc(r.alertThrottle?.windowMinutes || 5)}"></div></div>` : ''}</div>` +
+        `<div class="chain-policy-card section-gap">` +
+        `<div class="row-between">` +
+        `<div>` +
         `<div class="section-title small-section-title">Chained action dependency</div>` +
         `<div class="list-meta">Choose whether an After previous action continues when the preceding action does not succeed.</div>` +
         `</div>` +

@@ -1,11 +1,26 @@
-# V2 Build 2.0.12 Test Report
+# V2 Build 2.1.0 Test Report
 
 ## Result
 
-- JavaScript regression files: 61/61 passed.
+- JavaScript regression files: 63/63 passed.
 - Static architecture/security test: passed.
 - JavaScript syntax validation: passed.
 - JSON parsing validation: passed.
+
+## V2.1.0 focused coverage
+
+- Bulk Operations generate transient `bulk-operation` jobs with embedded rule snapshots and unique
+  one-time ledger keys; the bulk definition is not required to exist in saved profile rules.
+- Per-action **Needs approval** plans `awaiting-approval` jobs. Single approval preserves due time and
+  bulk approval arms only chain roots while dependent children remain dependency-gated.
+- Global local-alarm cancellation covers both Pending and Awaiting approval alarm jobs without
+  cancelling Notification jobs.
+- Per-rule local-alert throttling covers Alarm/Notification actions across multiple matching issues
+  and considers recent existing local-alert jobs.
+- Action History source contracts verify Approve all, Show completed, active-first/newest-first
+  ordering, and the Bulk Operations entry surface.
+- Stable browser action-notification identity and stop-all audio generation/cancellation integration
+  are statically covered.
 
 ## V2.0.12 focused coverage
 

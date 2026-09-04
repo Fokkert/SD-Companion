@@ -125,6 +125,13 @@
         failed: ['continue', 'stop'].includes(old.chainDependency?.failed) ? old.chainDependency.failed : d.chainDependency.failed
       },
       manualProcess: { relativeSchedule: ['update', 'preserve'].includes(old.manualProcess?.relativeSchedule) ? old.manualProcess.relativeSchedule : d.manualProcess.relativeSchedule },
+      alertThrottle: {
+        ...d.alertThrottle,
+        ...(old.alertThrottle || {}),
+        enabled: Boolean(old.alertThrottle?.enabled),
+        maxAlerts: clamp(old.alertThrottle?.maxAlerts, 1, LIMITS.ALERT_THROTTLE_MAX_ALERTS, d.alertThrottle.maxAlerts),
+        windowMinutes: clamp(old.alertThrottle?.windowMinutes, 1, LIMITS.ALERT_THROTTLE_WINDOW_MAX_MINUTES, d.alertThrottle.windowMinutes)
+      },
       actionRandomness: {
         ...d.actionRandomness,
         ...(old.actionRandomness || {}),

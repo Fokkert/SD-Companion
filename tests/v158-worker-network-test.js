@@ -12,8 +12,8 @@ for (const f of [
   'src/shared/migrations.js'
 ]) load(f);
 const SD = SDCompanion;
-assert.equal(SD.Constants.BUILD_VERSION, '2.0.12');
-assert.equal(SD.Constants.SCHEMA_VERSION, 32);
+assert.equal(SD.Constants.BUILD_VERSION, '2.1.0');
+assert.equal(SD.Constants.SCHEMA_VERSION, 33);
 const legacy = SD.Defaults.state();
 legacy.schemaVersion = 24;
 legacy.jiraSites = [

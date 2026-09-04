@@ -127,7 +127,11 @@
     }
     all.push(...jobs);
     await root.Storage.saveJobs(all);
-    for (const j of jobs) if (j.status === JOB.PENDING) await scheduleJob(j);
+    for (const j of jobs) {
+      if (j.status !== JOB.PENDING) continue;
+      if (j.dependsOnJobId) continue;
+      await scheduleJob(j);
+    }
     return jobs;
   };
   const list = async () => {
@@ -150,7 +154,7 @@
       cancelRequestTimes.delete(id);
       throw Object.assign(new Error('Queued action was not found.'), { code: 'JOB_NOT_FOUND' });
     }
-    if (![JOB.PENDING, JOB.RUNNING].includes(j.status)) {
+    if (![JOB.AWAITING_APPROVAL, JOB.PENDING, JOB.RUNNING].includes(j.status)) {
       cancelRequests.delete(id);
       cancelRequestTimes.delete(id);
       throw Object.assign(new Error('This action is no longer cancellable.'), { code: 'JOB_NOT_CANCELLABLE' });
@@ -172,7 +176,7 @@
     if (ctx) ctx.cancelRequested = true;
     clearShortTimer(id);
     await chrome.alarms.clear(alarmName(id)).catch(() => {});
-    if (j.status === JOB.PENDING) {
+    if ([JOB.AWAITING_APPROVAL, JOB.PENDING].includes(j.status)) {
       j.status = JOB.CANCELLED;
       j.completedAt = requestedAt;
       j.cancelledAt = requestedAt;
@@ -191,7 +195,7 @@
   const cancelPending = async ({ siteId = '', profileId = '', issueKey = '' } = {}) => {
     if (!siteId || !profileId) throw Object.assign(new Error('Bulk cancellation requires a server and profile scope.'), { code: 'BULK_CANCEL_SCOPE_REQUIRED' });
     const jobs = await root.Storage.getJobs(),
-      targets = jobs.filter(j => j.status === JOB.PENDING && (!siteId || j.siteId === siteId) && (!profileId || j.profileId === profileId) && (!issueKey || j.issueKey === issueKey));
+      targets = jobs.filter(j => [JOB.AWAITING_APPROVAL, JOB.PENDING].includes(j.status) && (!siteId || j.siteId === siteId) && (!profileId || j.profileId === profileId) && (!issueKey || j.issueKey === issueKey));
     if (!targets.length) return { cancelled: 0, jobIds: [] };
     const at = nowIso(), ids = targets.map(j => j.id);
     for (const id of ids) {
@@ -232,6 +236,80 @@
     }
     await root.Storage.appendAudit({ event: 'jobs-bulk-cancelled', siteId, profileId, issueKey, details: { count: targets.length, jobIds: ids, scope: issueKey ? 'issue' : 'profile' } });
     return { cancelled: targets.length, jobIds: ids };
+  };
+  const approve = async id => {
+    if (!id) throw Object.assign(new Error('Queued action ID is required.'), { code: 'JOB_NOT_FOUND' });
+    const jobs = await root.Storage.getJobs(),
+      job = jobs.find(x => x.id === id);
+    if (!job) throw Object.assign(new Error('Queued action was not found.'), { code: 'JOB_NOT_FOUND' });
+    if (job.status !== JOB.AWAITING_APPROVAL) throw Object.assign(new Error('This action is not awaiting approval.'), { code: 'JOB_NOT_AWAITING_APPROVAL' });
+    const at = nowIso();
+    job.status = JOB.PENDING;
+    job.approvedAt = at;
+    job.approvedBy = 'user';
+    await root.Storage.saveJobs(jobs);
+    await root.Storage.appendAudit({ event: 'job-approved', siteId: job.siteId, profileId: job.profileId, ruleId: job.ruleId, issueKey: job.issueKey, details: { jobId: job.id, action: job.action } });
+    await qlog(LEVEL.INFO, 'Action approved by user.', job, { jobId: job.id, action: job.action });
+    const dependency = job.dependsOnJobId ? jobs.find(x => x.id === job.dependsOnJobId) : null;
+    if (!dependency || ![JOB.AWAITING_APPROVAL, JOB.PENDING, JOB.RUNNING].includes(dependency.status)) await scheduleJob(job);
+    return job;
+  };
+  const approvePending = async ({ siteId = '', profileId = '', issueKey = '' } = {}) => {
+    if (!siteId || !profileId) throw Object.assign(new Error('Bulk approval requires a server and profile scope.'), { code: 'BULK_APPROVAL_SCOPE_REQUIRED' });
+    const jobs = await root.Storage.getJobs(),
+      targets = jobs.filter(j => j.status === JOB.AWAITING_APPROVAL && j.siteId === siteId && j.profileId === profileId && (!issueKey || j.issueKey === issueKey));
+    if (!targets.length) return { approved: 0, jobIds: [] };
+    const at = nowIso(), ids = targets.map(j => j.id), targetIds = new Set(ids);
+    for (const job of targets) {
+      job.status = JOB.PENDING;
+      job.approvedAt = at;
+      job.approvedBy = 'user-bulk';
+    }
+    await root.Storage.saveJobs(jobs);
+    for (const job of targets) {
+      const dependency = job.dependsOnJobId ? jobs.find(x => x.id === job.dependsOnJobId) : null;
+      if (!dependency || (!targetIds.has(dependency.id) && ![JOB.AWAITING_APPROVAL, JOB.PENDING, JOB.RUNNING].includes(dependency.status))) await scheduleJob(job);
+      await qlog(LEVEL.INFO, 'Action approved by bulk request.', job, { jobId: job.id, action: job.action, scope: issueKey ? 'issue' : 'profile' });
+    }
+    await root.Storage.appendAudit({ event: 'jobs-bulk-approved', siteId, profileId, issueKey, details: { count: targets.length, jobIds: ids, scope: issueKey ? 'issue' : 'profile' } });
+    return { approved: targets.length, jobIds: ids };
+  };
+  const cancelLocalAlerts = async ({ actionTypes = [ACTION.ALARM], siteId = '', profileId = '' } = {}) => {
+    const types = new Set(actionTypes), jobs = await root.Storage.getJobs(), at = nowIso();
+    const targets = jobs.filter(j => types.has(j.action) && (!siteId || j.siteId === siteId) && (!profileId || j.profileId === profileId) && [JOB.AWAITING_APPROVAL, JOB.PENDING, JOB.RUNNING].includes(j.status));
+    const cancelled = [];
+    for (const job of targets) {
+      if (job.status === JOB.RUNNING) {
+        const ctx = runningContexts.get(job.id);
+        // Local alert actions have no irreversible Jira write. A global stop
+        // request must therefore cancel them even if execution has entered
+        // the local-alert branch. Audio.play also checks a generation token
+        // to close the small race between cancellation and playback start.
+        cancelRequests.add(job.id);
+        cancelRequestTimes.set(job.id, at);
+        if (ctx) ctx.cancelRequested = true;
+        job.cancelRequestedAt = at;
+        job.cancelRequestedBy = 'stop-all-alerts';
+        continue;
+      }
+      job.status = JOB.CANCELLED;
+      job.completedAt = at;
+      job.cancelledAt = at;
+      job.cancelRequestedAt = at;
+      job.cancelRequestedBy = 'stop-all-alerts';
+      delete job.error;
+      clearShortTimer(job.id);
+      await chrome.alarms.clear(alarmName(job.id)).catch(() => {});
+      await writeLedger(job, 'cancelled', { at, cancelledAt: at, reason: 'stop-all-alerts' });
+      cancelled.push(job.id);
+    }
+    if (targets.length) await root.Storage.saveJobs(jobs);
+    for (const id of cancelled) {
+      const job = jobs.find(x => x.id === id);
+      if (job) await wakeDependents(jobs, id);
+    }
+    if (targets.length) await root.Storage.appendAudit({ event: 'local-alerts-cancelled', siteId, profileId, details: { actionTypes: [...types], count: targets.length, cancelledJobIds: cancelled } });
+    return { cancelled: cancelled.length, affected: targets.length, jobIds: cancelled };
   };
   const dependencyPolicyValue = (job, status) => {
     const p = { cancelled: 'continue', skipped: 'continue', failed: 'continue', ...(job.dependencyPolicy || {}) };
@@ -314,7 +392,7 @@
     if (!force && job.dependsOnJobId) {
       const dep = jobs.find(x => x.id === job.dependsOnJobId);
       if (!dep) return cancelForDependency(jobs, job, 'missing', 'Previous action is no longer available.');
-      if ([JOB.PENDING, JOB.RUNNING].includes(dep.status)) {
+      if ([JOB.AWAITING_APPROVAL, JOB.PENDING, JOB.RUNNING].includes(dep.status)) {
         await scheduleRetry(job);
         return null;
       }
@@ -395,9 +473,10 @@
         profile = state.profiles.find(p => p.id === job.profileId);
       throwIfCancelled();
       if (!site || !profile) throw new Error("Job configuration no longer exists.");
-      const rule = (profile.rules || []).find(r => r.id === job.ruleId);
-      if (!rule || !rule.enabled) throw new Error("Rule was removed or disabled.");
-      if (!manual && !root.RuleEngine.ruleScheduleActive(profile, rule, new Date())) throw stale("Schedule is no longer active.");
+      const bulkOperation = job.sourceType === 'bulk-operation',
+        rule = bulkOperation ? job.ruleSnapshot : (profile.rules || []).find(r => r.id === job.ruleId);
+      if (!rule || (!bulkOperation && !rule.enabled)) throw new Error(bulkOperation ? "Bulk operation definition is unavailable." : "Rule was removed or disabled.");
+      if (!bulkOperation && !manual && !root.RuleEngine.ruleScheduleActive(profile, rule, new Date())) throw stale("Schedule is no longer active.");
       dependencyCheck(site, job);
       throwIfCancelled();
       const token = await root.Storage.getCredential(site.id);
@@ -409,16 +488,34 @@
         issue = validateNoop(job)(await root.RuleEngine.validateAction(client, job, profile, { expectedStatusId: expected.id, expectedStatusName: expected.name, expectedPrecondition, skipSchedule: manual }));
       throwIfCancelled();
       if (job.action === ACTION.ALARM) {
+        const alarmGeneration = root.Audio?.generation?.();
         await reserve();
         markWriteStarted();
-        await root.Audio.play(job.payload.alarm, { siteId: job.siteId, profileId: job.profileId, issueKey: job.issueKey, summary: issue.summary || job.issueSnapshot?.summary || "", ruleName: rule.name || "Detection rule", source: "Rule action" });
+        throwIfCancelled();
+        const played = await root.Audio.play(
+          job.payload.alarm,
+          {
+            siteId: job.siteId,
+            profileId: job.profileId,
+            issueKey: job.issueKey,
+            summary: issue.summary || job.issueSnapshot?.summary || "",
+            ruleName: rule.name || "Detection rule",
+            source: bulkOperation ? "Bulk operation" : "Rule action"
+          },
+          alarmGeneration
+        );
+        throwIfCancelled();
+        if (played === false) throw cancellationError();
         job.result = { localAlarm: true };
       }
       else if (job.action === ACTION.NOTIFICATION) {
         await reserve();
         markWriteStarted();
-        await chrome.notifications.create({ type: "basic", iconUrl: chrome.runtime.getURL("icons/icon128.png"), title: job.payload.notification.title, message: job.payload.notification.message });
-        job.result = { notification: true };
+        // Use one stable ID so action notifications replace each other rather
+        // than accumulating into an unbounded stack across different rules.
+        const notificationId = 'sd-companion-action-notification';
+        await chrome.notifications.create(notificationId, { type: "basic", iconUrl: chrome.runtime.getURL("icons/icon128.png"), title: job.payload.notification.title, message: job.payload.notification.message });
+        job.result = { notification: true, notificationId };
       }
       else {
         if (job.action === ACTION.ASSIGN) {
@@ -593,5 +690,5 @@
     if (changed) await root.Storage.saveJobs(jobs);
     for (const j of jobs.filter(x => x.status === JOB.PENDING)) await scheduleJob(j);
   };
-  root.JobQueue = Object.freeze({ alarmName, scheduleJob, enqueue, list, cancel, cancelPending, process, processNow, processPendingNow, restore, resolveTransition });
+  root.JobQueue = Object.freeze({ alarmName, scheduleJob, enqueue, list, cancel, cancelPending, approve, approvePending, cancelLocalAlerts, process, processNow, processPendingNow, restore, resolveTransition });
 })();

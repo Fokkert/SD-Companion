@@ -269,6 +269,14 @@
         `<label>Random action pool</label>` +
         `<select class="select" data-action-id="${a.id}" data-aprop="randomPoolId">` +
         `<option value="">Not pooled</option>${pools.map(x => A.option(x.id, x.name || 'Pool', a.randomPoolId === x.id)).join('')}</select></div>` : '';
+    const approval = `<div class="setting-line action-when-toggle">` +
+      `<span>Needs approval</span>` +
+      `<label class="master-switch">` +
+      `<input type="checkbox" data-action-id="${a.id}" data-aprop="needsApproval" ${a.needsApproval ? 'checked' : ''}>` +
+      `<span>` +
+      `</span>` +
+      `</label>` +
+      `</div>`;
     const when = `<div class="setting-line action-when-toggle">` +
       `<span>Conditional action</span>` +
       `<label class="master-switch">` +
@@ -292,7 +300,7 @@
       `<div class="row">` +
       `<button class="btn btn-small" data-action="move-action-up" data-id="${a.id}" ${index === 0 ? 'disabled' : ''}>↑</button>` +
       `<button class="btn btn-small" data-action="move-action-down" data-id="${a.id}">↓</button>` +
-      `<button class="btn btn-small btn-danger" data-action="delete-action" data-id="${a.id}">Delete</button></div></div>${body}${poolEditor}${when}${delayEditor(a, index)}</div>`;
+      `<button class="btn btn-small btn-danger" data-action="delete-action" data-id="${a.id}">Delete</button></div></div>${body}${poolEditor}${approval}${when}${delayEditor(a, index)}</div>`;
   };
   A.RuleViews = { ...(A.RuleViews || {}), actionEditor, transitionChoices, relevantTransitionRows, targetStatusChoices, transitionMethod };
 })();

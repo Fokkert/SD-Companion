@@ -10,9 +10,9 @@ load('src/shared/condition-registry.js');
 load('src/shared/rule-query.js');
 const SD = SDCompanion, C = SD.Constants;
 assert.equal(C.DISPLAY_VERSION, 'V2');
-assert.equal(C.BUILD_VERSION, '2.0.12');
-assert.equal(C.SCHEMA_VERSION, 32);
-assert.equal(JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'))).version, '2.0.12');
+assert.equal(C.BUILD_VERSION, '2.1.0');
+assert.equal(C.SCHEMA_VERSION, 33);
+assert.equal(JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'))).version, '2.1.0');
 for (const t of ['emerald-glass', 'midnight-glass', 'graphite-glass', 'violet-glass', 'amber-glass', 'frost-light']) assert(Object.values(C.THEME).includes(t));
 assert.equal(Object.values(C.THEME).length, 6);
 const site = {

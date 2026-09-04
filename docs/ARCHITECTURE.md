@@ -54,7 +54,10 @@ future outage.
 
 ## Execution engine
 
-Matched issues are planned into ordered jobs. The planner applies global safety limits, rule
+Matched issues are planned into ordered jobs. Normal monitoring jobs reference their saved rule;
+Home → Bulk Operations instead creates transient one-time jobs containing an immutable rule snapshot,
+so a delayed bulk action can still perform full execution-time preflight without persisting a rule.
+ The planner applies global safety limits, rule
 priority/conflict policy, execution policy, per-action conditions, optional random action pools and
 the idempotency ledger. Ordinary delays are relative to the detection cycle. An action configured as
 **After previous action** receives a stable initial estimate and waits on its dependency without
@@ -78,7 +81,13 @@ Transition execution is protocol-specific and does not silently cross-fallback:
 
 Jira-changing actions use a two-phase ledger reservation. If a service worker is interrupted after a
 write may have started, the job becomes `uncertain` rather than being automatically replayed.
-Per-issue locks prevent two jobs from concurrently modifying the same Jira issue.
+Per-issue locks prevent two jobs from concurrently modifying the same Jira issue. Actions marked
+**Needs approval** enter `awaiting-approval` and are never armed until explicit user approval changes
+them to Pending.
+
+Alarm and Notification actions can additionally use a per-rule rolling local-alert rate limit. The
+planner evaluates existing queued/recent alert times together with newly planned alert times to avoid
+creating bursts inside the configured window.
 
 ## Timing
 
@@ -103,19 +112,26 @@ state and do not repeatedly overwrite configuration forms. Boolean settings use 
 set/multi-choice data such as project datasets, weekdays and filter pools retain selection-specific
 controls.
 
-## Action queue cancellation
+## Action approval and queue cancellation
 
-Each Pending action can be processed immediately or cancelled independently from Home. Pending jobs
-are unscheduled and finalized as `cancelled`. Running jobs use cooperative cancellation checkpoints
-during read-only/pre-write work. Immediately before an irreversible Jira write, browser
-notification, or local alarm dispatch, the queue atomically marks the running context as dispatched;
-subsequent cancellation requests are refused because SD Companion cannot guarantee rollback after
-the remote/local side effect has begun. Cancelled jobs retain a `cancelled` idempotency ledger entry
-so the same execution-policy occurrence is not immediately recreated by the next poll. Bulk
-cancellation is a separate explicitly scoped worker operation: it requires `siteId + profileId`,
-optionally an `issueKey`, and cancels only Pending jobs. This powers confirmed **Cancel all
-upcoming** controls for one issue or the active profile without ever broadening a missing scope to
-all extension jobs.
+Awaiting-approval jobs are inert until explicit approval. Approval preserves the configured due time;
+a future job becomes a normal Pending job while an already-due job is armed immediately. Approve-all
+is explicitly scoped to the active `siteId + profileId`.
+
+Each Awaiting approval or Pending action can be cancelled independently from Home; Pending work can
+also be processed immediately. Running Jira-write jobs use cooperative cancellation checkpoints
+during read-only/pre-write work. Immediately before an irreversible Jira write the queue marks the
+running context as dispatched; later ordinary cancellation is rejected because SD Companion cannot
+guarantee rollback.
+
+Local Alarm actions are special because no irreversible Jira write exists. The global Stop Alarm
+control cancels all Awaiting approval/Pending alarm jobs and sets cancellation intent on a concurrently
+running alarm job. Audio playback also carries a generation token so an alarm that was racing the stop
+request cannot restart after the user has stopped all alarms.
+
+Cancelled jobs retain a `cancelled` idempotency ledger entry so the same execution-policy occurrence
+is not immediately recreated by the next poll. Profile/issue **Cancel all upcoming** remains explicitly
+scoped and never broadens a missing scope to unrelated jobs.
 
 
 ### Manual Process semantics

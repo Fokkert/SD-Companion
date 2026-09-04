@@ -31,6 +31,16 @@ Normal rule configuration uses **All** or **Any** condition matching rather than
 nested group logic. Rule editing is staged locally and is not applied until **Save Rule** is
 pressed.
 
+
+## One-time Bulk Operations
+
+Home → **Bulk Operations** reuses the rule condition/action model for an operation that runs only when
+**Run now** is clicked. The user supplies a constrained saved-filter/JQL/condition source, can preview
+the current Jira matches, and builds the normal ordered action chain. The transient definition is not
+persisted in `profile.rules`. Bulk jobs carry a rule snapshot so delayed execution and Jira preflight
+remain valid even though no saved rule exists. Normal global safety limits, action conditions, delays,
+dependency policies and optional approval gates still apply.
+
 ## Execution policies
 
 - Once per issue
@@ -82,20 +92,36 @@ Each action can optionally have its own typed conditions. This lets one rule det
 set while individual actions apply only to the relevant project, issue type, status or other field
 values. Optional random action pools can select a configured number of matching actions from a pool.
 
+Each individual action also has an optional **Needs approval** gate. When enabled, the planner creates
+an `awaiting-approval` job instead of arming it for execution. Approval changes it to Pending without
+changing its configured due time. If the due time has already passed it is armed immediately; if it is
+still in the future, Action History exposes the normal **Process** and **Cancel** controls after
+approval. Chained children remain blocked behind their predecessor until dependency resolution.
+
+## Local alert rate limiting
+
+Each rule can independently enable a **Local alert rate limit** for Alarm and Browser notification
+actions. The rule stores a maximum alert count and rolling window in minutes. Existing queued/recent
+local-alert jobs and newly planned local alerts are evaluated together so a planning cycle cannot
+create an alert burst. Cancelled, skipped and failed alerts do not consume the limit. The setting is
+disabled by default for migrated rules.
+
 ## Live safety
 
 All enabled rule actions are live. Global safety limits cap work per cycle/hour. Before Jira writes,
 the engine confirms the rule is still enabled and scheduled, re-fetches the issue, re-evaluates both
 rule and action conditions and validates the action dependency.
 
-## Cancelling queued actions
+## Approval and cancelling queued actions
 
-Home → Issue Action History exposes **Cancel** on each Pending or Running action. A Pending action
+Home → Issue Action History exposes **Approve** on each Awaiting approval action and **Approve all**
+for all approval-gated actions in the active server/profile. It exposes **Cancel** on each Awaiting
+approval, Pending or Running action. A Pending action
 is cancelled immediately. A Running action can be cancelled only while it is still in preflight;
 once Jira/local dispatch has started, cancellation is rejected rather than reporting a false
 rollback. Cancellation applies to the selected action only. Home also exposes confirmed **Cancel
-all** controls for all Pending/upcoming actions of one issue and for all Pending/upcoming actions in
-the active profile. Bulk cancellation never claims to cancel Running work that may already be
+all** controls for all Awaiting approval/Pending upcoming actions of one issue and for all upcoming
+actions in the active profile. Bulk cancellation never claims to cancel Running work that may already be
 approaching an irreversible dispatch. Chained children react to predecessor cancellation according
 to the rule's configured dependency policy.
 

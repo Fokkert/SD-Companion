@@ -1,3 +1,32 @@
+## V2 · Build 2.1.0 — Bulk operations, approvals and alert control
+
+- Added Home → **Bulk Operations**, a transient one-time rule-style workflow with saved-filter/JQL
+  targeting, typed conditions, preview, ordered actions, delays, dependencies and immediate queueing.
+  Bulk definitions are not saved into profile rules.
+- Added per-action **Needs approval**. Approval-gated jobs enter a dedicated **Awaiting approval**
+  state and cannot be armed/executed until approved. Action History adds individual **Approve** and
+  profile-wide **Approve all** controls.
+- After approval, a future-due action becomes an ordinary Pending action with **Process** and
+  **Cancel** controls; an already-due action is armed for immediate execution. Chained actions remain
+  dependency-aware while approval is pending.
+- Added per-rule **Local alert rate limit** settings for Alarm and Notification actions. Users can
+  configure the maximum number of local alerts allowed in a rolling minute window.
+- Hardened alarm stopping: the top stop-alarm control now cancels queued/approval-gated Alarm jobs as
+  well as the active sound, and playback uses a cancellation generation guard to close the race where
+  a concurrently starting alarm could restart immediately after Stop was pressed.
+- Browser action notifications now use one stable notification ID so newer action notifications
+  replace older ones instead of accumulating indefinitely across rules.
+- Improved Home → Issue Action History ordering so Awaiting approval / Running / Pending work appears
+  first and newer activity precedes older terminal history. Added **Show completed** to hide/show
+  succeeded, failed, cancelled and skipped actions.
+- Bumped stored schema to 33 and build/manifest version to 2.1.0. Existing rules migrate with approval
+  disabled and local-alert throttling disabled, preserving previous behavior until explicitly enabled.
+- Added V2.1.0 regression coverage for bulk planning, approval queue states, approve-all chain
+  behavior, alert throttling, global queued-alarm cancellation and action-history controls.
+- Invalid/untrusted server-certificate bypass was intentionally not added: Chromium extensions cannot
+  disable server TLS verification per Jira server. Private/internal CAs must be trusted by the
+  operating system/browser, or the Jira certificate must be corrected.
+
 ## V2 · Build 2.0.12 — Extension lock and sensitive-action re-authentication
 
 - Added an optional device-local SD Companion lock using either a 4–12 digit PIN or an 8–128

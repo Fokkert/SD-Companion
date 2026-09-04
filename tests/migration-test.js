@@ -23,7 +23,7 @@ r.polling = { cursorOverlapMinutes: 5 };
 r.safety = { maxIssuesPerCycle: 4, maxActionsPerCycle: 8, maxCommentsPerHour: 3, maxAssignmentsPerHour: 5, maxTransitionsPerHour: 6 };
 const old = { ...base, schemaVersion: 19, system: { logLevel: 'info', dryRun: true }, profiles: [{ ...base.profiles[0], id: 'p', schedules: [oldSchedule, custom], rules: [r] }], activeProfileId: 'p' };
 const migrated = SD.Migrations.migrateState(old).state, p = migrated.profiles[0], mr = p.rules[0];
-assert.equal(migrated.schemaVersion, 32);
+assert.equal(migrated.schemaVersion, 33);
 assert(!('dryRun' in migrated.system));
 assert('safety' in migrated.system);
 assert(!('safety' in mr));

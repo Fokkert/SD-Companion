@@ -1,6 +1,6 @@
 (() => {
   const root = globalThis.SDCompanion = globalThis.SDCompanion || {},
-    { ACTION, ASSIGN_MODE, EXECUTION_POLICY, CONFLICT_MODE } = root.Constants,
+    { ACTION, ASSIGN_MODE, EXECUTION_POLICY, CONFLICT_MODE, JOB } = root.Constants,
     { userKey, randomChoice, randomInt, nowIso, normalizeText, template } = root.Utils;
   const ageMinutes = v => v ? Math.max(0, (Date.now() - new Date(v).getTime()) / 60000) : null;
   const flattenValue = v => {
@@ -149,6 +149,39 @@
   };
   const hourlyCount = (ledger, actionType, now) => Object.values(ledger).filter(x => x?.actionType === actionType && ['executed', 'reserved', 'queued', 'uncertain'].includes(x.status) && now - new Date(x.at || 0).getTime() < 3600000).length;
   const hourlyLimit = (safety, type) => type === ACTION.COMMENT ? safety.maxCommentsPerHour : type === ACTION.ASSIGN ? safety.maxAssignmentsPerHour : type === ACTION.TRANSITION ? safety.maxTransitionsPerHour : Infinity;
+  const isLocalAlert = type => type === ACTION.ALARM || type === ACTION.NOTIFICATION;
+  const localAlertTime = job => {
+    if (!job) return null;
+    const value = [JOB.SUCCEEDED].includes(job.status)
+      ? (job.completedAt || job.startedAt || job.scheduledAt || job.createdAt)
+      : (job.scheduledAt || job.startedAt || job.createdAt);
+    const time = new Date(value || 0).getTime();
+    return Number.isFinite(time) ? time : null;
+  };
+  const alertThrottleAllows = (existingJobs, plannedJobs, site, profile, rule, candidateTime) => {
+    if (!rule.alertThrottle?.enabled) return true;
+    const maxAlerts = Math.max(1, Math.min(root.Constants.LIMITS.ALERT_THROTTLE_MAX_ALERTS, Number(rule.alertThrottle.maxAlerts) || 1)),
+      windowMinutes = Math.max(1, Math.min(root.Constants.LIMITS.ALERT_THROTTLE_WINDOW_MAX_MINUTES, Number(rule.alertThrottle.windowMinutes) || 5)),
+      windowMs = windowMinutes * 60000,
+      times = [...(existingJobs || []), ...(plannedJobs || [])]
+        .filter(j =>
+          j.siteId === site.id &&
+          j.profileId === profile.id &&
+          j.ruleId === rule.id &&
+          isLocalAlert(j.action) &&
+          ![JOB.CANCELLED, JOB.SKIPPED, JOB.FAILED].includes(j.status)
+        )
+        .map(localAlertTime)
+        .filter(Number.isFinite);
+    times.push(Number(candidateTime));
+    times.sort((a, b) => a - b);
+    let left = 0;
+    for (let right = 0; right < times.length; right++) {
+      while (times[right] - times[left] > windowMs) left++;
+      if (right - left + 1 > maxAlerts) return false;
+    }
+    return true;
+  };
   const counters = rule => {
     rule.runtime = rule.runtime || {};
     rule.runtime.counters = { cycles: 0, matches: 0, planned: 0, skippedSchedule: 0, skippedLedger: 0, skippedConflict: 0, errors: 0, ...(rule.runtime.counters || {}) };
@@ -209,6 +242,7 @@
   const skippedDependency = (action, reason, at) => ({ actionId: String(action?.id || ''), actionType: String(action?.type || ''), reason: String(reason || 'not-scheduled'), at });
   const planCycle = async (site, profile, issues, at = new Date(), { safety = null } = {}) => {
     const ledger = await root.Storage.getLedger(),
+      existingJobs = root.Storage.getJobs ? await root.Storage.getJobs() : [],
       now = at.getTime(),
       plannedAt = new Date(now).toISOString(),
       plans = [],
@@ -279,6 +313,11 @@
             estimateBase = Number.isFinite(previousEstimate) ? previousEstimate : now,
             skipBlocks = chained && skippedSincePrevious.length && dependencyPolicy.skipped === 'stop',
             scheduledMs = skipBlocks ? now : (chained ? estimateBase + step.offsetSeconds * 1000 : now + step.offsetSeconds * 1000);
+          if (isLocalAlert(action.type) && !alertThrottleAllows(existingJobs, plans, site, profile, rule, scheduledMs)) {
+            c.skippedLedger++;
+            rememberSkip(action, 'alert-throttle');
+            continue;
+          }
           const job = {
             id,
             siteId: site.id,
@@ -296,7 +335,9 @@
             createdAt: nowIso(),
             scheduledAt: new Date(scheduledMs).toISOString(),
             historyOrderAt: new Date(scheduledMs).toISOString(),
-            status: 'pending',
+            approvalRequired: Boolean(action.needsApproval),
+            approvedAt: action.needsApproval ? null : plannedAt,
+            status: action.needsApproval ? JOB.AWAITING_APPROVAL : JOB.PENDING,
             attempts: 0
           };
           if (chained) {
@@ -327,12 +368,117 @@
     }
     return { plans, detections };
   };
+  const planOneTime = async (site, profile, rule, issues, operationId, at = new Date(), { safety = null } = {}) => {
+    const ledger = await root.Storage.getLedger(),
+      existingJobs = root.Storage.getJobs ? await root.Storage.getJobs() : [],
+      now = at.getTime(),
+      plannedAt = new Date(now).toISOString(),
+      limits = { ...root.Defaults.safety(), ...(safety || {}) },
+      plans = [],
+      detections = [],
+      plannedByType = new Map(),
+      transientRule = structuredClone(rule),
+      dependencyPolicy = chainPolicyFor(rule),
+      maxIssues = Math.max(1, Number(limits.maxIssuesPerCycle) || 25),
+      maxActions = Math.max(1, Number(limits.maxActionsPerCycle) || 50);
+    transientRule.enabled = true;
+    transientRule.schedule = { mode: 'always', scheduleIds: [] };
+    for (const issue of (issues || []).slice(0, maxIssues)) {
+      if (!matchesLogic(issue, transientRule.logic)) continue;
+      detections.push({ issueKey: issue.key, ruleId: transientRule.id, issue, at: plannedAt });
+      const eligible = (transientRule.actions || []).filter(a => a.enabled !== false && actionMatches(issue, a)),
+        selected = randomizedActionIds(transientRule, eligible);
+      let previousJob = null, skippedSincePrevious = [];
+      const rememberSkip = (action, reason) => skippedSincePrevious.push(skippedDependency(action, reason, plannedAt));
+      for (const action of transientRule.actions || []) {
+        if (plans.length >= maxActions) break;
+        const conditionOk = actionMatches(issue, action),
+          isSelected = selected.has(action.id) && action.enabled !== false && conditionOk;
+        if (!isSelected) {
+          rememberSkip(action, action.enabled === false ? 'disabled' : !conditionOk ? 'condition-not-matched' : 'random-selection');
+          continue;
+        }
+        const limit = Number(hourlyLimit(limits, action.type)),
+          already = hourlyCount(ledger, action.type, now) + (plannedByType.get(action.type) || 0);
+        if (Number.isFinite(limit) && already >= limit) {
+          rememberSkip(action, 'hourly-limit');
+          continue;
+        }
+        const step = buildStep(site, profile, transientRule, issue, action);
+        if (!step) {
+          rememberSkip(action, 'not-applicable');
+          continue;
+        }
+        const chained = action.delay?.mode === 'after-previous';
+        if (chained && !previousJob && !skippedSincePrevious.length) {
+          rememberSkip(action, 'missing-previous-action');
+          continue;
+        }
+        const id = crypto.randomUUID(),
+          previousEstimate = previousJob ? new Date(previousJob.scheduledAt || plannedAt).getTime() : now,
+          estimateBase = Number.isFinite(previousEstimate) ? previousEstimate : now,
+          skipBlocks = chained && skippedSincePrevious.length && dependencyPolicy.skipped === 'stop',
+          scheduledMs = skipBlocks ? now : (chained ? estimateBase + step.offsetSeconds * 1000 : now + step.offsetSeconds * 1000),
+          ledgerKey = `bulk:${profile.id}:${operationId}:${issue.key}:${action.id}`;
+        if (isLocalAlert(action.type) && !alertThrottleAllows(existingJobs, plans, site, profile, transientRule, scheduledMs)) {
+          rememberSkip(action, 'alert-throttle');
+          continue;
+        }
+        const job = {
+          id,
+          sourceType: 'bulk-operation',
+          bulkOperationId: operationId,
+          ruleSnapshot: structuredClone(transientRule),
+          siteId: site.id,
+          profileId: profile.id,
+          ruleId: transientRule.id,
+          ruleName: transientRule.name || 'Bulk operation',
+          issueKey: issue.key,
+          issueSnapshot: issue,
+          expectedStatusId: String(issue.statusId || ''),
+          expectedStatusName: String(issue.status || ''),
+          precondition: actionPrecondition(action, issue),
+          manualRelativeSchedule: transientRule.manualProcess?.relativeSchedule === 'preserve' ? 'preserve' : 'update',
+          ...step,
+          ledgerKey,
+          createdAt: plannedAt,
+          scheduledAt: new Date(scheduledMs).toISOString(),
+          historyOrderAt: new Date(scheduledMs).toISOString(),
+          approvalRequired: Boolean(action.needsApproval),
+          approvedAt: action.needsApproval ? null : plannedAt,
+          status: action.needsApproval ? JOB.AWAITING_APPROVAL : JOB.PENDING,
+          attempts: 0
+        };
+        if (chained) {
+          job.dependencyDelaySeconds = step.offsetSeconds;
+          job.dependencyPolicy = { ...dependencyPolicy };
+          if (skippedSincePrevious.length) job.dependencySkipped = structuredClone(skippedSincePrevious);
+          if (previousJob) {
+            job.dependsOnJobId = previousJob.id;
+            job.dependencyScheduled = false;
+          }
+          else {
+            job.dependencyScheduled = true;
+            job.dependencyResolvedAt = skippedSincePrevious.at(-1)?.at || plannedAt;
+            job.dependencyResolvedStatus = JOB.SKIPPED;
+          }
+        }
+        plans.push(job);
+        previousJob = job;
+        skippedSincePrevious = [];
+        plannedByType.set(action.type, (plannedByType.get(action.type) || 0) + 1);
+      }
+      if (plans.length >= maxActions) break;
+    }
+    return { plans, detections };
+  };
   const stale = message => Object.assign(new Error(message), { code: "ACTION_PRECONDITION_CHANGED" });
   const sameStable = (a, b) => JSON.stringify(stableValue(a)) === JSON.stringify(stableValue(b));
   const validateAction = async (client, job, profile, { expectedStatusId = "", expectedStatusName = "", expectedPrecondition = null, skipSchedule = false } = {}) => {
-    const rule = (profile.rules || []).find(r => r.id === job.ruleId);
-    if (!rule || !rule.enabled) throw new Error("Rule was removed or disabled.");
-    if (!skipSchedule && !ruleScheduleActive(profile, rule, new Date())) throw stale("Schedule is no longer active.");
+    const bulkOperation = job.sourceType === 'bulk-operation',
+      rule = bulkOperation ? job.ruleSnapshot : (profile.rules || []).find(r => r.id === job.ruleId);
+    if (!rule || (!bulkOperation && !rule.enabled)) throw new Error(bulkOperation ? "Bulk operation definition is unavailable." : "Rule was removed or disabled.");
+    if (!bulkOperation && !skipSchedule && !ruleScheduleActive(profile, rule, new Date())) throw stale("Schedule is no longer active.");
     const action = (rule.actions || []).find(a => a.id === job.actionId);
     if (!action || action.enabled === false) throw new Error("Action was removed or disabled.");
     const raw = await client.issue(job.issueKey, "names,schema"),
@@ -373,5 +519,5 @@
     for (const c of all) if (c?.field && !aliases.has(c.field)) base.push(c.field);
     return [...new Set(base)];
   };
-  root.RuleEngine = Object.freeze({ planCycle, validateAction, matchesLogic, actionMatches, valuesFor, ruleScheduleActive, policyFingerprint, delayFor, requiredIssueFields, actionPrecondition });
+  root.RuleEngine = Object.freeze({ planCycle, planOneTime, validateAction, matchesLogic, actionMatches, valuesFor, ruleScheduleActive, policyFingerprint, delayFor, requiredIssueFields, actionPrecondition });
 })();

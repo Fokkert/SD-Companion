@@ -8,8 +8,8 @@ globalThis.SDCompanion = {};
 load('src/shared/constants.js');
 load('src/shared/utils.js');
 const SD = SDCompanion, { ACTION, JOB } = SD.Constants;
-assert.equal(SD.Constants.BUILD_VERSION, '2.0.12');
-assert.equal(SD.Constants.SCHEMA_VERSION, 32);
+assert.equal(SD.Constants.BUILD_VERSION, '2.1.0');
+assert.equal(SD.Constants.SCHEMA_VERSION, 33);
 const appHtml = read('src/ui/app/app.html'),
   sideHtml = read('src/ui/app/sidepanel.html'),
   home = read('src/ui/app/pages/home.js'),

@@ -48,6 +48,10 @@
     if ((r.actions || []).length > L.RULE_ACTION_COUNT_MAX) errors.push(`Rule '${r.name}' can contain at most ${L.RULE_ACTION_COUNT_MAX} actions.`);
     for (const key of ['cancelled', 'skipped', 'failed']) if (!['continue', 'stop'].includes(r.chainDependency?.[key] || 'continue')) errors.push(`Rule '${r.name}' has an invalid chained-action dependency policy.`);
     if (!['update', 'preserve'].includes(r.manualProcess?.relativeSchedule || 'update')) errors.push(`Rule '${r.name}' has an invalid manual chained-schedule policy.`);
+    if (r.alertThrottle?.enabled) {
+      num(r.alertThrottle?.maxAlerts, 1, L.ALERT_THROTTLE_MAX_ALERTS, `Rule '${r.name}' local-alert limit`, errors);
+      num(r.alertThrottle?.windowMinutes, 1, L.ALERT_THROTTLE_WINDOW_MAX_MINUTES, `Rule '${r.name}' local-alert window`, errors);
+    }
     for (const [i, a] of (r.actions || []).entries()) {
       validateAction(a, r, errors);
       if (i === 0 && a.delay?.mode === 'after-previous') errors.push(`Rule '${r.name}' cannot chain its first action after a previous action.`);

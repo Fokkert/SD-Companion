@@ -6,9 +6,9 @@ const manifest = JSON.parse(read('manifest.json')),
   events = read('src/ui/app/app-events.js'),
   home = read('src/ui/app/pages/home.js'),
   css = read('src/ui/app/app.css');
-assert.equal(manifest.version, '2.0.12');
+assert.equal(manifest.version, '2.1.0');
 assert.equal(manifest.version_name, 'V2');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.0.12"'));
+assert(textIncludes(constants, 'BUILD_VERSION:"2.1.0"'));
 // Unit selectors must declare their working variables on the normal execution path.
 assert(textIncludes(events, "if(!key)return false;const u=el.value;if(key==='execution-repeat')"));
 assert(textIncludes(events, "if(!key)return false;const u=el.value,card=el.closest('.action-card')"));

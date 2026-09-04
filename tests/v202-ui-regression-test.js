@@ -8,9 +8,9 @@ const manifest = JSON.parse(read('manifest.json')),
   data = read('src/ui/app/pages/data.js'),
   events = read('src/ui/app/app-events.js'),
   css = read('src/ui/app/app.css');
-assert.equal(manifest.version, '2.0.12');
+assert.equal(manifest.version, '2.1.0');
 assert.equal(manifest.version_name, 'V2');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.0.12"'));
+assert(textIncludes(constants, 'BUILD_VERSION:"2.1.0"'));
 // V1.5.22 radar contract: compact monitor geometry + explicit axes/rings/sweep DOM.
 for (const token of ['radar radar-pro', 'radar-axis h', 'radar-axis v', 'radar-ring r1', 'radar-ring r2', 'radar-ring r3', 'radar-sweep', 'radar-core'])
   assert(textIncludes(home, token), `missing V1 radar token ${token}`);

@@ -215,9 +215,17 @@ const hideJiraAlarmPopup = async siteId => {
     } catch {}
   }
 };
+let alarmPlaybackGeneration = 0;
 SD.Audio = Object.freeze({
-  play: async (alarm, meta = {}) => {
+  generation: () => alarmPlaybackGeneration,
+  cancelAll: async () => {
+    alarmPlaybackGeneration += 1;
+    await SD.Audio.stop();
+  },
+  play: async (alarm, meta = {}, expectedGeneration = null) => {
+    if (expectedGeneration !== null && expectedGeneration !== alarmPlaybackGeneration) return false;
     await SD.Audio.stop(false);
+    if (expectedGeneration !== null && expectedGeneration !== alarmPlaybackGeneration) return false;
     await setAlarmRuntime(true, alarm, meta);
     try {
       chrome.runtime.sendMessage({ type: "SD_ALARM_STATE", active: true, alarm: { ...alarm, ...meta } }).catch(() => {});
@@ -230,6 +238,7 @@ SD.Audio = Object.freeze({
       await ensureOffscreen();
       await chrome.runtime.sendMessage({ type: "SD_OFFSCREEN_PLAY", alarm }).catch(() => {});
     }
+    return true;
   },
   stop: async (clearNotification = true) => {
     const state = await SD.Storage.ensureState(), active = state.runtime?.activeAlarm;
@@ -265,6 +274,11 @@ SD.Audio = Object.freeze({
     }
   }
 });
+const stopAllUserAlarms = async () => {
+  const result = await SD.JobQueue.cancelLocalAlerts({ actionTypes: [SD.Constants.ACTION.ALARM] });
+  await SD.Audio.cancelAll();
+  return result;
+};
 const POPUP_PATH = 'src/ui/app/app.html', SIDEPANEL_PATH = 'src/ui/app/sidepanel.html';
 const configureActionTarget = async (state = null) => {
   state = state || await SD.Storage.ensureState();
@@ -631,6 +645,67 @@ const scanCurrentMatches = async (siteId, profileId, { operationId = '' } = {}) 
   await setBadge();
   return { matches: snapshot.rows, checkedAt };
 };
+const normalizeBulkRule = input => {
+  const defaults = SD.Defaults.rule('Bulk operation'),
+    raw = input && typeof input === 'object' ? structuredClone(input) : {},
+    rule = {
+      ...defaults,
+      ...raw,
+      id: String(raw.id || `bulk-${crypto.randomUUID()}`),
+      name: 'Bulk operation',
+      enabled: true,
+      priority: 100,
+      schedule: { mode: 'always', scheduleIds: [] },
+      source: { ...defaults.source, ...(raw.source || {}) },
+      logic: raw.logic || defaults.logic,
+      executionPolicy: { ...defaults.executionPolicy },
+      conflict: { ...defaults.conflict },
+      polling: { ...defaults.polling },
+      randomDelay: { ...defaults.randomDelay, minSeconds: 0, maxSeconds: 0, ...(raw.randomDelay || {}) },
+      chainDependency: { ...defaults.chainDependency, ...(raw.chainDependency || {}) },
+      manualProcess: { ...defaults.manualProcess, ...(raw.manualProcess || {}) },
+      alertThrottle: { ...defaults.alertThrottle, ...(raw.alertThrottle || {}) },
+      actionRandomness: { ...defaults.actionRandomness, ...(raw.actionRandomness || {}), pools: structuredClone(raw.actionRandomness?.pools || []) },
+      actions: (raw.actions || []).map(a => ({ ...SD.Defaults.action(a.type), ...a, delay: { ...SD.Defaults.action(a.type).delay, ...(a.delay || {}) }, when: { ...SD.Defaults.action(a.type).when, ...(a.when || {}), logic: a.when?.logic || SD.Defaults.action(a.type).when.logic } })),
+      runtime: structuredClone(defaults.runtime)
+    };
+  return rule;
+};
+const queryBulkOperation = async (siteId, profileId, operation, { operationId = '' } = {}) => {
+  const state = await SD.Storage.ensureState(),
+    { site, profile } = getSiteProfile(state, siteId, profileId);
+  if (!site || !profile) throw new Error('Select a Jira server and profile.');
+  const token = await SD.Storage.getCredential(site.id);
+  if (!token) throw new Error('PAT is missing.');
+  const rule = normalizeBulkRule(operation),
+    errors = SD.Validators.validateRule(rule);
+  if (errors.length) throw Object.assign(new Error(errors[0]), { code: 'VALIDATION_ERROR' });
+  if (!(rule.actions || []).some(a => a.enabled !== false)) throw Object.assign(new Error('Bulk operation needs at least one enabled action.'), { code: 'VALIDATION_ERROR' });
+  const jql = SD.RuleQuery.baseJql(rule);
+  if (!jql) throw Object.assign(new Error('Bulk operation needs a saved filter, JQL, or queryable condition.'), { code: 'VALIDATION_ERROR' });
+  SD.Operations.throwIfCancelled(operationId);
+  const maxIssues = Math.max(1, Math.min(SD.Constants.LIMITS.RULE_MAX_ISSUES, Number(state.system?.safety?.maxIssuesPerCycle) || 25)),
+    client = new SD.JiraApi.JiraClient(site, token, { operationId }),
+    raw = await client.search(`${jql} ORDER BY updated DESC`, { maxIssues, fields: SD.RuleEngine.requiredIssueFields(rule) }),
+    issues = raw.map(x => SD.Discovery.normalizeIssue(x, (rule.source?.filterIds || []).length === 1 ? String(rule.source.filterIds[0]) : '')).filter(issue => SD.RuleEngine.matchesLogic(issue, rule.logic));
+  return { state, site, profile, rule, issues, jql, client };
+};
+const previewBulkOperation = async (siteId, profileId, operation, { operationId = '' } = {}) => {
+  const result = await queryBulkOperation(siteId, profileId, operation, { operationId });
+  return {
+    jql: result.jql,
+    count: result.issues.length,
+    issues: result.issues.slice(0, 100).map(issue => ({ key: issue.key, summary: issue.summary || '', status: issue.status || '', projectKey: issue.projectKey || '' }))
+  };
+};
+const runBulkOperation = async (siteId, profileId, operation, { operationId = '' } = {}) => {
+  const result = await queryBulkOperation(siteId, profileId, operation, { operationId }),
+    planned = await SD.RuleEngine.planOneTime(result.site, result.profile, result.rule, result.issues, operationId || crypto.randomUUID(), new Date(), { safety: result.state.system?.safety });
+  SD.Operations.throwIfCancelled(operationId);
+  if (planned.plans.length) await SD.JobQueue.enqueue(planned.plans);
+  await audit('bulk-operation-run', { matches: result.issues.length, planned: planned.plans.length, jql: result.jql }, { siteId: result.site.id, profileId: result.profile.id, ruleId: result.rule.id });
+  return { matched: result.issues.length, planned: planned.plans.length, jobs: planned.plans.map(j => ({ id: j.id, issueKey: j.issueKey, action: j.action, status: j.status, scheduledAt: j.scheduledAt })) };
+};
 const updateRadar = (site, profile, detections) => {
   const retention = Math.max(1, Number(profile.radar?.retentionMinutes) || 45) * 60000,
     cut = Date.now() - retention,
@@ -994,10 +1069,10 @@ chrome.alarms.onAlarm.addListener(async a => {
   }
 });
 chrome.commands?.onCommand?.addListener(command => {
-  if (command === 'stop-alarm') SD.Audio.stop().catch(() => {});
+  if (command === 'stop-alarm') stopAllUserAlarms().catch(() => {});
 });
 chrome.notifications.onButtonClicked.addListener((id, index) => {
-  if (id === 'sd-companion-active-alarm' && index === 0) SD.Audio.stop().catch(() => {});
+  if (id === 'sd-companion-active-alarm' && index === 0) stopAllUserAlarms().catch(() => {});
 });
 chrome.notifications.onClicked.addListener(id => {
   if (id === 'sd-companion-active-alarm') chrome.action.openPopup?.().catch(() => {});
@@ -1422,6 +1497,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case MESSAGE.REFRESH_TAB_STATUS: return { ok: true, sites: await SD.Discovery.refreshBrowserStatus(message.siteId) };
         case MESSAGE.RUN_CYCLE: return await withOperation(message, 'run-cycle', async (operationId) => ({ ok: true, ...await runCycle(message.siteId, message.profileId, { operationId, manual: true }) }));
         case MESSAGE.REFRESH_CURRENT_MATCHES: return await withOperation(message, 'current-matches', async (operationId) => ({ ok: true, ...await scanCurrentMatches(message.siteId, message.profileId, { operationId }) }));
+        case MESSAGE.PREVIEW_BULK_OPERATION: return await withOperation(message, 'bulk-preview', async (operationId) => ({ ok: true, preview: await previewBulkOperation(message.siteId, message.profileId, message.operation, { operationId }) }));
+        case MESSAGE.RUN_BULK_OPERATION:
+          await requireRiskAuth(message, 'run this bulk operation');
+          return await withOperation(message, 'bulk-run', async (operationId) => ({ ok: true, result: await runBulkOperation(message.siteId, message.profileId, message.operation, { operationId }) }));
         case MESSAGE.GET_RULE_PREVIEW: {
           const cursor = await SD.Storage.getCursor(message.profileId, message.ruleId),
             state = await SD.Storage.ensureState(),
@@ -1444,9 +1523,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             const state = await SD.Storage.ensureState();
             return { ok: true, alarm: state.runtime?.activeAlarm || { active: false } };
           }
-        case MESSAGE.STOP_ALARM:
-          await SD.Audio.stop();
-          return { ok: true };
+        case MESSAGE.STOP_ALARM: {
+          const result = await stopAllUserAlarms();
+          return { ok: true, result };
+        }
         case MESSAGE.GET_ALARM_STATE: {
           const state = await SD.Storage.ensureState();
           return { ok: true, alarm: state.runtime?.activeAlarm || { active: false } };
@@ -1456,6 +1536,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case MESSAGE.CANCEL_JOBS:
           await requireRiskAuth(message, 'cancel all upcoming actions');
           return { ok: true, result: await SD.JobQueue.cancelPending({ siteId: String(message.siteId || ''), profileId: String(message.profileId || ''), issueKey: String(message.issueKey || '') }) };
+        case MESSAGE.APPROVE_JOB:
+          await requireRiskAuth(message, 'approve this Jira action');
+          return { ok: true, job: await SD.JobQueue.approve(message.jobId) };
+        case MESSAGE.APPROVE_JOBS:
+          await requireRiskAuth(message, 'approve pending Jira actions');
+          return { ok: true, result: await SD.JobQueue.approvePending({ siteId: String(message.siteId || ''), profileId: String(message.profileId || ''), issueKey: String(message.issueKey || '') }) };
         case MESSAGE.PROCESS_JOB:
           await requireRiskAuth(message, 'process this Jira action immediately');
           return { ok: true, job: await SD.JobQueue.processNow(message.jobId) };

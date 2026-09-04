@@ -3,7 +3,7 @@
     SD = globalThis.SDCompanion,
     { MESSAGE, ACTION, JOB, LIMITS: L, TRANSITION_METHOD } = SD.Constants,
     R = SD.ConditionRegistry;
-  const activeRule = () => A.ruleDraft && A.ruleDraft.id === A.selectedRuleId ? A.ruleDraft : A.profile()?.rules?.find(r => r.id === A.selectedRuleId),
+  const activeRule = () => A.page === 'bulk' ? A.ensureBulkDraft?.() : (A.ruleDraft && A.ruleDraft.id === A.selectedRuleId ? A.ruleDraft : A.profile()?.rules?.find(r => r.id === A.selectedRuleId)),
     activeSchedule = () => A.scheduleDraft && A.scheduleDraft.id === A.selectedScheduleId ? A.scheduleDraft : A.profile()?.schedules?.find(s => s.id === A.selectedScheduleId);
   const setPath = (obj, path, value) => {
     const parts = path.split('.');
@@ -430,6 +430,11 @@
           if (path === 'autoSync.enabled' || path === 'system.completionToneEnabled') A.renderPage();
           return;
         }
+        if (el.id === 'homeShowCompletedActions') {
+          A.homeShowCompletedActions = el.checked;
+          A.renderPage();
+          return;
+        }
         if (el.dataset.projectDataset && el.dataset.projectKey) {
           const s = A.site();
           if (!s) return;
@@ -642,7 +647,7 @@
               } : null;
             }
           }
-          await saveRule(r, ['mode', 'delay.mode', 'transitionId', 'toStatusId', 'manualTransitionName', 'when.enabled', 'randomPoolId'].includes(prop));
+          await saveRule(r, ['mode', 'delay.mode', 'transitionId', 'toStatusId', 'manualTransitionName', 'when.enabled', 'needsApproval', 'randomPoolId'].includes(prop));
           return;
         }
         if (el.dataset.scheduleProp) {
@@ -749,6 +754,39 @@
             A.homeDetectionView = 'current';
             return;
           }
+          if (act === 'bulk-reset') {
+            A.resetBulkDraft?.();
+            A.renderPage();
+            return;
+          }
+          if (act === 'bulk-preview') {
+            if (!s || !p) throw new Error('Select a server and profile.');
+            const draft = structuredClone(A.ensureBulkDraft());
+            normalizeRuleConditions(draft, s);
+            const errors = SD.Validators.validateRule(draft);
+            if (errors.length) throw Object.assign(new Error(errors[0]), { code: 'VALIDATION_ERROR' });
+            const response = await A.send(MESSAGE.PREVIEW_BULK_OPERATION, { siteId: s.id, profileId: p.id, operation: draft });
+            A.bulkPreview = response.preview || null;
+            A.renderPage();
+            return;
+          }
+          if (act === 'bulk-run') {
+            if (!s || !p) throw new Error('Select a server and profile.');
+            const draft = structuredClone(A.ensureBulkDraft());
+            normalizeRuleConditions(draft, s);
+            const errors = SD.Validators.validateRule(draft);
+            if (errors.length) throw Object.assign(new Error(errors[0]), { code: 'VALIDATION_ERROR' });
+            if (!(draft.actions || []).some(action => action.enabled !== false)) throw Object.assign(new Error('Add at least one enabled action.'), { code: 'VALIDATION_ERROR' });
+            if (!confirm('Run this one-time bulk operation now? Matching issues will be queued immediately and configured delays will be respected.')) return;
+            const securityAuthToken = await A.requestSecurityReauth('run this bulk operation');
+            const response = await A.send(MESSAGE.RUN_BULK_OPERATION, { siteId: s.id, profileId: p.id, operation: draft, securityAuthToken });
+            const matched = response.result?.matched || 0, planned = response.result?.planned || 0;
+            A.resetBulkDraft?.();
+            await A.pullHomeActivity();
+            A.setPage('home');
+            A.toast(`Bulk operation queued ${planned} action${planned === 1 ? '' : 's'} across ${matched} matching issue${matched === 1 ? '' : 's'}.`, 'success');
+            return;
+          }
           if (act === 'go-servers') {
             A.setPage('servers');
             return;
@@ -761,7 +799,32 @@
           }
           if (act === 'stop-alarm') {
             await A.send(MESSAGE.STOP_ALARM);
+            await A.refreshHomeActivity();
             await A.load();
+            return;
+          }
+          if (act === 'approve-job') {
+            const job = (A.jobs || []).find(x => x.id === b.dataset.jobId);
+            if (!job) throw new Error('Queued action was not found.');
+            if (job.status !== JOB.AWAITING_APPROVAL) throw new Error('This action is no longer awaiting approval.');
+            const securityAuthToken = await A.requestSecurityReauth('approve this Jira action');
+            await A.send(MESSAGE.APPROVE_JOB, { jobId: job.id, securityAuthToken });
+            await A.pullHomeActivity();
+            A.toast('Action approved.', 'success');
+            return;
+          }
+          if (act === 'approve-all-jobs') {
+            if (!s || !p) throw new Error('Select a server and profile.');
+            const count = (A.jobs || []).filter(x => x.siteId === s.id && x.profileId === p.id && x.status === JOB.AWAITING_APPROVAL).length;
+            if (!count) {
+              A.toast('No actions are awaiting approval.', 'info');
+              return;
+            }
+            if (!confirm(`Approve all ${count} pending approval${count === 1 ? '' : 's'} for this profile?`)) return;
+            const securityAuthToken = await A.requestSecurityReauth('approve all pending Jira actions for this profile');
+            const response = await A.send(MESSAGE.APPROVE_JOBS, { siteId: s.id, profileId: p.id, securityAuthToken });
+            await A.pullHomeActivity();
+            A.toast(`${response.result?.approved || 0} action${response.result?.approved === 1 ? '' : 's'} approved.`, 'success');
             return;
           }
           if (act === 'process-job') {
@@ -778,7 +841,7 @@
           if (act === 'process-issue-jobs') {
             if (!s || !p) throw new Error('Select a server and profile.');
             const issueKey = String(b.dataset.issueKey || ''),
-              count = (A.jobs || []).filter(x => x.siteId === s.id && x.profileId === p.id && x.issueKey === issueKey && x.status === JOB.PENDING).length;
+              count = (A.jobs || []).filter(x => x.siteId === s.id && x.profileId === p.id && x.issueKey === issueKey && [JOB.AWAITING_APPROVAL, JOB.PENDING].includes(x.status)).length;
             if (!count) {
               A.toast('No upcoming actions remain for this issue.', 'info');
               return;
@@ -792,7 +855,7 @@
           }
           if (act === 'process-all-jobs') {
             if (!s || !p) throw new Error('Select a server and profile.');
-            const count = (A.jobs || []).filter(x => x.siteId === s.id && x.profileId === p.id && x.status === JOB.PENDING).length;
+            const count = (A.jobs || []).filter(x => x.siteId === s.id && x.profileId === p.id && [JOB.AWAITING_APPROVAL, JOB.PENDING].includes(x.status)).length;
             if (!count) {
               A.toast('No upcoming actions remain.', 'info');
               return;
@@ -807,8 +870,8 @@
           if (act === 'cancel-job') {
             const job = (A.jobs || []).find(x => x.id === b.dataset.jobId);
             if (!job) throw new Error('Queued action was not found.');
-            if (![JOB.PENDING, JOB.RUNNING].includes(job.status)) throw new Error('This action is no longer cancellable.');
-            if (!confirm(`Cancel this ${job.status === 'running' ? 'running' : 'queued'} action for ${job.issueKey || 'this issue'}?`)) return;
+            if (![JOB.AWAITING_APPROVAL, JOB.PENDING, JOB.RUNNING].includes(job.status)) throw new Error('This action is no longer cancellable.');
+            if (!confirm(`Cancel this ${job.status === JOB.RUNNING ? 'running' : job.status === JOB.AWAITING_APPROVAL ? 'unapproved' : 'queued'} action for ${job.issueKey || 'this issue'}?`)) return;
             const result = await A.send(MESSAGE.CANCEL_JOB, { jobId: job.id });
             await A.pullHomeActivity();
             A.toast(result.job?.status === JOB.CANCELLED ? 'Queued action cancelled.' : 'Cancellation requested.', 'info');

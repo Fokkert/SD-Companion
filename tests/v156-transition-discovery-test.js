@@ -9,8 +9,8 @@ const SD = SDCompanion;
 SD.Storage = { appendLog: async () => {} };
 SD.Operations = { throwIfCancelled: () => {} };
 load('src/background/discovery.js');
-assert.equal(SD.Constants.BUILD_VERSION, '2.0.12');
-assert.equal(SD.Constants.SCHEMA_VERSION, 32);
+assert.equal(SD.Constants.BUILD_VERSION, '2.1.0');
+assert.equal(SD.Constants.SCHEMA_VERSION, 33);
 const graph = {
   isDraft: false,
   layout: {

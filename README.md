@@ -15,6 +15,7 @@ SD Companion can:
   transition metadata.
 - Detect Jira issues using configurable rules and Jira Query Language (JQL).
 - Apply additional conditions to detected issues before actions are scheduled.
+- Run one-time **Bulk Operations** from Home using the same filters, conditions and action-chain model as rules, without saving a rule.
 - Run automated Jira actions, including:
   - assign or unassign issues;
   - post comments;
@@ -23,6 +24,8 @@ SD Companion can:
   - add or remove labels;
   - change priority.
 - Schedule actions with configurable delays and dependencies.
+- Require explicit user approval for selected actions before they are allowed to execute.
+- Rate-limit local Alarm/Notification actions per rule to prevent alert floods.
 - Run named monitoring schedules.
 - Process matching issues immediately when requested.
 - Monitor Jira connectivity and report connection problems.
@@ -30,6 +33,7 @@ SD Companion can:
 - Export and import profiles.
 - Create password-encrypted profile backups that can include Jira credentials.
 - Protect the extension UI and sensitive operations with an optional local PIN/password lock.
+- Review action history with active/new work first and optionally hide completed history.
 - Run from the normal extension popup or Chrome/Edge side panel.
 
 Jira permissions remain authoritative: SD Companion can only read or change data that the Jira user
@@ -155,14 +159,39 @@ executed.
 
 SD Companion supports action pipelines for detected issues.
 
-Available actions include assignment/unassignment, comments, transitions, field edits, label changes
-and priority changes.
+Available actions include assignment/unassignment, comments, transitions, field edits, label changes,
+priority changes, local alarms and browser notifications.
 
 Actions can use delays and dependencies, allowing multi-step workflows to execute in a controlled
-order rather than all at once.
+order rather than all at once. Individual actions can also enable **Needs approval**. Approval-gated
+actions remain in Action History and cannot execute until a user explicitly approves them.
+
+Home → Issue Action History keeps approval/running/pending work above older completed history. A
+**Show completed** toggle can hide terminal actions, and **Approve all** is available for the active
+server/profile when approval-gated actions are waiting.
 
 Because these actions can modify Jira issues, test automation against non-critical issues before
 enabling it broadly.
+
+## Bulk Operations
+
+Home → **Bulk Operations** provides a one-time execution surface for work that should run immediately
+without creating or saving a monitoring rule. Build a constrained Jira filter, optional typed
+conditions and an ordered action chain, preview the current matches, then choose **Run now**.
+
+Bulk Operations use the same action validation, Jira preflight, safety limits, delays, chained-action
+dependencies and optional approval gates as normal rule actions. The temporary bulk definition is not
+added to the profile's saved rules.
+
+## Local Alert Controls
+
+Alarm and Notification actions can be rate-limited per rule. Enable the rule's **Local alert rate
+limit** and configure the maximum number of local alerts allowed within a rolling time window. The
+limit applies to both Alarm and Notification actions belonging to that rule.
+
+The top alarm-stop control stops the current rule alarm and cancels queued/scheduled Alarm actions
+across the extension. Browser action notifications use one stable notification slot so new action
+notifications replace the previous one instead of building an unbounded stack.
 
 ## Profiles
 

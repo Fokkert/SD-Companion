@@ -29,11 +29,14 @@
       badge.textContent = !s ? "NO SERVER" : !hasPat ? "PAT MISSING" : healthy ? (degraded ? "API DEGRADED" : "API ONLINE") : "API OFFLINE";
       badge.className = `pill ${!s ? "info" : !hasPat ? "warn" : healthy ? (degraded ? "warn" : "good") : "bad"}`;
     }
-    const stop = A.$("quickStopAlarm"), alarmActive = Boolean(A.state?.runtime?.activeAlarm?.active);
+    const stop = A.$("quickStopAlarm"),
+      alarmActive = Boolean(A.state?.runtime?.activeAlarm?.active),
+      queuedAlarms = (A.jobs || []).some(j => j.action === SD.Constants.ACTION.ALARM && [SD.Constants.JOB.AWAITING_APPROVAL, SD.Constants.JOB.PENDING, SD.Constants.JOB.RUNNING].includes(j.status)),
+      canStopAlarms = alarmActive || queuedAlarms;
     if (stop) {
-      stop.classList.toggle("alarm-active", alarmActive);
-      stop.disabled = !alarmActive;
-      stop.title = alarmActive ? "Stop alarm" : "No alarm active";
+      stop.classList.toggle("alarm-active", canStopAlarms);
+      stop.disabled = !canStopAlarms;
+      stop.title = canStopAlarms ? "Stop current alarm and cancel scheduled alarms" : "No active or scheduled alarms";
     }
     const av = A.$("serverAvatar");
     if (s?.icon?.mode === "auto" && s.icon.url) av.innerHTML = `<img src="${A.esc(s.icon.url)}" alt="" data-favicon data-fallback="../../../icons/server-${A.esc(s.icon?.preset || "emerald")}.svg">`;

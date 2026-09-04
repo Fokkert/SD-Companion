@@ -19,6 +19,9 @@
     serverEditId: "",
     settingsSection: "general",
     homeDetectionView: "current",
+    homeShowCompletedActions: true,
+    bulkDraft: null,
+    bulkPreview: null,
     pendingImport: null,
     ruleDraft: null,
     ruleDraftIsNew: false,
@@ -35,7 +38,7 @@
   };
   A.$ = id => document.getElementById(id);
   A.esc = v => String(v ?? "").replace(/[&<>'"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[c]));
-  const opTypes = new Set([MESSAGE.ADD_SERVER, MESSAGE.TEST_CONNECTION, MESSAGE.DISCOVER_PROJECTS, MESSAGE.SYNC_SITE, MESSAGE.REFRESH_HEALTH, MESSAGE.RUN_CYCLE, MESSAGE.REFRESH_CURRENT_MATCHES]);
+  const opTypes = new Set([MESSAGE.ADD_SERVER, MESSAGE.TEST_CONNECTION, MESSAGE.DISCOVER_PROJECTS, MESSAGE.SYNC_SITE, MESSAGE.REFRESH_HEALTH, MESSAGE.RUN_CYCLE, MESSAGE.REFRESH_CURRENT_MATCHES, MESSAGE.PREVIEW_BULK_OPERATION, MESSAGE.RUN_BULK_OPERATION]);
   A.send = (type, payload = {}) => new Promise((resolve, reject) => {
     const p = { ...payload };
     if (A.currentOperationId && opTypes.has(type) && !p.operationId) p.operationId = A.currentOperationId;
@@ -169,6 +172,26 @@
   };
   A.site = () => A.state?.jiraSites.find(s => s.id === A.state.activeSiteId) || A.state?.jiraSites[0] || null;
   A.profile = () => A.state?.profiles.find(p => p.id === A.state.activeProfileId) || A.state?.profiles.find(p => p.siteId === A.site()?.id) || A.state?.profiles[0] || null;
+  A.makeBulkDraft = () => {
+    const rule = SD.Defaults.rule('Bulk operation');
+    rule.id = `bulk-${crypto.randomUUID()}`;
+    rule.enabled = true;
+    rule.schedule = { mode: 'always', scheduleIds: [] };
+    rule.randomDelay = { minSeconds: 0, maxSeconds: 0, unit: 'seconds' };
+    rule.executionPolicy = { ...SD.Defaults.rule().executionPolicy };
+    rule.conflict = { ...SD.Defaults.rule().conflict };
+    rule.actions = [];
+    return rule;
+  };
+  A.ensureBulkDraft = () => {
+    if (!A.bulkDraft) A.bulkDraft = A.makeBulkDraft();
+    return A.bulkDraft;
+  };
+  A.resetBulkDraft = () => {
+    A.bulkDraft = A.makeBulkDraft();
+    A.bulkPreview = null;
+    return A.bulkDraft;
+  };
   A.beginRuleEdit = (rule, { isNew = false } = {}) => {
     A.ruleDraft = structuredClone(rule);
     A.ruleDraftIsNew = Boolean(isNew);
