@@ -1,3 +1,15 @@
+## V2 · Build 2.2.1 — Unified activity and Home card refinement
+
+- Removed Help disclosure arrows and added stable local icons to Rules list entries.
+- Removed the standalone Detections list from Home; Detections & Actions now renders only detected issues that have queued or processed actions.
+- Current/Recent views now filter the combined per-issue action history instead of controlling a duplicate detections list.
+- Rebuilt the Monitoring deck around Detected, Actions, and Rules statistics and removed the separate rule-count ribbon.
+- Refined Home card spacing, hierarchy, control alignment, and Detections & Actions toolbar alignment.
+- Corrected server/profile soft-select option centering by reserving scrollbar space symmetrically.
+- Promoted Security status indicators into explicit cards.
+- Bumped build and manifest version to 2.2.1.
+- Release archives now extract into a versioned top-level folder.
+
 ## V2 · Build 2.2.0 — Home status and navigation refinement
 
 - Removed redundant Home status subtitles and duplicate cycle timestamps.

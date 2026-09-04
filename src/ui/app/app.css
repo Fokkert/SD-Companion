@@ -837,13 +837,6 @@ body[data-surface="sidepanel"] .topbar,body[data-surface="sidepanel"] .context-b
   color: var(--primary);
 }
 
-.help-chevron {
-  transition: transform .18s ease;
-}
-
-.help-topic[open] .help-chevron {
-  transform: rotate(180deg);
-}
 
 .help-body {
   padding: 16px 20px 18px;
@@ -4924,8 +4917,13 @@ n.connection-policy-note {
 
 /* Keep scroll thumbs/tracks visually inside rounded scrolling surfaces. */
 
-.inventory-list,.glass-multi,.sd-soft-select-menu,.discovery-matrix,.transition-inventory,.data-catalog {
+.inventory-list,.glass-multi,.discovery-matrix,.transition-inventory,.data-catalog {
   scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+
+.sd-soft-select-menu {
+  scrollbar-gutter: stable both-edges;
   overscroll-behavior: contain;
 }
 
@@ -5107,7 +5105,7 @@ n.connection-policy-note {
   display: none;
 }
 
-#homeMonitorCard,#homeOperationalHealth,#homeAlarmSlot,#homeDetectionsCard,#homeIssueActivityCard {
+#homeMonitorCard,#homeOperationalHealth,#homeAlarmSlot,#homeDetectionsActionsCard {
   contain: layout style;
 }
 
@@ -6691,9 +6689,6 @@ n.connection-policy-note {
   gap: 14px;
 }
 
-.detections-actions-head {
-  align-items: flex-start;
-}
 
 .detections-actions-primary-controls,
 .detections-actions-global-controls {
@@ -6706,23 +6701,6 @@ n.connection-policy-note {
   border-top: 1px solid color-mix(in srgb,var(--line) 78%,transparent);
 }
 
-.home-combined-section {
-  display: grid;
-  gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid color-mix(in srgb,var(--line) 78%,transparent);
-}
-
-.home-combined-section .section-gap {
-  margin-top: 0 !important;
-}
-
-.home-combined-section .small-section-title {
-  font-size: 13px;
-  font-weight: 850;
-  color: var(--muted2);
-  letter-spacing: .02em;
-}
 
 /* Profiles: actions stay vertically centered at the right edge of each card. */
 .profile-list-item {
@@ -6811,22 +6789,14 @@ n.connection-policy-note {
 }
 
 @container (max-width:560px) {
-  .detections-actions-head,
   .automation-feedback-grid {
     grid-template-columns: 1fr !important;
-  }
-
-  .detections-actions-head {
     display: grid;
   }
 
   .profile-card-actions {
     justify-self: end;
     justify-content: flex-end;
-  }
-
-  .automation-feedback-grid {
-    display: grid;
   }
 }
 
@@ -6986,5 +6956,316 @@ n.connection-policy-note {
   .detections-actions-global-controls .freshness-chip {
     margin-left: 0;
     margin-inline-start: auto;
+  }
+}
+
+/* V2.2.1 Home, rule-list, selector, Help, and Security refinement ---------- */
+
+/* Help disclosure titles intentionally have no rotating arrow/chevron. */
+.help-topic summary {
+  justify-content: flex-start;
+}
+
+.help-topic summary::marker {
+  content: "";
+}
+
+/* Rule entries use a stable deterministic icon chosen from a small local set. */
+.rule-entry-icon {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb,var(--primary) 28%,var(--line));
+  border-radius: 11px;
+  background: color-mix(in srgb,var(--primary) 8%,var(--surface-input));
+  color: var(--primary);
+}
+
+.rule-entry-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rule-card-title-row {
+  flex-wrap: nowrap !important;
+}
+
+/* Home surfaces use one consistent hierarchy instead of unrelated card styles. */
+.home-page {
+  gap: 14px !important;
+}
+
+.home-page > .card,
+.home-live-card,
+.operational-health .status-tile {
+  border: 1px solid color-mix(in srgb,var(--line2) 72%,var(--line)) !important;
+  background: linear-gradient(150deg,
+    color-mix(in srgb,var(--panel2) 84%,transparent),
+    color-mix(in srgb,var(--panel) 94%,transparent)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.045),0 14px 34px rgba(0,0,0,.14) !important;
+}
+
+.home-page > .card,
+.home-live-card {
+  border-radius: 21px !important;
+}
+
+/* Monitoring: radar + one compact control row + exactly three statistic cards. */
+.radar-monitor-card {
+  padding: 16px !important;
+  gap: 0 !important;
+}
+
+.monitor-compact-grid {
+  grid-template-columns: 148px minmax(0,1fr) !important;
+  gap: 16px !important;
+  align-items: center !important;
+}
+
+.radar-monitor-card .radar-stage {
+  min-height: 150px !important;
+}
+
+.radar-monitor-card .radar.radar-pro {
+  width: 144px !important;
+  height: 144px !important;
+}
+
+.monitor-compact-side {
+  gap: 12px !important;
+}
+
+.radar-monitor-head {
+  min-height: 44px;
+  align-items: center !important;
+  gap: 14px !important;
+}
+
+.monitor-state {
+  min-width: 0;
+  align-items: center !important;
+}
+
+.monitor-label {
+  margin-bottom: 2px;
+}
+
+.monitor-state strong {
+  font-size: 16px;
+  line-height: 1.1;
+}
+
+.radar-monitor-controls {
+  gap: 10px !important;
+  flex-wrap: nowrap !important;
+  justify-content: flex-end !important;
+}
+
+.radar-monitor-controls .master-switch {
+  flex: 0 0 auto;
+}
+
+.monitoring-scan-button {
+  min-width: 88px;
+}
+
+.compact-radar-stats {
+  gap: 8px !important;
+}
+
+.compact-radar-stats > div {
+  min-height: 66px;
+  padding: 10px 8px !important;
+  display: grid;
+  align-content: center;
+  border-radius: 15px !important;
+  border: 1px solid color-mix(in srgb,var(--line2) 72%,var(--line)) !important;
+  background: color-mix(in srgb,var(--surface-soft) 88%,transparent) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+}
+
+.compact-radar-stats strong {
+  font-size: 20px !important;
+}
+
+.compact-radar-stats span {
+  margin-top: 5px !important;
+  font-size: 10.5px !important;
+}
+
+/* The old rule-count ribbon no longer exists. */
+.monitor-timing {
+  display: none !important;
+}
+
+/* Schedule and health tiles follow the same vertical rhythm as Monitoring. */
+.home-schedule-card {
+  min-height: 74px;
+  padding: 14px 16px !important;
+  border-radius: 19px !important;
+}
+
+.operational-health {
+  gap: 10px !important;
+}
+
+.operational-health .status-tile {
+  min-height: 84px;
+  padding: 12px 13px !important;
+  border-radius: 18px !important;
+}
+
+.operational-health .status-tile strong {
+  margin-top: 6px;
+  font-size: 16px !important;
+}
+
+/* Detections and Actions is now one action-bearing issue list, with one header. */
+.detections-actions-card {
+  gap: 0 !important;
+  padding: 16px !important;
+}
+
+.detections-actions-toolbar {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.detections-actions-title {
+  margin: 0;
+  line-height: 36px;
+  white-space: nowrap;
+}
+
+.detections-actions-primary-controls {
+  margin-left: auto;
+  flex-wrap: nowrap !important;
+}
+
+.detections-actions-global-controls {
+  min-height: 52px;
+  padding: 9px 0 !important;
+  margin: 10px 0 !important;
+  border-top: 1px solid color-mix(in srgb,var(--line) 82%,transparent);
+  border-bottom: 1px solid color-mix(in srgb,var(--line) 82%,transparent);
+  align-items: center !important;
+  row-gap: 8px !important;
+}
+
+.detections-actions-global-controls .show-completed-control,
+.detections-actions-global-controls .freshness-chip {
+  align-self: center;
+}
+
+.detections-actions-global-controls .freshness-chip {
+  margin-left: auto;
+}
+
+.detections-actions-card .issue-activity-list {
+  margin: 0;
+  gap: 8px;
+}
+
+/* Soft-select menus reserve scrollbar space on both edges, keeping option
+ * cards visually centered inside the menu border. */
+.sd-soft-select-menu,
+.sd-soft-select-menu.sd-soft-select-portal {
+  scrollbar-gutter: stable both-edges !important;
+}
+
+.sd-soft-select-menu .sd-soft-select-option {
+  box-sizing: border-box;
+  margin-inline: 0;
+}
+
+/* Security status indicators are explicit cards instead of loose text blocks. */
+.security-status-card {
+  min-height: 72px;
+  display: grid;
+  align-content: center;
+  padding: 12px 13px !important;
+  border: 1px solid color-mix(in srgb,var(--primary) 20%,var(--line)) !important;
+  border-radius: 14px !important;
+  background: color-mix(in srgb,var(--panel2) 74%,var(--surface-soft)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035),0 8px 18px rgba(0,0,0,.09);
+}
+
+.security-status-card strong {
+  margin-top: 6px !important;
+  font-size: 14px;
+}
+
+@container (max-width:565px) {
+  .monitor-compact-grid {
+    grid-template-columns: 126px minmax(0,1fr) !important;
+    gap: 11px !important;
+  }
+
+  .radar-monitor-card .radar-stage {
+    min-height: 128px !important;
+  }
+
+  .radar-monitor-card .radar.radar-pro {
+    width: 122px !important;
+    height: 122px !important;
+  }
+
+  .radar-monitor-head {
+    align-items: center !important;
+  }
+
+  .radar-monitor-controls {
+    gap: 8px !important;
+  }
+
+  .monitoring-scan-button {
+    min-width: 78px;
+    padding-inline: 10px !important;
+  }
+
+  .detections-actions-toolbar {
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .detections-actions-title {
+    line-height: 34px;
+  }
+
+  .detections-actions-primary-controls {
+    margin-left: auto;
+  }
+}
+
+@container (max-width:440px) {
+  .monitor-compact-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .radar-monitor-card .radar-stage {
+    min-height: 132px !important;
+  }
+
+  .radar-monitor-head {
+    width: 100%;
+  }
+
+  .detections-actions-primary-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .detections-actions-global-controls {
+    align-items: center !important;
   }
 }

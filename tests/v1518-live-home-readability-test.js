@@ -7,8 +7,8 @@ const core = fs.readFileSync('src/ui/app/app-core.js', 'utf8');
 const main = fs.readFileSync('src/ui/app/app-main.js', 'utf8');
 const sw = fs.readFileSync('src/background/service-worker.js', 'utf8');
 const css = fs.readFileSync('src/ui/app/app.css', 'utf8');
-assert.equal(manifest.version, '2.2.0');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.2.0"'));
+assert.equal(manifest.version, '2.2.1');
+assert(textIncludes(constants, 'BUILD_VERSION:"2.2.1"'));
 // Every operational Home surface must participate in the lightweight periodic DOM refresh.
 for (const id of ['homeMonitorCard', 'homeOperationalHealth', 'homeAlarmSlot', 'homeDetectionsActionsCard', 'homeScheduleCard'])
   assert(textIncludes(home, id), `${id} missing from Home live renderer`);

@@ -1,17 +1,26 @@
-# V2 Build 2.2.0 Test Report
+# V2 Build 2.2.1 Test Report
 
 ## Result
 
-- JavaScript regression files: 65/65 passed.
+- JavaScript regression files: 66/66 passed.
 - Static architecture/security test: passed.
-- JavaScript syntax validation: 105/105 passed.
+- JavaScript syntax validation: 106/106 passed.
 - JSON parsing validation: passed.
+
+## V2.2.1 focused coverage
+
+- Help topics render without custom arrows/chevrons, and Rules list entries render deterministic local SVG icons.
+- Detections & Actions has one per-issue action-bearing list; the duplicate standalone detections list and its secondary list heading are absent.
+- Current/Recent activity views operate on issues that have recorded jobs, while active jobs remain visible in Current even if the issue is no longer in the latest detection snapshot.
+- Monitoring renders Detected, Actions, and Rules statistics and no longer renders the Evaluated tile or rule-count ribbon.
+- Home card hierarchy/alignment, Detections & Actions toolbar alignment, symmetric soft-select menu gutters, and boxed Security indicators are covered by the v2.2.1 UI regression.
+- Release documentation verifies the versioned top-level extraction folder layout.
 
 ## V2.2.0 focused coverage
 
 - Removed empty-schedule and action-refresh helper text while keeping the useful primary Home states.
 - Scan Now / Check now and background monitoring are blocked when no enabled rules exist.
-- Server/profile ribbon spacing, dark-theme choices, Settings main-tab styling, Back navigation, and immediate Side Panel opening are covered by the v2.2.0 UI regression.
+- Server/profile ribbon structure, dark-theme choices, Settings main-tab styling, Back navigation, and immediate Side Panel opening are covered by the v2.2.0 UI regression.
 - Device-local protection explanatory copy is absent from Settings while the security implementation remains unchanged.
 
 ## V2.1.1 focused coverage

@@ -26,13 +26,6 @@
     }).join('');
   };
   const radar = (s, p, monitoring) => `<div class="radar radar-pro ${monitoring ? 'radar-live' : 'radar-off'}"><i class="radar-axis h"></i><i class="radar-axis v"></i><i class="radar-ring r1"></i><i class="radar-ring r2"></i><i class="radar-ring r3"></i><i class="radar-sweep"></i><i class="radar-core"></i>${radarDots(s, p)}</div>`;
-  const detectionRows = rows => (rows || []).slice(0, 12).map(e => `<div class="list-item detection-row">` +
-    `<div class="detection-key">${A.esc(e.issueKey || 'Issue')}</div>` +
-    `<div class="detection-main">` +
-    `<div class="list-title">${A.esc(e.summary || e.issueKey || 'Jira issue')}</div>` +
-    `<div class="list-meta">${A.esc(e.status || '')} · ${A.esc(e.ruleName || 'Detected')}</div>` +
-    `</div>` +
-    `<span class="detection-time">${A.esc(SD.Utils.formatDateTime(e.at))}</span></div>`).join('') || `<div class="empty compact-empty">No detections.</div>`;
   const actionName = a => ({ assign: 'Assignment', comment: 'Comment', transition: 'Transition', 'edit-fields': 'Edit fields', labels: 'Labels', priority: 'Priority', alarm: 'Alarm', notification: 'Notification' }[a] || a || 'Action');
   const dependencyWaiting = j => j.status === JOB.PENDING && Boolean(j.dependsOnJobId) && !j.dependencyScheduled;
   const terminalStatus = status => [JOB.SUCCEEDED, JOB.FAILED, JOB.CANCELLED, JOB.SKIPPED].includes(status);
@@ -64,38 +57,61 @@
     if (j.action === 'notification') return p.notification?.title ? `Notification: ${p.notification.title}` : 'Browser notification';
     return actionName(j.action);
   };
-  const issueActivity = (site, profile, recent, current) => {
-    const jobs = (A.jobs || []).filter(j => j.siteId === site.id && j.profileId === profile.id),
-      map = new Map(),
-      seed = [...(current || []), ...(recent || [])];
-    for (const d of seed) {
-      if (!map.has(d.issueKey)) {
-        map.set(d.issueKey, {
-          issueKey: d.issueKey,
-          summary: d.summary || '',
-          status: d.status || '',
-          at: d.at || '',
-          rules: new Set([d.ruleName || d.ruleId].filter(Boolean)),
-          jobs: []
-        });
-      }
+  const scopedActivityJobs = (site, profile) => (A.jobs || [])
+    .filter(job => job.siteId === site.id && job.profileId === profile.id);
+
+  const activityViewCounts = (site, profile, current) => {
+    const jobs = scopedActivityJobs(site, profile),
+      currentDetected = new Set((current || []).map(row => row.issueKey).filter(Boolean)),
+      currentIssues = new Set(),
+      recentIssues = new Set();
+
+    for (const job of jobs) {
+      if (!job.issueKey) continue;
+      recentIssues.add(job.issueKey);
+      if (currentDetected.has(job.issueKey) || !terminalStatus(job.status)) currentIssues.add(job.issueKey);
     }
-    for (const j of jobs) {
-      let row = map.get(j.issueKey);
+
+    return { current: currentIssues.size, recent: recentIssues.size };
+  };
+
+  const issueActivity = (site, profile, view, current, recent) => {
+    const allJobs = scopedActivityJobs(site, profile),
+      currentDetected = new Set((current || []).map(row => row.issueKey).filter(Boolean)),
+      metadataRows = view === 'recent' ? recent : current,
+      metadata = new Map();
+
+    for (const row of metadataRows || []) {
+      if (!row?.issueKey) continue;
+      const existing = metadata.get(row.issueKey);
+      if (!existing || new Date(row.at || 0) >= new Date(existing.at || 0)) metadata.set(row.issueKey, row);
+    }
+
+    const jobs = view === 'recent'
+      ? allJobs
+      : allJobs.filter(job => currentDetected.has(job.issueKey) || !terminalStatus(job.status));
+    const map = new Map();
+
+    for (const job of jobs) {
+      if (!job.issueKey) continue;
+      const detected = metadata.get(job.issueKey);
+      let row = map.get(job.issueKey);
       if (!row) {
         row = {
-          issueKey: j.issueKey,
-          summary: j.issueSnapshot?.summary || '',
-          status: j.issueSnapshot?.status || '',
-          at: j.createdAt || '',
-          rules: new Set(),
+          issueKey: job.issueKey,
+          summary: detected?.summary || job.issueSnapshot?.summary || '',
+          status: detected?.status || job.issueSnapshot?.status || '',
+          at: detected?.at || job.createdAt || '',
+          rules: new Set([detected?.ruleName || detected?.ruleId].filter(Boolean)),
           jobs: []
         };
-        map.set(j.issueKey, row);
+        map.set(job.issueKey, row);
       }
-      row.jobs.push(j);
-      if (j.ruleName) row.rules.add(j.ruleName);
-      if (new Date(j.createdAt || 0) > new Date(row.at || 0)) row.at = j.createdAt;
+
+      row.jobs.push(job);
+      if (job.ruleName) row.rules.add(job.ruleName);
+      if (detected?.ruleName) row.rules.add(detected.ruleName);
+      if (new Date(job.createdAt || 0) > new Date(row.at || 0)) row.at = job.createdAt;
     }
 
     const hasActive = row => row.jobs.some(j => !terminalStatus(j.status)),
@@ -106,12 +122,10 @@
 
     return rows.map(row => {
       const allOrdered = [...row.jobs].sort((a, b) => actionRank(a) - actionRank(b) || new Date(b.historyOrderAt || b.completedAt || b.startedAt || b.createdAt || b.scheduledAt || 0) - new Date(a.historyOrderAt || a.completedAt || a.startedAt || a.createdAt || a.scheduledAt || 0) || String(b.id || '').localeCompare(String(a.id || ''))),
-        // When an issue still has active work, keep its completed actions visible for context.
-        // Show completed controls whole completed issue groups, not individual rows inside an active issue.
         ordered = allOrdered,
-        done = allOrdered.filter(j => j.status === JOB.SUCCEEDED).length,
-        upcomingJobs = allOrdered.filter(j => [JOB.AWAITING_APPROVAL, JOB.PENDING].includes(j.status)),
-        pending = allOrdered.filter(j => [JOB.AWAITING_APPROVAL, JOB.PENDING, JOB.RUNNING].includes(j.status)).length;
+        done = allOrdered.filter(job => job.status === JOB.SUCCEEDED).length,
+        upcomingJobs = allOrdered.filter(job => [JOB.AWAITING_APPROVAL, JOB.PENDING].includes(job.status)),
+        pending = allOrdered.filter(job => [JOB.AWAITING_APPROVAL, JOB.PENDING, JOB.RUNNING].includes(job.status)).length;
       return `<details class="activity-issue" data-issue-key="${A.esc(row.issueKey)}">` +
         `<summary>` +
         `<span class="detection-key">${A.esc(row.issueKey)}</span>` +
@@ -125,19 +139,19 @@
           `<span>${upcomingJobs.length} upcoming action${upcomingJobs.length === 1 ? '' : 's'}</span>` +
           `<div class="row activity-bulk-actions">` +
           `<button type="button" class="btn btn-small btn-primary" data-action="process-issue-jobs" data-issue-key="${A.esc(row.issueKey)}">Process all</button>` +
-          `<button type="button" class="btn btn-small btn-danger" data-action="cancel-issue-jobs" data-issue-key="${A.esc(row.issueKey)}">Cancel all</button></div></div>` : ''}${ordered.length ? ordered.map(j => {
-            const approvable = j.status === JOB.AWAITING_APPROVAL,
-              cancellable = [JOB.AWAITING_APPROVAL, JOB.PENDING, JOB.RUNNING].includes(j.status),
-              processable = j.status === JOB.PENDING,
-              requested = j.status === JOB.RUNNING && Boolean(j.cancelRequestedAt);
-            return `<div class="activity-action status-${A.esc(j.status)}${requested ? ' cancel-requested' : ''}">` +
+          `<button type="button" class="btn btn-small btn-danger" data-action="cancel-issue-jobs" data-issue-key="${A.esc(row.issueKey)}">Cancel all</button></div></div>` : ''}${ordered.length ? ordered.map(job => {
+            const approvable = job.status === JOB.AWAITING_APPROVAL,
+              cancellable = [JOB.AWAITING_APPROVAL, JOB.PENDING, JOB.RUNNING].includes(job.status),
+              processable = job.status === JOB.PENDING,
+              requested = job.status === JOB.RUNNING && Boolean(job.cancelRequestedAt);
+            return `<div class="activity-action status-${A.esc(job.status)}${requested ? ' cancel-requested' : ''}">` +
               `<span class="activity-action-icon"></span>` +
               `<div class="activity-action-copy">` +
-              `<b>${A.esc(actionName(j.action))}</b>` +
-              `<small>${A.esc(actionStatus(j))} · ${A.esc(actionTime(j))}</small>` +
-              `<span class="activity-detail">${A.esc(actionDetail(j, site))}</span>${j.error?.message ? `<em>${A.esc(j.error.message)}</em>` : ''}</div>${cancellable || processable || approvable ? `<div class="queue-action-buttons">${approvable ? `<button type="button" class="btn btn-small btn-primary" data-action="approve-job" data-job-id="${A.esc(j.id)}">Approve</button>` : ''}${processable ? `<button type="button" class="btn btn-small queue-process-btn" data-action="process-job" data-job-id="${A.esc(j.id)}">Process</button>` : ''}${cancellable ? `<button type="button" class="btn btn-small queue-cancel-btn" data-action="cancel-job" data-job-id="${A.esc(j.id)}" ${requested ? 'disabled' : ''}>${requested ? 'Cancelling…' : 'Cancel'}</button>` : ''}</div>` : ''}</div>`;
-          }).join('') : '<div class="empty compact-empty">Detected; no actions queued for this issue.</div>'}</div></details>`;
-    }).join('') || `<div class="empty compact-empty">${A.homeShowCompletedActions ? 'No issue activity yet.' : 'No active issue actions. Turn on Show completed to view finished history.'}</div>`;
+              `<b>${A.esc(actionName(job.action))}</b>` +
+              `<small>${A.esc(actionStatus(job))} · ${A.esc(actionTime(job))}</small>` +
+              `<span class="activity-detail">${A.esc(actionDetail(job, site))}</span>${job.error?.message ? `<em>${A.esc(job.error.message)}</em>` : ''}</div>${cancellable || processable || approvable ? `<div class="queue-action-buttons">${approvable ? `<button type="button" class="btn btn-small btn-primary" data-action="approve-job" data-job-id="${A.esc(job.id)}">Approve</button>` : ''}${processable ? `<button type="button" class="btn btn-small queue-process-btn" data-action="process-job" data-job-id="${A.esc(job.id)}">Process</button>` : ''}${cancellable ? `<button type="button" class="btn btn-small queue-cancel-btn" data-action="cancel-job" data-job-id="${A.esc(job.id)}" ${requested ? 'disabled' : ''}>${requested ? 'Cancelling…' : 'Cancel'}</button>` : ''}</div>` : ''}</div>`;
+          }).join('') : `<div class="empty compact-empty">No actions recorded.</div>`}</div></details>`;
+    }).join('') || `<div class="empty compact-empty">${A.homeShowCompletedActions ? 'No detected issues with actions yet.' : 'No active issue actions. Turn on Show completed to view finished history.'}</div>`;
   };
 
   const activityRefreshLabel = () => {
@@ -145,24 +159,22 @@
     return sec < 60 ? `${sec}s` : `${Math.round(sec / 60)}m`;
   };
 
-  const detectionsAndActionsCard = (site, profile, pr, st, view, current, recent) => {
-    const shown = view === 'recent' ? recent : current,
-      scoped = (A.jobs || []).filter(j => j.siteId === site.id && j.profileId === profile.id),
-      pending = scoped.filter(j => j.status === JOB.PENDING).length,
-      approvals = scoped.filter(j => j.status === JOB.AWAITING_APPROVAL).length,
-      upcoming = scoped.filter(j => [JOB.AWAITING_APPROVAL, JOB.PENDING].includes(j.status)).length,
+  const detectionsAndActionsCard = (site, profile, view, current, recent) => {
+    const scoped = scopedActivityJobs(site, profile),
+      pending = scoped.filter(job => job.status === JOB.PENDING).length,
+      approvals = scoped.filter(job => job.status === JOB.AWAITING_APPROVAL).length,
+      upcoming = scoped.filter(job => [JOB.AWAITING_APPROVAL, JOB.PENDING].includes(job.status)).length,
       enabledRules = (profile.rules || []).filter(rule => rule.enabled).length,
-      canCheck = Boolean(A.credentialStatus?.[site.id] && enabledRules);
+      canCheck = Boolean(A.credentialStatus?.[site.id] && enabledRules),
+      counts = activityViewCounts(site, profile, current);
     return `<div id="homeDetectionsActionsCard" class="card home-live-card detections-actions-card">` +
-      `<div class="row-between detections-actions-head">` +
-      `<div>` +
-      `<div class="section-title">Detections &amp; Actions</div>` +
-      `</div>` +
+      `<div class="detections-actions-toolbar">` +
+      `<div class="section-title detections-actions-title">Detections &amp; Actions</div>` +
       `<div class="row detections-actions-primary-controls">` +
       `<button class="btn btn-small" data-action="refresh-current-matches" ${canCheck ? '' : 'disabled'}>Check now</button>` +
-      `<div class="detection-view-toggle" role="group" aria-label="Detection history view">` +
-      `<button type="button" class="${view === 'current' ? 'active' : ''}" data-action="home-detection-view" data-view="current">Current <span>${current.length}</span></button>` +
-      `<button type="button" class="${view === 'recent' ? 'active' : ''}" data-action="home-detection-view" data-view="recent">Recent <span>${recent.length}</span></button>` +
+      `<div class="detection-view-toggle" role="group" aria-label="Issue activity view">` +
+      `<button type="button" class="${view === 'current' ? 'active' : ''}" data-action="home-detection-view" data-view="current">Current <span>${counts.current}</span></button>` +
+      `<button type="button" class="${view === 'recent' ? 'active' : ''}" data-action="home-detection-view" data-view="recent">Recent <span>${counts.recent}</span></button>` +
       `</div>` +
       `</div>` +
       `</div>` +
@@ -173,24 +185,16 @@
       `<label class="row control-label show-completed-control" title="Hide issue groups whose actions are all complete. Active issue groups keep their completed action context.">Show completed <span class="master-switch"><input id="homeShowCompletedActions" type="checkbox" ${A.homeShowCompletedActions ? 'checked' : ''}><span></span></span></label>` +
       `<span class="freshness-chip">Auto refresh · ${activityRefreshLabel()}</span>` +
       `</div>` +
-      `<div class="home-combined-section home-detections-section">` +
-      `<div class="small-section-title">Detections</div>` +
-      `<div class="list compact-list detection-list section-gap">${detectionRows(shown)}</div>` +
-      `</div>` +
-      `<div class="home-combined-section home-actions-section">` +
-      `<div class="small-section-title">Actions by issue</div>` +
-      `<div class="issue-activity-list section-gap">${issueActivity(site, profile, recent, current)}</div>` +
-      `</div>` +
+      `<div class="issue-activity-list">${issueActivity(site, profile, view, current, recent)}</div>` +
       `</div>`;
   };
   const activeSchedules = p => (p.schedules || []).filter(x => x.enabled && SD.Schedule.isActive(x, new Date()));
   const monitorCard = (s, p) => {
-    const st = s.runtime || {},
-      pr = p.runtime || {},
+    const pr = p.runtime || {},
       monitor = Boolean(p.monitoring?.enabled),
       hasPat = Boolean(A.credentialStatus?.[s.id]),
       live = monitor && hasPat,
-      enabledRules = (p.rules || []).filter(r => r.enabled).length,
+      enabledRules = (p.rules || []).filter(rule => rule.enabled).length,
       totalRules = (p.rules || []).length;
     return `<div id="homeMonitorCard" class="card radar-monitor-card ${live ? 'monitor-on' : 'monitor-off'}">` +
       `<div class="monitor-compact-grid">` +
@@ -198,20 +202,18 @@
       `<div class="monitor-compact-side">` +
       `<div class="radar-monitor-head">` +
       `<div class="monitor-state">` +
-      `<span class="monitor-light">` +
-      `</span>` +
+      `<span class="monitor-light"></span>` +
       `<div>` +
       `<div class="monitor-label">Monitoring</div>` +
       `<strong data-home-monitor-state>${monitor ? (hasPat ? 'ON' : 'ON · PAT REQUIRED') : 'OFF'}</strong>` +
       `</div>` +
       `</div>` +
       `<div class="radar-monitor-controls">` +
-      `<button class="btn btn-primary btn-small" data-action="run-cycle" ${hasPat && enabledRules ? '' : 'disabled'}>Scan Now</button>` +
       `<label class="master-switch" title="Continuous rule polling">` +
       `<input id="homeMonitor" type="checkbox" ${monitor ? 'checked' : ''} ${enabledRules ? '' : 'disabled'}>` +
-      `<span>` +
-      `</span>` +
+      `<span></span>` +
       `</label>` +
+      `<button class="btn btn-primary btn-small monitoring-scan-button" data-action="run-cycle" ${hasPat && enabledRules ? '' : 'disabled'}>Scan Now</button>` +
       `</div>` +
       `</div>` +
       `<div class="compact-radar-stats">` +
@@ -224,12 +226,13 @@
       `<span>Actions</span>` +
       `</div>` +
       `<div>` +
-      `<strong data-home-stat="evaluated">${st.lastIssueCount || 0}</strong>` +
-      `<span>Evaluated</span>` +
+      `<strong data-home-stat="rules">${enabledRules}/${totalRules}</strong>` +
+      `<span>Rules</span>` +
       `</div>` +
       `</div>` +
-      `<div class="monitor-timing">` +
-      `<span data-home-rule-count>${enabledRules}/${totalRules} rules</span></div></div></div></div>`;
+      `</div>` +
+      `</div>` +
+      `</div>`;
   };
   const scheduleCard = p => {
     const active = activeSchedules(p),
@@ -314,19 +317,20 @@
   A.refreshHomeMonitorDom = (s, p) => {
     const card = A.$('homeMonitorCard');
     if (!card) return;
-    const st = s.runtime || {},
-      pr = p.runtime || {},
+    const pr = p.runtime || {},
       monitor = Boolean(p.monitoring?.enabled),
-      enabledRules = (p.rules || []).filter(r => r.enabled).length,
+      enabledRules = (p.rules || []).filter(rule => rule.enabled).length,
       totalRules = (p.rules || []).length;
     A.setHomeMonitoringVisual(monitor);
-    const values = { detected: pr.lastDetectionCount || 0, actions: pr.lastPlanCount || 0, evaluated: st.lastIssueCount || 0 };
+    const values = {
+      detected: pr.lastDetectionCount || 0,
+      actions: pr.lastPlanCount || 0,
+      rules: `${enabledRules}/${totalRules}`
+    };
     for (const [name, value] of Object.entries(values)) {
       const el = card.querySelector(`[data-home-stat="${name}"]`);
       if (el) el.textContent = String(value);
     }
-    const count = card.querySelector('[data-home-rule-count]');
-    if (count) count.textContent = `${enabledRules}/${totalRules} rules`;
     const radarEl = card.querySelector('.radar.radar-pro');
     if (radarEl) {
       radarEl.querySelectorAll('.radar-dot').forEach(x => x.remove());
@@ -353,7 +357,7 @@
       ['homeScheduleCard', scheduleCard(p)],
       ['homeOperationalHealth', healthCards(s, p)],
       ['homeAlarmSlot', alarmCard()],
-      ['homeDetectionsActionsCard', detectionsAndActionsCard(s, p, pr, st, view, current, recent)]
+      ['homeDetectionsActionsCard', detectionsAndActionsCard(s, p, view, current, recent)]
     ];
     for (const [id, html] of parts) {
       const el = A.$(id);
@@ -372,6 +376,6 @@
       view = A.homeDetectionView === 'recent' ? 'recent' : 'current',
       current = pr.currentDetections || [],
       recent = (st.radarEvents || []).filter(e => !e.profileId || e.profileId === p.id);
-    return `<section class="page home-page">${head('Operations')}${monitorCard(s, p)}${scheduleCard(p)}${healthCards(s, p)}${alarmCard()}${detectionsAndActionsCard(s, p, pr, st, view, current, recent)}</section>`;
+    return `<section class="page home-page">${head('Operations')}${monitorCard(s, p)}${scheduleCard(p)}${healthCards(s, p)}${alarmCard()}${detectionsAndActionsCard(s, p, view, current, recent)}</section>`;
   };
 })();

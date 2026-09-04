@@ -197,15 +197,15 @@
         `<span class="pill ${sec.enabled ? 'good' : 'info'}">${sec.enabled ? 'ENABLED' : 'OFF'}</span>` +
         `</div>` +
         `<div class="security-status-grid">` +
-        `<div>` +
+        `<div class="security-status-card">` +
         `<span>Status</span>` +
         `<strong>${sec.enabled ? 'Protected' : 'Not protected'}</strong>` +
         `</div>` +
-        `<div>` +
+        `<div class="security-status-card">` +
         `<span>Unlock method</span>` +
         `<strong>${sec.enabled ? label : 'Not set'}</strong>` +
         `</div>` +
-        `<div>` +
+        `<div class="security-status-card">` +
         `<span>Session</span>` +
         `<strong>${sec.enabled ? `${A.esc(sessionValue)} ${A.esc(sessionUnit)}` : '—'}</strong>` +
         `</div>` +

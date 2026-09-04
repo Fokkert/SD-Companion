@@ -1,6 +1,6 @@
 (() => {
   const A = globalThis.SDApp, { head } = A.View;
-  const topic = (id, title, html) => `<details class="help-topic" id="help-${id}"><summary><span>${title}</span><span class="help-chevron">⌄</span></summary><div class="help-body">${html}</div></details>`;
+  const topic = (id, title, html) => `<details class="help-topic" id="help-${id}"><summary><span>${title}</span></summary><div class="help-body">${html}</div></details>`;
   A.pageHelp = () => {
     const index = [
       ['start', 'Start'],
@@ -57,7 +57,7 @@ ${topic('discovery', '3. API discovery', '<p>Discovery uses Jira REST API data a
             '<li>Changing transition handling methods does not intentionally erase rule fields belonging to the other modes, so a server can switch compatibility modes without rebuilding every rule.</li>' +
             '</ul>')}
 ${topic('monitor', '4. Monitoring and Scan Now', '<p>Monitoring is the continuous rule-evaluation switch for the selected profile. While it is on, enabled rules are evaluated at the configured polling cadence and according to each rule\'s schedule. Scan Now performs one immediate cycle without changing Monitoring.</p>' +
-              '<p>Home combines current/recent detections and per-issue action history in one <b>Detections &amp; Actions</b> workspace. The same workspace contains Check now, Current/Recent selection, global queue controls and the Show completed filter.</p>')}
+              '<p>Home presents detected issues that produced actions in one <b>Detections &amp; Actions</b> workspace. Current/Recent selection, Check now, global queue controls and Show completed all operate on that combined issue/action history.</p>')}
 ${topic('rules', '5. Rule model', '<p>A rule defines what should match and what should happen.</p>' +
                 '<ul>' +
                 '<li>Priority determines evaluation order.</li>' +

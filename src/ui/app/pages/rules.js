@@ -10,6 +10,18 @@
     [EXECUTION_POLICY.ONCE_UPDATE]: 'Once / update',
     [EXECUTION_POLICY.REPEAT]: 'Repeat after interval'
   }[m] || m);
+  const ruleIcons = [
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="7"/></svg>',
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2-7 11h6l-1 9 7-12h-6z"/></svg>',
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>',
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6 7v5l-4 2v-7z"/></svg>',
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h3l2-6 4 12 2-6h3"/><path d="M4 4h16v16H4z"/></svg>'
+  ];
+  const ruleIcon = rule => {
+    const seed = `${rule?.id || ''}:${rule?.name || ''}`,
+      index = Math.abs(Number(A.hash(seed)) || 0) % ruleIcons.length;
+    return `<span class="rule-entry-icon">${ruleIcons[index]}</span>`;
+  };
   const unitOptions = u => ['seconds', 'minutes', 'hours'].map(x => A.option(x, x[0].toUpperCase() + x.slice(1), u === x)).join('');
   const timePair = (labelA, labelB, minSeconds, maxSeconds, unit, attrsA, attrsB, unitAttr) => `<div class="time-pair">` +
     `<div class="field">` +
@@ -254,8 +266,8 @@
         `<div class="list-item rule-card configured-object ${x.enabled ? 'enabled active-object' : ''} ${editing ? 'editing-object' : ''}">` +
         `<div class="rule-card-main">` +
         `<div class="row rule-card-title-row">` +
-        `<span class="status-dot ${x.enabled ? 'online' : 'offline'}">` +
-        `</span>` +
+        `${ruleIcon(x)}` +
+        `<span class="status-dot ${x.enabled ? 'online' : 'offline'}"></span>` +
         `<div class="list-title">${A.esc(x.name)}</div>` +
         `</div>` +
         `<div class="list-meta">${x.enabled ? 'Enabled' : 'Disabled'} · ${sched} · ${executionLabel(x.executionPolicy?.mode)} · ${x.actions?.length || 0} actions · ${c.matches || 0} matches</div>` +

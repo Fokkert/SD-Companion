@@ -2,7 +2,7 @@ const { textIncludes } = require('./source-assertions');
 const fs = require('fs'), path = require('path'), assert = require('assert');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
 const manifest = JSON.parse(read('manifest.json'));
-assert.equal(manifest.version, '2.2.0');
+assert.equal(manifest.version, '2.2.1');
 assert.equal(manifest.version_name, 'V2');
 const core = read('src/ui/app/app-core.js'),
   base = read('src/ui/app/pages/base.js'),

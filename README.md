@@ -58,12 +58,11 @@ extension.
 
 ### 2. Extract the ZIP
 
-Extract the downloaded ZIP to a permanent folder.
-
-For example:
+Extract the downloaded ZIP to a permanent location. The release archive contains one versioned
+top-level folder, for example:
 
 ```text
-C:\Users\<you>\Documents\SD-Companion
+C:\Users\<you>\Documents\SD-Companion-v2.2.1\
 ```
 
 Do not delete that folder while the extension is installed. Chrome/Edge loads the unpacked extension
@@ -89,15 +88,18 @@ Enable **Developer mode** on the Extensions page.
 
 ### 5. Load SD Companion
 
-Select **Load unpacked** and choose the folder you extracted.
+Select **Load unpacked** and choose the versioned folder created by extraction.
 
-The selected folder must directly contain:
+That selected folder directly contains:
 
 ```text
-manifest.json
-icons\
-src\
+SD-Companion-vX.Y.Z\
+├── manifest.json
+├── icons\
+└── src\
 ```
+
+Choose `SD-Companion-vX.Y.Z` itself in Chrome/Edge, not its parent directory.
 
 SD Companion should now appear in the browser's extension list.
 
@@ -269,12 +271,13 @@ For version-by-version changes, see [`CHANGELOG.md`](CHANGELOG.md).
 The source repository contains the extension runtime, automated tests and technical documentation.
 
 The installable release package is intentionally smaller than the repository. A release package
-contains only:
+contains one versioned top-level folder and only the runtime files inside it:
 
 ```text
-manifest.json
-icons/
-src/
+SD-Companion-vX.Y.Z/
+  manifest.json
+  icons/
+  src/
 ```
 
 Repository files such as `README.md`, `CHANGELOG.md`, `LICENSE`, `docs/` and `tests/` are not
