@@ -78,163 +78,111 @@
     }
     else if (section === 'automation') {
       title = 'Automation';
-      const v = auto.intervalValue ?? SD.Utils.timeFromSeconds(auto.intervalSeconds, auto.unit),
+      const automationSection = A.settingsAutomationSection || 'sync',
+        v = auto.intervalValue ?? SD.Utils.timeFromSeconds(auto.intervalSeconds, auto.unit),
         activityUnit = draft.system.activityRefreshUnit || 'seconds',
         activityValue = draft.system.activityRefreshValue ?? SD.Utils.timeFromSeconds(draft.system.activityRefreshSeconds || 3, activityUnit),
         autoBounds = unitBounds(SD.Constants.LIMITS.METADATA_SYNC_MIN_SECONDS, SD.Constants.LIMITS.METADATA_SYNC_MAX_SECONDS, auto.unit || 'hours'),
-        activityBounds = unitBounds(SD.Constants.LIMITS.ACTIVITY_REFRESH_MIN_SECONDS, SD.Constants.LIMITS.ACTIVITY_REFRESH_MAX_SECONDS, activityUnit);
-      body = `<div class="settings-card">` +
-        `<div class="settings-card-head">` +
-        `<span class="settings-card-icon">${icon('automation')}</span><b>Metadata synchronization</b>${site ? `<span class="freshness-chip">${A.esc(site.name)}</span>` : ''}</div>` +
-        `<div class="setting-line">` +
-        `<span>Periodic project-data sync</span>` +
-        `<label class="master-switch">` +
-        `<input type="checkbox" data-settings-prop="autoSync.enabled" ${auto.enabled ? 'checked' : ''} ${site ? '' : 'disabled'}>` +
-        `<span>` +
-        `</span>` +
-        `</label>` +
+        activityBounds = unitBounds(SD.Constants.LIMITS.ACTIVITY_REFRESH_MIN_SECONDS, SD.Constants.LIMITS.ACTIVITY_REFRESH_MAX_SECONDS, activityUnit),
+        automationTab = (id, label) => `<button type="button" class="settings-subpage-tab ${automationSection === id ? 'active' : ''}" data-action="automation-settings-section" data-section="${id}" role="tab" aria-selected="${automationSection === id ? 'true' : 'false'}">${label}</button>`;
+
+      let automationBody = '';
+      if (automationSection === 'sync') {
+        automationBody = `<div class="settings-card">` +
+          `<div class="settings-card-head">` +
+          `<span class="settings-card-icon">${icon('automation')}</span><b>Metadata synchronization</b>${site ? `<span class="freshness-chip">${A.esc(site.name)}</span>` : ''}</div>` +
+          `<div class="setting-line">` +
+          `<span>Periodic project-data sync</span>` +
+          `<label class="master-switch">` +
+          `<input type="checkbox" data-settings-prop="autoSync.enabled" ${auto.enabled ? 'checked' : ''} ${site ? '' : 'disabled'}>` +
+          `<span></span>` +
+          `</label>` +
+          `</div>` +
+          `<div class="time-value-row">` +
+          `<div class="field">` +
+          `<label>Interval</label>` +
+          `<input class="input" type="number" step="1" data-settings-prop="autoSync.intervalValue" min="${autoBounds.min}" max="${autoBounds.max}" value="${A.esc(v)}" ${site ? '' : 'disabled'}>` +
+          `</div>` +
+          `<div class="field time-unit-field">` +
+          `<label>Unit</label>` +
+          `<select class="select" data-settings-prop="autoSync.unit" ${site ? '' : 'disabled'}>${unitOptions(auto.unit)}</select>` +
+          `</div>` +
+          `</div>` +
+          `${site ? `<div class="settings-inline-meta"><span>Last ${A.esc(SD.Utils.formatDateTime(auto.lastRunAt || site.inventory?.lastFullSyncAt))}</span><span>Next ${A.esc(SD.Utils.formatDateTime(auto.nextRunAt))}</span></div>` : ''}` +
+          `</div>` +
+          `<div class="settings-card">` +
+          `<div class="settings-card-head">` +
+          `<span class="settings-card-icon">${icon('automation')}</span>` +
+          `<b>Operational feedback</b>` +
+          `</div>` +
+          `<div class="automation-feedback-grid">` +
+          `<div class="time-value-row">` +
+          `<div class="field">` +
+          `<label>Home history refresh</label>` +
+          `<input class="input" type="number" step="1" data-settings-prop="system.activityRefreshValue" min="${activityBounds.min}" max="${activityBounds.max}" value="${A.esc(activityValue)}">` +
+          `</div>` +
+          `<div class="field time-unit-field">` +
+          `<label>Unit</label>` +
+          `<select class="select" data-settings-prop="system.activityRefreshUnit">${unitOptions(activityUnit, ['seconds', 'minutes'])}</select>` +
+          `</div>` +
+          `</div>` +
+          `<div class="setting-line setting-line-card">` +
+          `<span>Action completion tone</span>` +
+          `<label class="master-switch">` +
+          `<input type="checkbox" data-settings-prop="system.completionToneEnabled" ${draft.system.completionToneEnabled !== false ? 'checked' : ''}>` +
+          `<span></span>` +
+          `</label>` +
+          `</div>` +
+          `</div>` +
+          `</div>` +
+          `<div class="settings-tile-grid">${link('schedules', 'Schedules & Polling')}</div>`;
+      }
+      else if (automationSection === 'safety') {
+        automationBody = `<div class="settings-card">` +
+          `<div class="settings-card-head">` +
+          `<span class="settings-card-icon">${icon('automation')}</span>` +
+          `<b>Global safety limits</b>` +
+          `</div>` +
+          `<div class="settings-section-copy">Limits apply across automation and one-time Bulk Operations. Use values appropriate for your Jira environment.</div>` +
+          `<div class="grid-3 compact-settings-grid automation-safety-grid">` +
+          `<div class="field"><label>Issues / cycle</label><input class="input" type="number" min="1" max="${SD.Constants.LIMITS.RULE_MAX_ISSUES}" data-settings-prop="system.safety.maxIssuesPerCycle" value="${safe.maxIssuesPerCycle}"></div>` +
+          `<div class="field"><label>Actions / cycle</label><input class="input" type="number" min="1" max="${SD.Constants.LIMITS.RULE_MAX_ACTIONS}" data-settings-prop="system.safety.maxActionsPerCycle" value="${safe.maxActionsPerCycle}"></div>` +
+          `<div class="field"><label>Comments / hour</label><input class="input" type="number" min="0" max="${SD.Constants.LIMITS.RULE_MAX_HOURLY}" data-settings-prop="system.safety.maxCommentsPerHour" value="${safe.maxCommentsPerHour}"></div>` +
+          `<div class="field"><label>Assignments / hour</label><input class="input" type="number" min="0" max="${SD.Constants.LIMITS.RULE_MAX_HOURLY}" data-settings-prop="system.safety.maxAssignmentsPerHour" value="${safe.maxAssignmentsPerHour}"></div>` +
+          `<div class="field"><label>Transitions / hour</label><input class="input" type="number" min="0" max="${SD.Constants.LIMITS.RULE_MAX_HOURLY}" data-settings-prop="system.safety.maxTransitionsPerHour" value="${safe.maxTransitionsPerHour}"></div>` +
+          `</div>` +
+          `</div>`;
+      }
+      else {
+        automationBody = `<div class="settings-card alarm-settings-card">` +
+          `<div class="settings-card-head">` +
+          `<span class="settings-card-icon">${icon('automation')}</span><b>Profile alarm</b>${profile ? `<span class="freshness-chip">${A.esc(profile.name)}</span>` : ''}</div>` +
+          `<div class="grid-2">` +
+          `<div class="field"><label>Sound</label><select id="alarmPreset" class="select" data-searchable="true">${SD.Constants.ALARM_PRESETS.map(x => A.option(x.id, x.name, alarm.preset === x.id)).join('')}</select></div>` +
+          `<div class="field"><label>Stop method</label><select id="alarmStopMethod" class="select">${SD.Constants.ALARM_STOP_METHODS.map(x => A.option(x.id, x.name, alarm.stopMethod === x.id)).join('')}</select></div>` +
+          `</div>` +
+          `<div class="alarm-duration-grid">` +
+          `<div class="field"><label>Duration</label><input id="alarmDuration" class="input" type="number" min="1" max="86400" step="1" value="${A.esc(SD.Utils.timeFromSeconds(alarm.durationSeconds || 12, alarm.durationUnit || 'seconds'))}"></div>` +
+          `<div class="field time-unit-field"><label>Unit</label><select id="alarmDurationUnit" class="select">${unitOptions(alarm.durationUnit || 'seconds')}</select></div>` +
+          `<div class="field"><label>Volume · <strong id="alarmVolumeValue">${Math.round((Number(alarm.volume) || 0) * 100)}%</strong></label><input id="alarmVolume" class="range" data-range-key="alarm-volume" type="range" min="0" max="1" step="0.01" value="${Number(alarm.volume) || 0}"></div>` +
+          `</div>` +
+          `<div class="toggle-card-grid alarm-toggle-grid">` +
+          `<div class="toggle-card"><label class="master-switch"><input id="alarmLoop" type="checkbox" ${alarm.loop !== false ? 'checked' : ''}><span></span></label><span><strong>Loop sound</strong></span></div>` +
+          `<div class="toggle-card"><label class="master-switch"><input id="alarmSystemNotification" type="checkbox" ${alarm.showSystemNotification !== false ? 'checked' : ''}><span></span></label><span><strong>Browser notification</strong></span></div>` +
+          `<div class="toggle-card"><label class="master-switch"><input id="alarmPagePopup" type="checkbox" ${alarm.showPagePopup !== false ? 'checked' : ''}><span></span></label><span><strong>Jira popup</strong></span></div>` +
+          `<div class="toggle-card"><label class="master-switch"><input id="alarmUseCustom" type="checkbox" ${alarm.useCustom ? 'checked' : ''}><span></span></label><span><strong>Use custom audio</strong></span></div>` +
+          `</div>` +
+          `<div class="field"><label>Custom audio</label><input id="alarmFile" class="input file-input" type="file" accept="audio/*"><span class="file-name">${A.esc(alarm.customName || 'No custom file')}</span></div>` +
+          `<div class="row alarm-settings-actions"><button class="btn" data-action="test-alarm">Test Alarm</button>${alarm.customDataUrl ? `<button class="btn btn-small" data-action="clear-custom-alarm">Clear Custom Audio</button>` : ''}</div>` +
+          `</div>`;
+      }
+
+      body = `<div class="settings-subpage-nav" role="tablist" aria-label="Automation settings sections">` +
+        `${automationTab('sync', 'Sync & Refresh')}` +
+        `${automationTab('safety', 'Safety Limits')}` +
+        `${automationTab('alarm', 'Alarm')}` +
         `</div>` +
-        `<div class="time-value-row">` +
-        `<div class="field">` +
-        `<label>Interval</label>` +
-        `<input class="input" type="number" step="1" data-settings-prop="autoSync.intervalValue" min="${autoBounds.min}" max="${autoBounds.max}" value="${A.esc(v)}" ${site ? '' : 'disabled'}>` +
-        `</div>` +
-        `<div class="field time-unit-field">` +
-        `<label>Unit</label>` +
-        `<select class="select" data-settings-prop="autoSync.unit" ${site ? '' : 'disabled'}>${unitOptions(auto.unit)}</select></div></div>${site ? `<div class="settings-inline-meta"><span>Last ${A.esc(SD.Utils.formatDateTime(auto.lastRunAt || site.inventory?.lastFullSyncAt))}</span><span>Next ${A.esc(SD.Utils.formatDateTime(auto.nextRunAt))}</span></div>` : ''}</div>
-<div class="settings-card">` +
-        `<div class="settings-card-head">` +
-        `<span class="settings-card-icon">${icon('automation')}</span>` +
-        `<b>Operational feedback</b>` +
-        `</div>` +
-        `<div class="grid-2">` +
-        `<div class="time-value-row">` +
-        `<div class="field">` +
-        `<label>Home history refresh</label>` +
-        `<input class="input" type="number" step="1" data-settings-prop="system.activityRefreshValue" min="${activityBounds.min}" max="${activityBounds.max}" value="${A.esc(activityValue)}">` +
-        `</div>` +
-        `<div class="field time-unit-field">` +
-        `<label>Unit</label>` +
-        `<select class="select" data-settings-prop="system.activityRefreshUnit">${unitOptions(activityUnit, ['seconds', 'minutes'])}</select>` +
-        `</div>` +
-        `</div>` +
-        `<div class="setting-line setting-line-card">` +
-        `<span>Action completion tone</span>` +
-        `<label class="master-switch">` +
-        `<input type="checkbox" data-settings-prop="system.completionToneEnabled" ${draft.system.completionToneEnabled !== false ? 'checked' : ''}>` +
-        `<span>` +
-        `</span>` +
-        `</label>` +
-        `</div>` +
-        `</div>` +
-        `</div>
-<div class="settings-card">` +
-        `<div class="settings-card-head">` +
-        `<span class="settings-card-icon">${icon('automation')}</span>` +
-        `<b>Global safety limits</b>` +
-        `</div>` +
-        `<div class="grid-3 compact-settings-grid">` +
-        `<div class="field">` +
-        `<label>Issues / cycle</label>` +
-        `<input class="input" type="number" min="1" max="${SD.Constants.LIMITS.RULE_MAX_ISSUES}" data-settings-prop="system.safety.maxIssuesPerCycle" value="${safe.maxIssuesPerCycle}">` +
-        `</div>` +
-        `<div class="field">` +
-        `<label>Actions / cycle</label>` +
-        `<input class="input" type="number" min="1" max="${SD.Constants.LIMITS.RULE_MAX_ACTIONS}" data-settings-prop="system.safety.maxActionsPerCycle" value="${safe.maxActionsPerCycle}">` +
-        `</div>` +
-        `<div class="field">` +
-        `<label>Comments / hour</label>` +
-        `<input class="input" type="number" min="0" max="${SD.Constants.LIMITS.RULE_MAX_HOURLY}" data-settings-prop="system.safety.maxCommentsPerHour" value="${safe.maxCommentsPerHour}">` +
-        `</div>` +
-        `<div class="field">` +
-        `<label>Assignments / hour</label>` +
-        `<input class="input" type="number" min="0" max="${SD.Constants.LIMITS.RULE_MAX_HOURLY}" data-settings-prop="system.safety.maxAssignmentsPerHour" value="${safe.maxAssignmentsPerHour}">` +
-        `</div>` +
-        `<div class="field">` +
-        `<label>Transitions / hour</label>` +
-        `<input class="input" type="number" min="0" max="${SD.Constants.LIMITS.RULE_MAX_HOURLY}" data-settings-prop="system.safety.maxTransitionsPerHour" value="${safe.maxTransitionsPerHour}">` +
-        `</div>` +
-        `</div>` +
-        `</div>
-<div class="settings-card alarm-settings-card">` +
-        `<div class="settings-card-head">` +
-        `<span class="settings-card-icon">${icon('automation')}</span><b>Profile alarm</b>${profile ? `<span class="freshness-chip">${A.esc(profile.name)}</span>` : ''}</div>` +
-        `<div class="grid-2">` +
-        `<div class="field">` +
-        `<label>Sound</label>` +
-        `<select id="alarmPreset" class="select" data-searchable="true">${SD.Constants.ALARM_PRESETS.map(x => A.option(x.id, x.name, alarm.preset === x.id)).join('')}</select>` +
-        `</div>` +
-        `<div class="field">` +
-        `<label>Stop method</label>` +
-        `<select id="alarmStopMethod" class="select">${SD.Constants.ALARM_STOP_METHODS.map(x => A.option(x.id, x.name, alarm.stopMethod === x.id)).join('')}</select>` +
-        `</div>` +
-        `</div>` +
-        `<div class="alarm-duration-grid">` +
-        `<div class="field">` +
-        `<label>Duration</label>` +
-        `<input id="alarmDuration" class="input" type="number" min="1" max="86400" step="1" value="${A.esc(SD.Utils.timeFromSeconds(alarm.durationSeconds || 12, alarm.durationUnit || 'seconds'))}">` +
-        `</div>` +
-        `<div class="field time-unit-field">` +
-        `<label>Unit</label>` +
-        `<select id="alarmDurationUnit" class="select">${unitOptions(alarm.durationUnit || 'seconds')}</select>` +
-        `</div>` +
-        `<div class="field">` +
-        `<label>Volume · <strong id="alarmVolumeValue">${Math.round((Number(alarm.volume) || 0) * 100)}%</strong>` +
-        `</label>` +
-        `<input id="alarmVolume" class="range" data-range-key="alarm-volume" type="range" min="0" max="1" step="0.01" value="${Number(alarm.volume) || 0}">` +
-        `</div>` +
-        `</div>` +
-        `<div class="toggle-card-grid alarm-toggle-grid">` +
-        `<div class="toggle-card">` +
-        `<label class="master-switch">` +
-        `<input id="alarmLoop" type="checkbox" ${alarm.loop !== false ? 'checked' : ''}>` +
-        `<span>` +
-        `</span>` +
-        `</label>` +
-        `<span>` +
-        `<strong>Loop sound</strong>` +
-        `</span>` +
-        `</div>` +
-        `<div class="toggle-card">` +
-        `<label class="master-switch">` +
-        `<input id="alarmSystemNotification" type="checkbox" ${alarm.showSystemNotification !== false ? 'checked' : ''}>` +
-        `<span>` +
-        `</span>` +
-        `</label>` +
-        `<span>` +
-        `<strong>Browser notification</strong>` +
-        `</span>` +
-        `</div>` +
-        `<div class="toggle-card">` +
-        `<label class="master-switch">` +
-        `<input id="alarmPagePopup" type="checkbox" ${alarm.showPagePopup !== false ? 'checked' : ''}>` +
-        `<span>` +
-        `</span>` +
-        `</label>` +
-        `<span>` +
-        `<strong>Jira popup</strong>` +
-        `</span>` +
-        `</div>` +
-        `<div class="toggle-card">` +
-        `<label class="master-switch">` +
-        `<input id="alarmUseCustom" type="checkbox" ${alarm.useCustom ? 'checked' : ''}>` +
-        `<span>` +
-        `</span>` +
-        `</label>` +
-        `<span>` +
-        `<strong>Use custom audio</strong>` +
-        `</span>` +
-        `</div>` +
-        `</div>` +
-        `<div class="field">` +
-        `<label>Custom audio</label>` +
-        `<input id="alarmFile" class="input file-input" type="file" accept="audio/*">` +
-        `<span class="file-name">${A.esc(alarm.customName || 'No custom file')}</span>` +
-        `</div>` +
-        `<div class="row alarm-settings-actions">` +
-        `<button class="btn" data-action="test-alarm">Test Alarm</button>${alarm.customDataUrl ? `<button class="btn btn-small" data-action="clear-custom-alarm">Clear Custom Audio</button>` : ''}</div>` +
-        `</div>` +
-        `<div class="settings-tile-grid">${link('schedules', 'Schedules & Polling')}</div>`;
+        `<div class="settings-subpage">${automationBody}</div>`;
     }
     else if (section === 'security') {
       title = 'Security';
@@ -302,17 +250,6 @@
         `<button class="btn btn-primary" data-action="security-set-passcode">${sec.enabled ? 'Change Passcode' : 'Enable Lock'}</button>${sec.enabled ? `<button class="btn" data-action="security-save-timeout">Save Session Timeout</button>` +
           `<button class="btn" data-action="security-lock-now">Lock Now</button>` +
           `<button class="btn btn-danger" data-action="security-disable">Disable Lock</button>` : ''}</div>` +
-        `</div>` +
-        `<div class="settings-card">` +
-        `<div class="section-title">Protected sensitive actions</div>` +
-        `<div class="security-risk-grid section-gap">` +
-        `<span>Process actions now</span>` +
-        `<span>Bulk queue cancellation</span>` +
-        `<span>Change Jira URL / PAT</span>` +
-        `<span>Import encrypted configuration</span>` +
-        `<span>Create credential backup</span>` +
-        `<span>Delete / clear / factory reset</span>` +
-        `</div>` +
         `</div>`;
     }
     else {

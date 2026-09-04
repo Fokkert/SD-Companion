@@ -109,6 +109,58 @@
     copy.runtime = SD.Defaults.rule(copy.name).runtime;
     return copy;
   };
+
+  const nextProfileCopyName = (stored, profiles) => {
+    const source = String(stored?.name || 'Profile').trim() || 'Profile',
+      names = new Set((profiles || []).map(x => String(x.name || '').trim().toLowerCase()));
+    let candidate = `${source} Copy`.slice(0, 80), index = 2;
+    while (names.has(candidate.toLowerCase())) {
+      const suffix = ` Copy ${index++}`;
+      candidate = `${source.slice(0, Math.max(1, 80 - suffix.length))}${suffix}`;
+    }
+    return candidate;
+  };
+  const duplicateProfileObject = (stored, allProfiles) => {
+    const copy = structuredClone(stored),
+      now = new Date().toISOString(),
+      scheduleMap = new Map();
+    copy.id = crypto.randomUUID();
+    copy.name = nextProfileCopyName(stored, (allProfiles || []).filter(x => x.siteId === stored.siteId));
+    copy.createdAt = now;
+    copy.updatedAt = now;
+    copy.monitoring = { ...(copy.monitoring || {}), enabled: false };
+    copy.runtime = structuredClone(SD.Defaults.profile(copy.name, { id: copy.siteId }).runtime);
+
+    for (const schedule of copy.schedules || []) {
+      const previousId = schedule.id;
+      schedule.id = crypto.randomUUID();
+      scheduleMap.set(previousId, schedule.id);
+    }
+
+    for (const rule of copy.rules || []) {
+      const poolMap = new Map();
+      rule.id = crypto.randomUUID();
+      rule.revision = 1;
+      rule.createdAt = now;
+      rule.updatedAt = now;
+      if (rule.schedule?.mode === 'scheduled') {
+        rule.schedule.scheduleIds = (rule.schedule.scheduleIds || []).map(id => scheduleMap.get(id)).filter(Boolean);
+      }
+      renewLogicIds(rule.logic);
+      for (const pool of rule.actionRandomness?.pools || []) {
+        const previousId = pool.id;
+        pool.id = crypto.randomUUID();
+        poolMap.set(previousId, pool.id);
+      }
+      for (const action of rule.actions || []) {
+        action.id = crypto.randomUUID();
+        if (action.randomPoolId) action.randomPoolId = poolMap.get(action.randomPoolId) || '';
+        if (action.when?.logic) renewLogicIds(action.when.logic);
+      }
+      rule.runtime = structuredClone(SD.Defaults.rule(rule.name).runtime);
+    }
+    return copy;
+  };
   const updateRangeOutput = el => {
     const key = el.dataset.rangeKey;
     if (!key) return;
@@ -880,7 +932,7 @@
           if (act === 'cancel-issue-jobs') {
             if (!s || !p) throw new Error('Select a server and profile.');
             const issueKey = String(b.dataset.issueKey || ''),
-              count = (A.jobs || []).filter(x => x.siteId === s.id && x.profileId === p.id && x.issueKey === issueKey && x.status === JOB.PENDING).length;
+              count = (A.jobs || []).filter(x => x.siteId === s.id && x.profileId === p.id && x.issueKey === issueKey && [JOB.AWAITING_APPROVAL, JOB.PENDING].includes(x.status)).length;
             if (!count) {
               A.toast('No upcoming actions remain for this issue.', 'info');
               return;
@@ -894,7 +946,7 @@
           }
           if (act === 'cancel-all-jobs') {
             if (!s || !p) throw new Error('Select a server and profile.');
-            const count = (A.jobs || []).filter(x => x.siteId === s.id && x.profileId === p.id && x.status === JOB.PENDING).length;
+            const count = (A.jobs || []).filter(x => x.siteId === s.id && x.profileId === p.id && [JOB.AWAITING_APPROVAL, JOB.PENDING].includes(x.status)).length;
             if (!count) {
               A.toast('No upcoming actions remain.', 'info');
               return;
@@ -1351,6 +1403,16 @@
             A.renderPage();
             return;
           }
+          if (act === 'duplicate-profile') {
+            const stored = (A.state.profiles || []).find(x => x.id === b.dataset.id && x.siteId === s?.id);
+            if (!stored) throw new Error('Profile not found.');
+            const copy = duplicateProfileObject(stored, A.state.profiles || []);
+            A.state.profiles.push(copy);
+            await A.save(false, 'all-profiles');
+            A.toast(`Duplicated as ${copy.name}. Monitoring is off in the copy until you enable it.`, 'success');
+            A.renderPage();
+            return;
+          }
           if (act === 'rename-profile') {
             p.name = A.$('profileNameEdit').value.trim() || p.name;
             await A.save();
@@ -1415,6 +1477,11 @@
           }
           if (act === 'settings-section') {
             A.settingsSection = b.dataset.section || 'general';
+            A.renderPage();
+            return;
+          }
+          if (act === 'automation-settings-section') {
+            A.settingsAutomationSection = ['sync', 'safety', 'alarm'].includes(b.dataset.section) ? b.dataset.section : 'sync';
             A.renderPage();
             return;
           }
@@ -1524,7 +1591,8 @@
       } catch (err) {
         if (!['OPERATION_CANCELLED', 'SECURITY_AUTH_CANCELLED'].includes(err.code)) {
           A.toast(err.message, 'error');
-          console.warn(err);
+          // The failure is handled by the toast and SD Companion logger above.
+          // Do not mirror handled operational errors into Chrome's extension Errors console.
         }
       }
     });

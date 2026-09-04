@@ -18,6 +18,7 @@
     serverAddOpen: false,
     serverEditId: "",
     settingsSection: "general",
+    settingsAutomationSection: "sync",
     homeDetectionView: "current",
     homeShowCompletedActions: true,
     bulkDraft: null,

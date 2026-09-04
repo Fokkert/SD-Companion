@@ -1,3 +1,18 @@
+## V2 · Build 2.1.1 — Home consolidation and UI cleanup
+
+- Combined Home **Detections** and **Issue Action History** into one **Detections & Actions** workspace with Check now, Current/Recent selection, Approve all, Process all, Cancel all upcoming and Show completed controls.
+- Corrected **Show completed** semantics: with the toggle off, issue groups disappear only when every action for that issue is terminal; completed actions remain visible inside issue groups that still contain active work.
+- Moved **Bulk Operations** from Home to Rules beside **+ Rule**.
+- Simplified Last Cycle failures to a compact **Error occurred · see Logs / Audit** status so long connection/synchronization errors no longer expand the Home card. Synchronization warnings are also written to the audit journal.
+- Replaced Home schedule wording that used “shift” with **Active Schedule / No Active Schedule**.
+- Added a consistent readable control-label typography standard for text paired with toggles/buttons.
+- Removed decorative left-edge color strips from list entries, including rules and detections.
+- Repositioned profile Select/Selected controls to the vertically centered right side of profile cards.
+- Added safe **Duplicate** profile support. Duplicates receive fresh nested identifiers, reset runtime state and start with Monitoring disabled.
+- Removed the **Protected sensitive actions** panel from Settings → Security and moved that explanation to Help.
+- Split Settings → Automation into **Sync & Refresh**, **Safety Limits** and **Alarm** subpages with less crowded spacing.
+- Stopped handled UI-action failures from being redundantly mirrored with `console.warn`; users still receive the error toast and SD Companion's own log/audit reporting.
+
 ## V2 · Build 2.1.0 — Bulk operations, approvals and alert control
 
 - Added Home → **Bulk Operations**, a transient one-time rule-style workflow with saved-filter/JQL

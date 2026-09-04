@@ -924,7 +924,9 @@ const metadataSyncTick = async () => {
           x.inventorySettings.autoSync.nextRunAt = new Date(Date.now() + interval * 1000).toISOString();
         }
       }).catch(() => {});
-      await log(LEVEL.ERROR, 'Periodic metadata sync failed', SD.Utils.safeError(e), { siteId: site.id });
+      const syncError = SD.Utils.safeError(e);
+      await log(LEVEL.ERROR, 'Periodic metadata sync failed', syncError, { siteId: site.id });
+      await audit('metadata-auto-sync-failed', syncError, { siteId: site.id });
     }
   }
   await configureMetadataSyncAlarm(await SD.Storage.ensureState());

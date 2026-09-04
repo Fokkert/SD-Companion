@@ -4673,9 +4673,6 @@ n.connection-policy-note {
   box-shadow: inset 0 1px 0 rgba(255,255,255,.025),0 5px 14px rgba(0,0,0,.09) !important;
 }
 
-.detection-row::before {
-  width: 2px !important;
-}
 
 .detection-key {
   padding: 3px 6px !important;
@@ -4710,9 +4707,6 @@ n.connection-policy-note {
   box-shadow: inset 0 1px 0 rgba(255,255,255,.03),0 6px 16px rgba(0,0,0,.1) !important;
 }
 
-.rule-card::before {
-  width: 2px !important;
-}
 
 .rule-card .list-title {
   font-size: 11.5px !important;
@@ -5483,7 +5477,7 @@ n.connection-policy-note {
   }
 }
 
-/* V2.0.2: keep the exact V1.5.22 radar geometry/markup; shift card remains a V2 addition. */
+/* V2.0.2: keep the exact V1.5.22 radar geometry/markup; schedule card remains a V2 addition. */
 
 .brand-button strong {
   font-size: 21px !important;
@@ -5491,7 +5485,7 @@ n.connection-policy-note {
   letter-spacing: .01em;
 }
 
-.home-shift-card {
+.home-schedule-card {
   display: grid;
   grid-template-columns: 42px minmax(0,1fr) auto;
   gap: 12px;
@@ -5500,7 +5494,7 @@ n.connection-policy-note {
   border-radius: 17px !important;
 }
 
-.shift-card-icon {
+.schedule-card-icon {
   width: 42px;
   height: 42px;
   border-radius: 14px;
@@ -5510,23 +5504,23 @@ n.connection-policy-note {
   border: 1px solid var(--line);
 }
 
-.shift-card-icon span {
+.schedule-card-icon span {
   width: 12px;
   height: 12px;
   border-radius: 50%;
   background: var(--muted);
 }
 
-.home-shift-card.active .shift-card-icon span {
+.home-schedule-card.active .schedule-card-icon span {
   background: var(--success);
   box-shadow: 0 0 14px color-mix(in srgb,var(--success) 72%,transparent);
 }
 
-.shift-card-copy {
+.schedule-card-copy {
   min-width: 0;
 }
 
-.shift-card-copy>span {
+.schedule-card-copy>span {
   display: block;
   font-size: 10.5px;
   text-transform: uppercase;
@@ -5535,7 +5529,7 @@ n.connection-policy-note {
   font-weight: 850;
 }
 
-.shift-card-copy strong {
+.schedule-card-copy strong {
   display: block;
   margin-top: 3px;
   font-size: 15px;
@@ -5544,14 +5538,14 @@ n.connection-policy-note {
   white-space: nowrap;
 }
 
-.shift-card-copy small {
+.schedule-card-copy small {
   display: block;
   margin-top: 3px;
   color: var(--muted);
   font-size: 11px;
 }
 
-.home-shift-card .pill {
+.home-schedule-card .pill {
   font-size: 10px;
 }
 
@@ -6656,5 +6650,182 @@ n.connection-policy-note {
 
   .security-settings-actions .btn {
     flex: 1 1 150px;
+  }
+}
+
+/* V2.1.1 focused UI consistency and workspace cleanup ---------------------- */
+
+:root {
+  --control-label-font-size: 14px;
+  --control-label-font-weight: 760;
+}
+
+/* Text directly paired with switches/buttons uses one readable standard. */
+.control-label,
+.setting-line > span:first-child,
+.toggle-card > span > strong,
+.server-behavior-toggle strong {
+  color: var(--text) !important;
+  font-size: var(--control-label-font-size) !important;
+  font-weight: var(--control-label-font-weight) !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0 !important;
+}
+
+.show-completed-control {
+  gap: 9px;
+  margin: 0;
+  color: var(--text) !important;
+}
+
+/* Decorative left-edge list accents were visually distorted at compact sizes. */
+.list-item::before {
+  content: none !important;
+  display: none !important;
+  width: 0 !important;
+}
+
+/* Home: detections and action history share one operational workspace. */
+.detections-actions-card {
+  display: grid;
+  gap: 14px;
+}
+
+.detections-actions-head {
+  align-items: flex-start;
+}
+
+.detections-actions-primary-controls,
+.detections-actions-global-controls {
+  align-items: center;
+  gap: 8px;
+}
+
+.detections-actions-global-controls {
+  padding: 10px 0 2px;
+  border-top: 1px solid color-mix(in srgb,var(--line) 78%,transparent);
+}
+
+.home-combined-section {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb,var(--line) 78%,transparent);
+}
+
+.home-combined-section .section-gap {
+  margin-top: 0 !important;
+}
+
+.home-combined-section .small-section-title {
+  font-size: 13px;
+  font-weight: 850;
+  color: var(--muted2);
+  letter-spacing: .02em;
+}
+
+/* Profiles: actions stay vertically centered at the right edge of each card. */
+.profile-list-item {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) auto !important;
+  align-items: center !important;
+  gap: 14px !important;
+}
+
+.profile-card-copy {
+  min-width: 0;
+}
+
+.profile-card-actions {
+  justify-self: end;
+  align-self: center;
+  align-items: center;
+  flex-wrap: nowrap !important;
+}
+
+/* Automation settings are split into compact internal pages. */
+.settings-subpage-nav {
+  display: flex;
+  gap: 6px;
+  padding: 5px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: color-mix(in srgb,var(--panel2) 72%,transparent);
+  scrollbar-width: thin;
+}
+
+.settings-subpage-tab {
+  flex: 1 0 auto;
+  min-width: 118px;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+  transition: background .14s ease,border-color .14s ease,color .14s ease;
+}
+
+.settings-subpage-tab:hover {
+  color: var(--text);
+  background: color-mix(in srgb,var(--primary) 5%,var(--surface-soft));
+}
+
+.settings-subpage-tab.active {
+  color: var(--text);
+  border-color: color-mix(in srgb,var(--primary) 34%,var(--line));
+  background: color-mix(in srgb,var(--primary) 10%,var(--panel2));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.settings-subpage {
+  display: grid;
+  gap: 14px;
+}
+
+.settings-subpage > .settings-card,
+.settings-subpage > .settings-tile-grid {
+  margin: 0 !important;
+}
+
+.automation-feedback-grid {
+  display: grid;
+  grid-template-columns: minmax(0,1.35fr) minmax(210px,.85fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.settings-section-copy {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.automation-safety-grid {
+  margin-top: 2px;
+}
+
+@container (max-width:560px) {
+  .detections-actions-head,
+  .automation-feedback-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .detections-actions-head {
+    display: grid;
+  }
+
+  .profile-card-actions {
+    justify-self: end;
+    justify-content: flex-end;
+  }
+
+  .automation-feedback-grid {
+    display: grid;
   }
 }

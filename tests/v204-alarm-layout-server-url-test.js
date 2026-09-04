@@ -15,9 +15,9 @@ const manifest = JSON.parse(read('manifest.json')),
   migrations = read('src/shared/migrations.js'),
   css = read('src/ui/app/app.css'),
   servers = read('src/ui/app/pages/servers.js');
-assert.equal(manifest.version, '2.1.0');
+assert.equal(manifest.version, '2.1.1');
 assert.equal(manifest.version_name, 'V2');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.1.0"'));
+assert(textIncludes(constants, 'BUILD_VERSION:"2.1.1"'));
 // Alarm configuration is centralized at profile Settings level.
 assert(textIncludes(settings, 'Profile alarm'));
 assert(textIncludes(settings, 'id="alarmPreset"'));

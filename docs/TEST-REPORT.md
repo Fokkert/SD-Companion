@@ -1,11 +1,21 @@
-# V2 Build 2.1.0 Test Report
+# V2 Build 2.1.1 Test Report
 
 ## Result
 
-- JavaScript regression files: 63/63 passed.
+- JavaScript regression files: 64/64 passed.
 - Static architecture/security test: passed.
 - JavaScript syntax validation: passed.
 - JSON parsing validation: passed.
+
+## V2.1.1 focused coverage
+
+- Combined Home Detections & Actions rendering, Current/Recent controls and profile-wide action controls are covered by source/render regressions.
+- Show completed verifies whole-issue filtering while retaining completed action context for issues that still have active work.
+- Rules owns the Bulk Operations entry point; Home no longer exposes the Bulk button.
+- Active Schedule wording, compact Last Cycle error rendering and removal of left-edge list accents are statically covered.
+- Profile duplication verifies fresh identifiers, remapped schedule/pool references, reset runtime state and Monitoring disabled on the copy.
+- Settings Automation subpages and removal of the protected-actions Security panel are covered; Help retains the protected-action explanation.
+- Handled UI action errors no longer use `console.warn`, avoiding redundant Chrome extension Errors entries for failures already handled by toast/logging.
 
 ## V2.1.0 focused coverage
 

@@ -36,7 +36,7 @@ for (const f of [
   vm.runInThisContext(read(f), { filename: f });
 (async () => {
   const SD = SDCompanion, K = SD.Constants.STORAGE_KEYS;
-  assert.equal(SD.Constants.BUILD_VERSION, '2.1.0');
+  assert.equal(SD.Constants.BUILD_VERSION, '2.1.1');
   let st = await SD.Storage.securityStatus();
   assert.equal(st.enabled, false);
   assert.equal(st.unlocked, true);
@@ -65,17 +65,20 @@ for (const f of [
     core = read('src/ui/app/app-core.js'),
     events = read('src/ui/app/app-events.js'),
     settings = read('src/ui/app/pages/logs-more.js'),
+    help = read('src/ui/app/pages/help.js'),
     worker = read('src/background/service-worker.js'),
     app = read('src/ui/app/app.html'),
     side = read('src/ui/app/sidepanel.html'),
     css = read('src/ui/app/app.css');
-  assert.equal(manifest.version, '2.1.0');
+  assert.equal(manifest.version, '2.1.1');
   for (const src of [app, side])
     assert(textIncludes(src, 'securityLockOverlay') && textIncludes(src, 'securityReauthOverlay'));
   assert(textIncludes(settings, "nav('security','Security')"));
   assert(textIncludes(settings, 'security-set-passcode'));
   assert(textIncludes(settings, 'Save Session Timeout'));
-  assert(textIncludes(settings, 'Protected sensitive actions'));
+  assert(!textIncludes(settings, 'Protected sensitive actions'));
+  assert(textIncludes(help, 'Security and protected actions'));
+  assert(textIncludes(help, 'Changing a Jira server URL or PAT is protected.'));
   assert(textIncludes(core, 'A.requestSecurityReauth'));
   assert(textIncludes(core, "mode:'risk'"));
   assert(textIncludes(core, 'A.scheduleSecurityRelock'));

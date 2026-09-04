@@ -16,6 +16,7 @@
       ['api', 'API pacing'],
       ['alarms', 'Alarms'],
       ['profiles', 'Profiles'],
+      ['security', 'Security'],
       ['health', 'Health'],
       ['diagnostics', 'Diagnostics'],
       ['storage', 'Data cleanup'],
@@ -56,7 +57,7 @@ ${topic('discovery', '3. API discovery', '<p>Discovery uses Jira REST API data a
             '<li>Changing transition handling methods does not intentionally erase rule fields belonging to the other modes, so a server can switch compatibility modes without rebuilding every rule.</li>' +
             '</ul>')}
 ${topic('monitor', '4. Monitoring and Scan Now', '<p>Monitoring is the continuous rule-evaluation switch for the selected profile. While it is on, enabled rules are evaluated at the configured polling cadence and according to each rule\'s schedule. Scan Now performs one immediate cycle without changing Monitoring.</p>' +
-              '<p>Home separates current detections from recent history and also shows completed, pending and failed actions by issue.</p>')}
+              '<p>Home combines current/recent detections and per-issue action history in one <b>Detections &amp; Actions</b> workspace. The same workspace contains Check now, Current/Recent selection, global queue controls and the Show completed filter.</p>')}
 ${topic('rules', '5. Rule model', '<p>A rule defines what should match and what should happen.</p>' +
                 '<ul>' +
                 '<li>Priority determines evaluation order.</li>' +
@@ -71,7 +72,7 @@ ${topic('rules', '5. Rule model', '<p>A rule defines what should match and what 
                 '<li>The Effective JQL preview shows the query derived from the configured source and conditions.</li>' +
                 '<li>Rule edits are staged locally. Use Save Rule to apply them; Cancel discards the draft.</li>' +
                 '</ul>')}
-${topic('bulk', '6. Bulk Operations', '<p>Home → Bulk Operations is a one-time rule-style execution surface. It is not saved into the profile rules.</p>' +
+${topic('bulk', '6. Bulk Operations', '<p>Rules → <b>Bulk Operations</b> is a one-time rule-style execution surface next to the + Rule control. It is not saved into the profile rules.</p>' +
                   '<ul>' +
                   '<li>Choose saved filters and/or Additional JQL, plus the same typed conditions available to rules.</li>' +
                   '<li>Build the normal ordered action chain, including delays, After previous dependencies and optional Needs approval gates.</li>' +
@@ -95,19 +96,19 @@ ${topic('actions', '8. Actions and sequencing', '<p>Actions execute in their dis
                     '<li>In Manual Transition Name mode, matching is case-insensitive against transitions currently available on the issue. Zero matches fail and multiple exact-name matches fail as ambiguous.</li>' +
                     '<li>Edit Fields, Labels and Priority modify Jira fields using the configured values.</li>' +
                     '<li>Alarm and Notification are local attention actions.</li>' +
-                    '<li>Any individual action can enable Needs approval. It then remains Awaiting approval until the user approves it from Home → Issue Action History.</li>' +
+                    '<li>Any individual action can enable Needs approval. It then remains Awaiting approval until the user approves it from Home → Detections &amp; Actions.</li>' +
                     '<li>Each action may inherit the rule delay range, use its own independent min/max delay, or use After previous action. Rules decide separately whether cancelled, skipped/not-run, or failed predecessors continue or stop the chain. Manual Process can either update later relative schedules from the actual manual completion time or preserve their existing schedule.</li>' +
                     '<li>Action-level conditions are revalidated against the exact issue immediately before execution. Stale-state checks are action-specific: transitions watch status, assignments assignee, priority actions priority, labels labels, and Edit Fields only the fields it modifies. Comments, alarms and notifications are not cancelled just because status changed.</li>' +
                     '</ul>')}
 ${topic('schedules', '9. Schedules, polling and time units', '<p>Named schedules support days of week, start/end time, timezone, optional effective dates and overnight windows. Schedule edits are staged until Save Schedule is pressed; Cancel discards the draft. No named schedule is created automatically; create only the schedules you need. Rules can always choose Always On.</p>' +
                       '<p>Polling, repeat intervals, cursor overlap, action delays, alarm duration and other human-facing time settings provide selectable time units where appropriate. Switching a unit keeps the visible numeric value and reinterprets it in the new unit; it does not live-convert the number.</p>' +
-                      '<p>Home detection/action history refresh is configured under Settings → Automation. The default is 3 seconds; refresh is deferred while the user is actively reading or expanding the activity cards.</p>')}
+                      '<p>Home detection/action history refresh is configured under Settings → Automation. The default is 3 seconds; refresh is deferred while the user is actively reading or expanding the activity workspace. Settings → Automation is split into Sync & Refresh, Safety Limits, and Alarm subpages so these controls are easier to navigate.</p>')}
 ${topic('safety', '10. Global execution safety', '<ul>' +
                         '<li>Safety limits are global and are configured under Settings → Automation.</li>' +
                         '<li>Limits cap issues and actions per cycle and comments, assignments and transitions per hour.</li>' +
                         '<li>The idempotency ledger prevents the same logical action from being replayed under the selected execution policy.</li>' +
                         '<li>A per-issue execution lock prevents concurrent workers from modifying the same issue at the same time.</li>' +
-                        '<li>Awaiting approval, pending and running actions are visible from Home so queued work can be reviewed operationally. Approve/Approve all release approval-gated work. Awaiting approval and Pending actions can be processed immediately, individually or with confirmed Process all at issue/profile scope. Each individual queued action can also be cancelled from Issue Action History. Pending actions cancel immediately; a running action is cancelled only while it is still in preflight. Once its Jira write has been dispatched, SD Companion refuses cancellation rather than pretending the remote change can be undone.</li>' +
+                        '<li>Awaiting approval, pending and running actions are visible from Home → Detections &amp; Actions so queued work can be reviewed operationally. Approve/Approve all release approval-gated work. Awaiting approval and Pending actions can be processed immediately, individually or with confirmed Process all at issue/profile scope. Each individual queued action can also be cancelled from Detections &amp; Actions. Pending actions cancel immediately; a running action is cancelled only while it is still in preflight. Once its Jira write has been dispatched, SD Companion refuses cancellation rather than pretending the remote change can be undone.</li>' +
                         '</ul>')}
 ${topic('api', '11. API pacing and rate limits', '<p>Each Jira server has an independent adaptive request policy.</p>' +
                           '<ul>' +
@@ -132,26 +133,36 @@ ${topic('profiles', '13. Profiles and portability', '<p>A profile contains rules
                               '<li>Normal export preserves the selected profile, related server configuration/inventory/runtime snapshot, appearance and system settings, but intentionally excludes the PAT.</li>' +
                               '<li>Password-encrypted secure backup can include the PAT.</li>' +
                               '<li>Import is previewed before it is applied. Profiles can be imported even when no Jira server is configured; the saved server shell is restored from the backup and credentials can be configured later.</li>' +
-                              '<li>Deleting a profile cascades through its rules, schedules, cursors, jobs, ledger and runtime state.</li>' +
+                              '<li>Profiles can be duplicated. The duplicate receives new internal object IDs and clean runtime counters, while Monitoring starts off to prevent accidental duplicate execution.</li><li>Deleting a profile cascades through its rules, schedules, cursors, jobs, ledger and runtime state.</li>' +
                               '</ul>')}
-${topic('health', '14. Compatibility and permissions', '<p>Health shows connection status, authenticated identity, server capabilities, permissions and request statistics. SD Companion learns capabilities from the Jira endpoints that are actually available instead of assuming all Jira deployments expose identical APIs.</p>' +
+
+${topic('security', '14. Security and protected actions', '<p>Settings → Security configures the optional device-local extension lock. The detailed sensitive-action list is documented here instead of crowding the Settings page.</p>' +
+                                '<ul>' +
+                                '<li>Processing queued Jira actions immediately, including Approve/Approve all and Process/Process all, requires sensitive-action confirmation when the extension lock is enabled.</li>' +
+                                '<li>Bulk queue cancellation and other high-impact queue operations are protected.</li>' +
+                                '<li>Changing a Jira server URL or PAT is protected.</li>' +
+                                '<li>Applying encrypted configuration imports and creating credential-bearing encrypted backups are protected.</li>' +
+                                '<li>Delete, clear-cache, clear-runtime and factory-reset operations are protected.</li>' +
+                                '<li>The PIN/password itself is not stored; SD Companion keeps a salted verifier and issues short-lived authorization for protected operations.</li>' +
+                                '</ul>')}
+${topic('health', '15. Compatibility and permissions', '<p>Health shows connection status, authenticated identity, server capabilities, permissions and request statistics. SD Companion learns capabilities from the Jira endpoints that are actually available instead of assuming all Jira deployments expose identical APIs.</p>' +
                                 '<p>PAT authentication does not require browser-session token renewal. Authentication failures are tracked separately from pre-HTTP network failures. SD Companion does not force a Local Network Access target address space; Chrome/Edge determine the resolved destination and enforce LNA/CORS/TLS/network policy.</p>')}
-${topic('diagnostics', '15. Logs and Audit Journal', '<p>Logs are technical diagnostics and obey the configured log level. The Audit Journal records operational events such as synchronization, detection, job scheduling, execution, deduplication, cancellation and failure. Both can be exported as JSON and cleared independently.</p>' +
+${topic('diagnostics', '16. Logs and Audit Journal', '<p>Logs are technical diagnostics and obey the configured log level. The Audit Journal records operational events such as synchronization, detection, job scheduling, execution, deduplication, cancellation and failure. Both can be exported as JSON and cleared independently.</p>' +
                                   '<p>Normal Settings edits are staged until Save is pressed. Reset restores the saved Settings state. The optional action-completion tone is a fixed soft low-volume cue that can be enabled or disabled under Settings → Automation.</p>')}
-${topic('storage', '16. Data maintenance', '<ul>' +
+${topic('storage', '17. Data maintenance', '<ul>' +
                                     '<li>Clear Current Server Cache removes synchronized metadata while preserving server configuration and discovery choices.</li>' +
                                     '<li>Clear Current Profile Runtime Data clears counters, cursors, jobs and ledger state while preserving rules and schedules.</li>' +
                                     '<li>Factory Reset erases all SD Companion configuration, credentials, metadata, logs, audit and runtime data.</li>' +
                                     '<li>Deleting a profile or server removes data belonging to that object.</li>' +
                                     '</ul>')}
-${topic('trouble', '17. Troubleshooting', '<ul>' +
+${topic('trouble', '18. Troubleshooting', '<ul>' +
                                       '<li>If metadata is missing, run Stage 1 first, enable the desired per-project datasets, then run the configured-data sync.</li>' +
                                       '<li>If a filter is missing, inspect filter coverage and Logs; Jira editions differ in which owned-filter enumeration endpoints they expose.</li>' +
                                       '<li>If Jira fails before returning HTTP, inspect the Health error and check Jira reachability, Chrome/Edge Local Network Access or CORS policy, certificate trust, DNS, proxy/PAC and VPN routing. SD Companion does not bypass those browser/network checks.</li>' +
                                       '<li>If a rule does not run, verify Enabled, Monitoring, schedule, Effective JQL, permissions, execution policy and global safety limits.</li>' +
                                       '<li>If a transition is missing, refresh the relevant project datasets and confirm an appropriate issue context exists for transition discovery.</li>' +
                                       '<li>Cancel long discovery/sync operations from the loading surface; incomplete snapshots are discarded.</li>' +
-                                      '<li>To run queued work early, expand Home → Issue Action History and use Process beside a Pending action, or Process all for the issue/profile. To cancel, use Cancel beside the Pending/Running action. Cancelling one action does not automatically cancel later independent actions already queued for the same issue.</li>' +
+                                      '<li>To run queued work early, expand Home → Detections &amp; Actions and use Process beside a Pending action, or Process all for the issue/profile. To cancel, use Cancel beside the Pending/Running action. Cancelling one action does not automatically cancel later independent actions already queued for the same issue.</li>' +
                                       '</ul>')}
 </section>`;
   };

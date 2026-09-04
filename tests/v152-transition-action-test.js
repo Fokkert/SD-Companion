@@ -14,7 +14,7 @@ for (const f of [
 ])
   load(f);
 const SD = SDCompanion;
-assert.equal(SD.Constants.BUILD_VERSION, '2.1.0');
+assert.equal(SD.Constants.BUILD_VERSION, '2.1.1');
 const enabled = SD.Defaults.rule('Open Incidents');
 enabled.enabled = true;
 enabled.source.jql = 'project = IT';

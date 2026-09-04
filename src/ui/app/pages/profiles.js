@@ -73,19 +73,22 @@
     return `<section class="page">${head('Profiles')}<div class="configured-section">` +
       `<div class="section-kicker">Profiles on ${A.esc(s.name)}</div>` +
       `<div class="card">` +
-      `<div class="list">${profiles.map(x => `<div class="list-item configured-object ${x.id === p?.id ? 'active-object' : ''}">` +
-        `<div>` +
+      `<div class="list profile-list">${profiles.map(x => `<div class="list-item configured-object profile-list-item ${x.id === p?.id ? 'active-object' : ''}">` +
+        `<div class="profile-card-copy">` +
         `<div class="list-title">${A.esc(x.name)}</div>` +
         `<div class="list-meta">${(x.rules || []).length} rules · ${(x.schedules || []).length} schedules</div>` +
         `</div>` +
-        `<button class="btn btn-small" data-action="select-profile" data-id="${x.id}">${x.id === p?.id ? 'Selected' : 'Use'}</button></div>`).join('')}</div>` +
+        `<div class="row profile-card-actions">` +
+        `<button class="btn btn-small" data-action="duplicate-profile" data-id="${x.id}">Duplicate</button>` +
+        `<button class="btn btn-small ${x.id === p?.id ? 'btn-primary' : ''}" data-action="select-profile" data-id="${x.id}" ${x.id === p?.id ? 'disabled' : ''}>${x.id === p?.id ? 'Selected' : 'Select'}</button>` +
+        `</div></div>`).join('')}</div>` +
       `</div>` +
       `</div>` +
       `<div class="card">` +
       `<div class="grid-2">` +
       `<div class="field">` +
       `<label>New profile name</label>` +
-      `<input id="newProfileName" class="input" maxlength="80" placeholder="Night Shift">` +
+      `<input id="newProfileName" class="input" maxlength="80" placeholder="Operations Profile">` +
       `</div>` +
       `<button class="btn btn-primary" style="align-self:end" data-action="new-profile">Create Profile</button>` +
       `</div>` +

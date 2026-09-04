@@ -55,7 +55,7 @@ future outage.
 ## Execution engine
 
 Matched issues are planned into ordered jobs. Normal monitoring jobs reference their saved rule;
-Home → Bulk Operations instead creates transient one-time jobs containing an immutable rule snapshot,
+Rules → Bulk Operations instead creates transient one-time jobs containing an immutable rule snapshot,
 so a delayed bulk action can still perform full execution-time preflight without persisting a rule.
  The planner applies global safety limits, rule
 priority/conflict policy, execution policy, per-action conditions, optional random action pools and
@@ -142,3 +142,7 @@ action-specific preflight/write path. Rules store `manualProcess.relativeSchedul
 a dependent After previous job to anchor to the manually processed predecessor's actual completion
 time; `preserve` records dependency resolution without rewriting the dependent job's existing
 `scheduledAt`.
+
+## Profile duplication
+
+Profile duplication is configuration cloning rather than runtime cloning. The duplicate receives a new profile ID plus fresh rule, schedule, action, condition and random-pool IDs. Internal schedule/pool references are remapped, runtime state is reset, and monitoring starts disabled.

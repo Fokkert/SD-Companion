@@ -265,7 +265,7 @@
         `<button class="btn btn-small" data-action="${editing ? 'cancel-rule-edit' : 'edit-rule'}" data-id="${x.id}">${editing ? 'Close' : 'Edit'}</button></div></div>${editing && A.ruleDraft ? editor(A.ruleDraft, s, p) : ''}</div>`;
     }).join('');
     const newEditor = A.ruleDraftIsNew && A.ruleDraft ? `<div class="configured-object-stack new-rule-draft">${editor(A.ruleDraft, s, p)}</div>` : '';
-    return `<section class="page rules-page">${head('Rules', '', `<button class="btn btn-primary btn-small" data-action="new-rule">+ Rule</button>`)}<div class="configured-section">` +
+    return `<section class="page rules-page">${head('Rules', '', `<div class="row"><button class="btn btn-primary btn-small" data-action="new-rule">+ Rule</button><button class="btn btn-small" data-page="bulk">Bulk Operations</button></div>`)}<div class="configured-section">` +
       `<div class="section-kicker">Configured rules</div>` +
       `<div class="card compact-configured-card">` +
       `<div class="list rule-list">${newEditor}${rows || (!newEditor ? '<div class="empty">No rules configured.</div>' : '')}</div></div></div></section>`;

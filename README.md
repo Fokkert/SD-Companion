@@ -15,7 +15,7 @@ SD Companion can:
   transition metadata.
 - Detect Jira issues using configurable rules and Jira Query Language (JQL).
 - Apply additional conditions to detected issues before actions are scheduled.
-- Run one-time **Bulk Operations** from Home using the same filters, conditions and action-chain model as rules, without saving a rule.
+- Run one-time **Bulk Operations** from Rules using the same filters, conditions and action-chain model as rules, without saving a rule.
 - Run automated Jira actions, including:
   - assign or unassign issues;
   - post comments;
@@ -164,9 +164,9 @@ priority changes, local alarms and browser notifications.
 
 Actions can use delays and dependencies, allowing multi-step workflows to execute in a controlled
 order rather than all at once. Individual actions can also enable **Needs approval**. Approval-gated
-actions remain in Action History and cannot execute until a user explicitly approves them.
+actions remain in Home → Detections & Actions and cannot execute until a user explicitly approves them.
 
-Home → Issue Action History keeps approval/running/pending work above older completed history. A
+Home → Detections & Actions keeps approval/running/pending work above older completed history. A
 **Show completed** toggle can hide terminal actions, and **Approve all** is available for the active
 server/profile when approval-gated actions are waiting.
 
@@ -175,7 +175,7 @@ enabling it broadly.
 
 ## Bulk Operations
 
-Home → **Bulk Operations** provides a one-time execution surface for work that should run immediately
+Rules → **Bulk Operations** provides a one-time execution surface for work that should run immediately
 without creating or saving a monitoring rule. Build a constrained Jira filter, optional typed
 conditions and an ordered action chain, preview the current matches, then choose **Run now**.
 
@@ -200,7 +200,7 @@ Profiles keep automation configuration separated.
 They can contain rules, schedules, monitoring settings and other profile-specific automation
 configuration for a Jira server.
 
-Profiles can be exported and imported for migration or backup.
+Profiles can be exported and imported for migration or backup. Existing profiles can also be duplicated. A duplicate receives independent rule, schedule, action and condition identifiers, resets runtime state and starts with monitoring disabled so the copy cannot immediately double-run automation.
 
 For credential-bearing backups, use SD Companion's encrypted secure-backup option.
 

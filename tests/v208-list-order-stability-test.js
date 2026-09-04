@@ -10,8 +10,8 @@ const home = fs.readFileSync(path.join(root, 'src/ui/app/pages/home.js'), 'utf8'
 const engine = fs.readFileSync(path.join(root, 'src/background/rule-engine.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'src/ui/app/app.css'), 'utf8');
 const soft = fs.readFileSync(path.join(root, 'src/ui/app/soft-select.js'), 'utf8');
-assert.equal(manifest.version, '2.1.0');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.1.0"'));
+assert.equal(manifest.version, '2.1.1');
+assert(textIncludes(constants, 'BUILD_VERSION:"2.1.1"'));
 // Schedule selector: name only, no appended human schedule description.
 assert(textIncludes(rules, 'A.glassMulti(p.schedules,x=>x.id,x=>x.name'));
 assert(!textIncludes(rules, 'x=>`${x.name} · ${SD.Schedule.describe(x)}`'));
@@ -31,6 +31,8 @@ assert(textIncludes(engine, 'historyOrderAt:new Date(scheduledMs).toISOString()'
 assert(textIncludes(home, 'j.status===JOB.AWAITING_APPROVAL?0:j.status===JOB.RUNNING?1:j.status===JOB.PENDING?2'));
 assert(textIncludes(home, 'actionRank(a)-actionRank(b)'));
 assert(textIncludes(home, 'new Date(b.historyOrderAt||b.completedAt||b.startedAt||b.createdAt||b.scheduledAt||0)-new Date(a.historyOrderAt||a.completedAt||a.startedAt||a.createdAt||a.scheduledAt||0)'));
-assert(textIncludes(home, 'A.homeShowCompletedActions?allOrdered:allOrdered.filter(j=>!terminalStatus(j.status))'));
+assert(textIncludes(home, 'const hasActive=row=>row.jobs.some(j=>!terminalStatus(j.status))'));
+assert(textIncludes(home, 'visibleRows=[...map.values()].filter(row=>A.homeShowCompletedActions||hasActive(row))'));
+assert(textIncludes(home, 'ordered=allOrdered'));
 assert(!textIncludes(home, 'x.jobs.sort((a,b)=>new Date(a.scheduledAt||a.createdAt||0)'));
 console.log('v208-list-order-stability-test: OK');

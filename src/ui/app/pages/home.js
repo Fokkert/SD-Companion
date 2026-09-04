@@ -68,90 +68,119 @@
     const jobs = (A.jobs || []).filter(j => j.siteId === site.id && j.profileId === profile.id),
       map = new Map(),
       seed = [...(current || []), ...(recent || [])];
-    for (const d of seed) if (!map.has(d.issueKey)) map.set(d.issueKey, { issueKey: d.issueKey, summary: d.summary || '', status: d.status || '', at: d.at || '', rules: new Set([d.ruleName || d.ruleId].filter(Boolean)), jobs: [] });
-    for (const j of jobs) {
-      let x = map.get(j.issueKey);
-      if (!x) {
-        x = { issueKey: j.issueKey, summary: j.issueSnapshot?.summary || '', status: j.issueSnapshot?.status || '', at: j.createdAt || '', rules: new Set(), jobs: [] };
-        map.set(j.issueKey, x);
+    for (const d of seed) {
+      if (!map.has(d.issueKey)) {
+        map.set(d.issueKey, {
+          issueKey: d.issueKey,
+          summary: d.summary || '',
+          status: d.status || '',
+          at: d.at || '',
+          rules: new Set([d.ruleName || d.ruleId].filter(Boolean)),
+          jobs: []
+        });
       }
-      x.jobs.push(j);
-      if (j.ruleName) x.rules.add(j.ruleName);
-      if (new Date(j.createdAt || 0) > new Date(x.at || 0)) x.at = j.createdAt;
     }
+    for (const j of jobs) {
+      let row = map.get(j.issueKey);
+      if (!row) {
+        row = {
+          issueKey: j.issueKey,
+          summary: j.issueSnapshot?.summary || '',
+          status: j.issueSnapshot?.status || '',
+          at: j.createdAt || '',
+          rules: new Set(),
+          jobs: []
+        };
+        map.set(j.issueKey, row);
+      }
+      row.jobs.push(j);
+      if (j.ruleName) row.rules.add(j.ruleName);
+      if (new Date(j.createdAt || 0) > new Date(row.at || 0)) row.at = j.createdAt;
+    }
+
     const hasActive = row => row.jobs.some(j => !terminalStatus(j.status)),
-      rows = [...map.values()].sort((a, b) => Number(hasActive(b)) - Number(hasActive(a)) || new Date(b.at || 0) - new Date(a.at || 0)).slice(0, 30);
-    return rows.map(x => {
-      const allOrdered = [...x.jobs].sort((a, b) => actionRank(a) - actionRank(b) || new Date(b.historyOrderAt || b.completedAt || b.startedAt || b.createdAt || b.scheduledAt || 0) - new Date(a.historyOrderAt || a.completedAt || a.startedAt || a.createdAt || a.scheduledAt || 0) || String(b.id || '').localeCompare(String(a.id || ''))),
-        ordered = A.homeShowCompletedActions ? allOrdered : allOrdered.filter(j => !terminalStatus(j.status)),
+      visibleRows = [...map.values()].filter(row => A.homeShowCompletedActions || hasActive(row)),
+      rows = visibleRows
+        .sort((a, b) => Number(hasActive(b)) - Number(hasActive(a)) || new Date(b.at || 0) - new Date(a.at || 0))
+        .slice(0, 30);
+
+    return rows.map(row => {
+      const allOrdered = [...row.jobs].sort((a, b) => actionRank(a) - actionRank(b) || new Date(b.historyOrderAt || b.completedAt || b.startedAt || b.createdAt || b.scheduledAt || 0) - new Date(a.historyOrderAt || a.completedAt || a.startedAt || a.createdAt || a.scheduledAt || 0) || String(b.id || '').localeCompare(String(a.id || ''))),
+        // When an issue still has active work, keep its completed actions visible for context.
+        // Show completed controls whole completed issue groups, not individual rows inside an active issue.
+        ordered = allOrdered,
         done = allOrdered.filter(j => j.status === JOB.SUCCEEDED).length,
-        pendingJobs = allOrdered.filter(j => j.status === JOB.PENDING),
-        approvals = allOrdered.filter(j => j.status === JOB.AWAITING_APPROVAL).length,
+        upcomingJobs = allOrdered.filter(j => [JOB.AWAITING_APPROVAL, JOB.PENDING].includes(j.status)),
         pending = allOrdered.filter(j => [JOB.AWAITING_APPROVAL, JOB.PENDING, JOB.RUNNING].includes(j.status)).length;
-      return `<details class="activity-issue" data-issue-key="${A.esc(x.issueKey)}">` +
+      return `<details class="activity-issue" data-issue-key="${A.esc(row.issueKey)}">` +
         `<summary>` +
-        `<span class="detection-key">${A.esc(x.issueKey)}</span>` +
+        `<span class="detection-key">${A.esc(row.issueKey)}</span>` +
         `<span class="activity-summary">` +
-        `<b>${A.esc(x.summary || x.issueKey)}</b>` +
-        `<small>${A.esc([...x.rules].join(' · ') || x.status || 'Detected')}</small>` +
+        `<b>${A.esc(row.summary || row.issueKey)}</b>` +
+        `<small>${A.esc([...row.rules].join(' · ') || row.status || 'Detected')}</small>` +
         `</span>` +
         `<span class="activity-counts">${done ? `<i class="done">${done} done</i>` : ''}${pending ? `<i class="pending">${pending} pending</i>` : ''}</span>` +
         `</summary>` +
-        `<div class="activity-timeline">${pendingJobs.length ? `<div class="activity-bulk-row">` +
-          `<span>${pendingJobs.length} upcoming action${pendingJobs.length === 1 ? '' : 's'}</span>` +
+        `<div class="activity-timeline">${upcomingJobs.length ? `<div class="activity-bulk-row">` +
+          `<span>${upcomingJobs.length} upcoming action${upcomingJobs.length === 1 ? '' : 's'}</span>` +
           `<div class="row activity-bulk-actions">` +
-          `<button type="button" class="btn btn-small btn-primary" data-action="process-issue-jobs" data-issue-key="${A.esc(x.issueKey)}">Process all</button>` +
-          `<button type="button" class="btn btn-small btn-danger" data-action="cancel-issue-jobs" data-issue-key="${A.esc(x.issueKey)}">Cancel all</button></div></div>` : ''}${ordered.length ? ordered.map(j => {
+          `<button type="button" class="btn btn-small btn-primary" data-action="process-issue-jobs" data-issue-key="${A.esc(row.issueKey)}">Process all</button>` +
+          `<button type="button" class="btn btn-small btn-danger" data-action="cancel-issue-jobs" data-issue-key="${A.esc(row.issueKey)}">Cancel all</button></div></div>` : ''}${ordered.length ? ordered.map(j => {
             const approvable = j.status === JOB.AWAITING_APPROVAL,
               cancellable = [JOB.AWAITING_APPROVAL, JOB.PENDING, JOB.RUNNING].includes(j.status),
               processable = j.status === JOB.PENDING,
               requested = j.status === JOB.RUNNING && Boolean(j.cancelRequestedAt);
             return `<div class="activity-action status-${A.esc(j.status)}${requested ? ' cancel-requested' : ''}">` +
-              `<span class="activity-action-icon">` +
-              `</span>` +
+              `<span class="activity-action-icon"></span>` +
               `<div class="activity-action-copy">` +
               `<b>${A.esc(actionName(j.action))}</b>` +
               `<small>${A.esc(actionStatus(j))} · ${A.esc(actionTime(j))}</small>` +
               `<span class="activity-detail">${A.esc(actionDetail(j, site))}</span>${j.error?.message ? `<em>${A.esc(j.error.message)}</em>` : ''}</div>${cancellable || processable || approvable ? `<div class="queue-action-buttons">${approvable ? `<button type="button" class="btn btn-small btn-primary" data-action="approve-job" data-job-id="${A.esc(j.id)}">Approve</button>` : ''}${processable ? `<button type="button" class="btn btn-small queue-process-btn" data-action="process-job" data-job-id="${A.esc(j.id)}">Process</button>` : ''}${cancellable ? `<button type="button" class="btn btn-small queue-cancel-btn" data-action="cancel-job" data-job-id="${A.esc(j.id)}" ${requested ? 'disabled' : ''}>${requested ? 'Cancelling…' : 'Cancel'}</button>` : ''}</div>` : ''}</div>`;
           }).join('') : '<div class="empty compact-empty">Detected; no actions queued for this issue.</div>'}</div></details>`;
-    }).join('') || '<div class="empty compact-empty">No issue activity yet.</div>';
+    }).join('') || `<div class="empty compact-empty">${A.homeShowCompletedActions ? 'No issue activity yet.' : 'No active issue actions. Turn on Show completed to view finished history.'}</div>`;
   };
-  const detectionCard = (pr, st, view, current, recent) => {
-    const shown = view === 'recent' ? recent : current;
-    return `<div id="homeDetectionsCard" class="card recent-activity home-live-card">` +
-      `<div class="row-between detection-head">` +
-      `<div>` +
-      `<div class="section-title">Detections</div>` +
-      `<div class="list-meta">${view === 'current' ? `Checked ${A.esc(SD.Utils.formatDateTime(pr.currentDetectionsAt))}` : 'Recent history'}</div>` +
-      `</div>` +
-      `<div class="detection-head-actions">${view === 'current' ? `<button class="btn btn-small" data-action="refresh-current-matches">Check now</button>` : ''}<div class="detection-view-toggle" role="group">` +
-      `<button type="button" class="${view === 'current' ? 'active' : ''}" data-action="home-detection-view" data-view="current">Current <span>${current.length}</span>` +
-      `</button>` +
-      `<button type="button" class="${view === 'recent' ? 'active' : ''}" data-action="home-detection-view" data-view="recent">Recent <span>${recent.length}</span>` +
-      `</button>` +
-      `</div>` +
-      `</div>` +
-      `</div>` +
-      `<div class="list compact-list detection-list">${detectionRows(shown)}</div></div>`;
-  };
+
   const activityRefreshLabel = () => {
     const sec = Math.max(SD.Constants.LIMITS.ACTIVITY_REFRESH_MIN_SECONDS, Math.min(SD.Constants.LIMITS.ACTIVITY_REFRESH_MAX_SECONDS, Number(A.state?.system?.activityRefreshSeconds) || 3));
     return sec < 60 ? `${sec}s` : `${Math.round(sec / 60)}m`;
   };
-  const activityCard = (s, p, recent, current) => {
-    const scoped = (A.jobs || []).filter(j => j.siteId === s.id && j.profileId === p.id),
+
+  const detectionsAndActionsCard = (site, profile, pr, st, view, current, recent) => {
+    const shown = view === 'recent' ? recent : current,
+      scoped = (A.jobs || []).filter(j => j.siteId === site.id && j.profileId === profile.id),
       pending = scoped.filter(j => j.status === JOB.PENDING).length,
       approvals = scoped.filter(j => j.status === JOB.AWAITING_APPROVAL).length,
       upcoming = scoped.filter(j => [JOB.AWAITING_APPROVAL, JOB.PENDING].includes(j.status)).length;
-    return `<div id="homeIssueActivityCard" class="card issue-activity-card home-live-card">` +
-      `<div class="row-between activity-card-head">` +
-      `<div class="section-title">Issue Action History</div>` +
-      `<div class="row activity-card-controls">${approvals ? `<button type="button" class="btn btn-small btn-primary" data-action="approve-all-jobs">Approve all (${approvals})</button>` : ''}${pending ? `<button type="button" class="btn btn-small btn-primary" data-action="process-all-jobs">Process all (${pending})</button>` : ''}${upcoming ? `<button type="button" class="btn btn-small btn-danger" data-action="cancel-all-jobs">Cancel all upcoming (${upcoming})</button>` : ''}` +
-      `<label class="row list-meta" title="Show or hide completed, failed, cancelled and skipped actions">Show completed <span class="master-switch"><input id="homeShowCompletedActions" type="checkbox" ${A.homeShowCompletedActions ? 'checked' : ''}><span></span></span></label>` +
+    return `<div id="homeDetectionsActionsCard" class="card home-live-card detections-actions-card">` +
+      `<div class="row-between detections-actions-head">` +
+      `<div>` +
+      `<div class="section-title">Detections &amp; Actions</div>` +
+      `<div class="list-meta">${view === 'current' ? `Checked ${A.esc(SD.Utils.formatDateTime(pr.currentDetectionsAt))}` : 'Recent detection history'} · Action history auto refresh ${activityRefreshLabel()}</div>` +
+      `</div>` +
+      `<div class="row detections-actions-primary-controls">` +
+      `<button class="btn btn-small" data-action="refresh-current-matches">Check now</button>` +
+      `<div class="detection-view-toggle" role="group" aria-label="Detection history view">` +
+      `<button type="button" class="${view === 'current' ? 'active' : ''}" data-action="home-detection-view" data-view="current">Current <span>${current.length}</span></button>` +
+      `<button type="button" class="${view === 'recent' ? 'active' : ''}" data-action="home-detection-view" data-view="recent">Recent <span>${recent.length}</span></button>` +
+      `</div>` +
+      `</div>` +
+      `</div>` +
+      `<div class="row detections-actions-global-controls">` +
+      `${approvals ? `<button type="button" class="btn btn-small btn-primary" data-action="approve-all-jobs">Approve all (${approvals})</button>` : ''}` +
+      `${pending ? `<button type="button" class="btn btn-small btn-primary" data-action="process-all-jobs">Process all (${pending})</button>` : ''}` +
+      `${upcoming ? `<button type="button" class="btn btn-small btn-danger" data-action="cancel-all-jobs">Cancel all upcoming (${upcoming})</button>` : ''}` +
+      `<label class="row control-label show-completed-control" title="Hide issue groups whose actions are all complete. Active issue groups keep their completed action context.">Show completed <span class="master-switch"><input id="homeShowCompletedActions" type="checkbox" ${A.homeShowCompletedActions ? 'checked' : ''}><span></span></span></label>` +
       `<span class="freshness-chip">Auto refresh · ${activityRefreshLabel()}</span>` +
       `</div>` +
+      `<div class="home-combined-section home-detections-section">` +
+      `<div class="small-section-title">Detections</div>` +
+      `<div class="list compact-list detection-list section-gap">${detectionRows(shown)}</div>` +
       `</div>` +
-      `<div class="issue-activity-list section-gap">${issueActivity(s, p, recent, current)}</div></div>`;
+      `<div class="home-combined-section home-actions-section">` +
+      `<div class="small-section-title">Actions by issue</div>` +
+      `<div class="issue-activity-list section-gap">${issueActivity(site, profile, recent, current)}</div>` +
+      `</div>` +
+      `</div>`;
   };
   const activeSchedules = p => (p.schedules || []).filter(x => x.enabled && SD.Schedule.isActive(x, new Date()));
   const monitorCard = (s, p) => {
@@ -202,17 +231,17 @@
       `<span data-home-monitor-next>${monitor ? (hasPat ? 'Next ' + A.esc(SD.Utils.formatDateTime(pr.nextCycleAt)) : 'PAT required') : 'Monitoring stopped'}</span>` +
       `<span data-home-rule-count>${enabledRules}/${totalRules} rules</span></div></div></div></div>`;
   };
-  const shiftCard = p => {
+  const scheduleCard = p => {
     const active = activeSchedules(p),
       names = active.map(x => x.name).filter(Boolean),
-      label = names.length ? names.join(', ') : 'No active shift';
-    return `<div id="homeShiftCard" class="card home-shift-card ${active.length ? 'active' : 'inactive'}">` +
-      `<div class="shift-card-icon">` +
+      label = names.length ? names.join(', ') : 'No Active Schedule';
+    return `<div id="homeScheduleCard" class="card home-schedule-card ${active.length ? 'active' : 'inactive'}">` +
+      `<div class="schedule-card-icon">` +
       `<span>` +
       `</span>` +
       `</div>` +
-      `<div class="shift-card-copy">` +
-      `<span>Active shift</span>` +
+      `<div class="schedule-card-copy">` +
+      `<span>Active Schedule</span>` +
       `<strong>${A.esc(label)}</strong>` +
       `<small>${active.length ? `${active.length} schedule${active.length === 1 ? '' : 's'} currently active` : 'No saved schedule currently matches this time'}</small>` +
       `</div>` +
@@ -236,7 +265,7 @@
       `<div class="status-tile">` +
       `<span>Last cycle</span>` +
       `<strong>${A.esc(SD.Utils.formatDateTime(pr.lastCycleAt || st.lastCycleAt))}</strong>` +
-      `<small>${!hasPat ? 'Paused until PAT is configured' : st.lastError ? A.esc(st.lastError) : 'No engine error'}</small>` +
+      `<small>${!hasPat ? 'Paused until PAT is configured' : st.lastError ? 'Error occurred · see Logs / Audit' : 'No engine error'}</small>` +
       `</div>` +
       `<div class="status-tile">` +
       `<span>Requests</span>` +
@@ -321,7 +350,7 @@
     const s = A.site(), p = A.profile();
     if (!s || !p) return;
     document.querySelectorAll('.home-credential-notice').forEach(x => x.remove());
-    const openIssues = new Set([...document.querySelectorAll('#homeIssueActivityCard details.activity-issue[open]')].map(x => x.dataset.issueKey).filter(Boolean)),
+    const openIssues = new Set([...document.querySelectorAll('#homeDetectionsActionsCard details.activity-issue[open]')].map(x => x.dataset.issueKey).filter(Boolean)),
       st = s.runtime || {},
       pr = p.runtime || {},
       view = A.homeDetectionView === 'recent' ? 'recent' : 'current',
@@ -329,18 +358,17 @@
       recent = (st.radarEvents || []).filter(e => !e.profileId || e.profileId === p.id);
     A.refreshHomeMonitorDom(s, p);
     const parts = [
-      ['homeShiftCard', shiftCard(p)],
+      ['homeScheduleCard', scheduleCard(p)],
       ['homeOperationalHealth', healthCards(s, p)],
       ['homeAlarmSlot', alarmCard()],
-      ['homeDetectionsCard', detectionCard(pr, st, view, current, recent)],
-      ['homeIssueActivityCard', activityCard(s, p, recent, current)]
+      ['homeDetectionsActionsCard', detectionsAndActionsCard(s, p, pr, st, view, current, recent)]
     ];
     for (const [id, html] of parts) {
       const el = A.$(id);
       if (el) el.outerHTML = html;
     }
     for (const key of openIssues) {
-      const el = [...document.querySelectorAll('#homeIssueActivityCard details.activity-issue')].find(x => x.dataset.issueKey === key);
+      const el = [...document.querySelectorAll('#homeDetectionsActionsCard details.activity-issue')].find(x => x.dataset.issueKey === key);
       if (el) el.open = true;
     }
   };
@@ -352,6 +380,6 @@
       view = A.homeDetectionView === 'recent' ? 'recent' : 'current',
       current = pr.currentDetections || [],
       recent = (st.radarEvents || []).filter(e => !e.profileId || e.profileId === p.id);
-    return `<section class="page home-page">${head('Operations', '', `<button class="btn btn-primary btn-small" data-page="bulk">Bulk Operations</button>`)}${monitorCard(s, p)}${shiftCard(p)}${healthCards(s, p)}${alarmCard()}${detectionCard(pr, st, view, current, recent)}${activityCard(s, p, recent, current)}</section>`;
+    return `<section class="page home-page">${head('Operations')}${monitorCard(s, p)}${scheduleCard(p)}${healthCards(s, p)}${alarmCard()}${detectionsAndActionsCard(s, p, pr, st, view, current, recent)}</section>`;
   };
 })();

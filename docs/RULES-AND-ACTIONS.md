@@ -114,7 +114,7 @@ rule and action conditions and validates the action dependency.
 
 ## Approval and cancelling queued actions
 
-Home → Issue Action History exposes **Approve** on each Awaiting approval action and **Approve all**
+Home → Detections & Actions exposes **Approve** on each Awaiting approval action and **Approve all**
 for all approval-gated actions in the active server/profile. It exposes **Cancel** on each Awaiting
 approval, Pending or Running action. A Pending action
 is cancelled immediately. A Running action can be cancelled only while it is still in preflight;
@@ -128,9 +128,13 @@ to the rule's configured dependency policy.
 
 ## Immediate processing and smart stale-state guards
 
-Home → Issue Action History provides **Process** for one Pending action plus confirmed **Process
+Home → Detections & Actions provides **Process** for one Pending action plus confirmed **Process
 all** at issue and active-profile scope. Immediate processing bypasses the queued timestamp/current
 schedule window but keeps action-specific Jira checks. Transition watches status, Assignment watches
 assignee, Priority watches priority, Labels watches labels, and Edit Fields watches only fields
 being modified. Comment, Alarm and Notification do not cancel merely because status changed.
 Explicit action-level conditions remain execution-time requirements.
+
+## Detections & Actions visibility
+
+Home → Detections & Actions groups action history by issue. **Show completed** hides whole issue groups only when all actions in that issue are terminal. If an issue still has Awaiting approval, Pending or Running work, completed actions for that same issue remain visible as execution context.

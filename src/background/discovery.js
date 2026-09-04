@@ -116,6 +116,7 @@
     const w = { stage, ...root.Utils.safeError(e) };
     warnings.push(w);
     await root.Storage.appendLog({ level: 'warn', siteId, message: `API sync warning: ${stage}`, details: w });
+    await root.Storage.appendAudit?.({ event: 'api-sync-warning', siteId, details: w });
   };
   const mergeUsers = list => {
     const map = new Map();

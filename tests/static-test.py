@@ -23,7 +23,7 @@ def source_in(source, expected):
 manifest = json.loads(read('manifest.json'))
 
 assert manifest['manifest_version'] == 3
-assert manifest['version'] == '2.1.0'
+assert manifest['version'] == '2.1.1'
 assert manifest['version_name'] == 'V2'
 assert 'content_scripts' not in manifest
 assert 'options_page' not in manifest
@@ -154,7 +154,7 @@ assert 'data-workspace' in data
 assert 'data-catalog' in data
 assert source_in(data, 'statuses:s.statuses')
 
-for expected in ('Issue Action History', 'activity-issue', 'actionDetail', 'Pending'):
+for expected in ('Detections &amp; Actions', 'activity-issue', 'actionDetail', 'Pending'):
     assert expected in home
 
 assert 'page-host' in css

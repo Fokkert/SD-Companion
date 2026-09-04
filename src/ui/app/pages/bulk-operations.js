@@ -70,7 +70,7 @@
       chain = { cancelled: 'continue', skipped: 'continue', failed: 'continue', ...(rule.chainDependency || {}) };
 
     return `<section class="page rules-page bulk-operations-page">` +
-      `${head('Bulk Operations', 'Create a one-time Jira operation. It is not saved as a rule and runs only when you click Run now.', `<button class="btn btn-small" data-page="home">Back to Home</button>`)}` +
+      `${head('Bulk Operations', 'Create a one-time Jira operation. It is not saved as a rule and runs only when you click Run now.', `<button class="btn btn-small" data-page="rules">Back to Rules</button>`)}` +
       `<div class="card notice warn">` +
       `<b>One-time execution</b>` +
       `<div class="help">The filter and action chain on this page are temporary. Running the operation queues actions immediately while respecting configured delays, approval requirements and global safety limits.</div>` +

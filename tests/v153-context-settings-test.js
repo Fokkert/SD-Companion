@@ -14,7 +14,7 @@ for (const f of [
 ])
   vm.runInThisContext(fs.readFileSync(f, 'utf8'), { filename: f });
 const SD = SDCompanion;
-assert.equal(SD.Constants.BUILD_VERSION, '2.1.0');
+assert.equal(SD.Constants.BUILD_VERSION, '2.1.1');
 assert.equal(SD.Constants.SCHEMA_VERSION, 33);
 const state = SD.Defaults.state();
 assert.equal(state.system.activityRefreshSeconds, 3);
