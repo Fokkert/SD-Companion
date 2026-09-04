@@ -1,0 +1,162 @@
+:root {
+  color-scheme: dark;
+  --bg: #04100b;
+  --bg2: #092218;
+  --panel: rgba(8,34,23,.82);
+  --panel2: rgba(11,48,32,.94);
+  --line: rgba(126,255,188,.15);
+  --line2: rgba(76,241,153,.38);
+  --text: #effff6;
+  --muted: #91b5a3;
+  --primary: #45ef94;
+  --primary2: #12a95f;
+  --accent: #83ffd0;
+  --glow: rgba(69,239,148,.22);
+  --success: #55f7a3;
+  --warning: #ffd166;
+  --danger: #ff6f91;
+  --info: #73d4ff;
+  --shadow: 0 22px 70px rgba(0,0,0,.42);
+  --radius: 18px;
+  --radius-sm: 12px;
+  --font: Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --on-primary: #041009;
+}
+
+html[data-theme="emerald-glass"] {
+  color-scheme: dark;
+}
+
+/* Deep navy: substantially darker, cooler and lower-saturation than Emerald. */
+
+html[data-theme="midnight-glass"] {
+  color-scheme: dark;
+  --bg: #01030a;
+  --bg2: #040b1b;
+  --panel: rgba(5,12,28,.91);
+  --panel2: rgba(8,18,40,.97);
+  --line: rgba(114,149,220,.13);
+  --line2: rgba(78,125,226,.36);
+  --text: #eef4ff;
+  --muted: #8498ba;
+  --primary: #6693ff;
+  --primary2: #3155b7;
+  --accent: #a8c2ff;
+  --glow: rgba(74,112,226,.18);
+  --on-primary: #050b18;
+}
+
+/* Neutral charcoal: almost no hue, lower glow and flatter glass. */
+
+html[data-theme="graphite-glass"] {
+  color-scheme: dark;
+  --bg: #111214;
+  --bg2: #1b1d21;
+  --panel: rgba(29,31,35,.94);
+  --panel2: rgba(38,41,46,.98);
+  --line: rgba(235,239,246,.10);
+  --line2: rgba(189,198,211,.25);
+  --text: #f4f5f7;
+  --muted: #a2a8b1;
+  --primary: #d0d5dc;
+  --primary2: #8b939e;
+  --accent: #f1f3f5;
+  --glow: rgba(225,230,238,.08);
+  --shadow: 0 18px 48px rgba(0,0,0,.34);
+  --on-primary: #17191c;
+}
+
+/* Purple dusk: visibly brighter surfaces and stronger chroma. */
+
+html[data-theme="violet-glass"] {
+  color-scheme: dark;
+  --bg: #140b20;
+  --bg2: #29123d;
+  --panel: rgba(46,24,69,.84);
+  --panel2: rgba(67,34,96,.95);
+  --line: rgba(226,192,255,.18);
+  --line2: rgba(193,126,255,.42);
+  --text: #fff5ff;
+  --muted: #c2a6d2;
+  --primary: #c58cff;
+  --primary2: #8747d4;
+  --accent: #f0c7ff;
+  --glow: rgba(197,140,255,.24);
+  --on-primary: #180823;
+}
+
+/* Warm amber: brown/bronze surfaces instead of another nearly-black accent swap. */
+
+html[data-theme="amber-glass"] {
+  color-scheme: dark;
+  --bg: #1a1005;
+  --bg2: #35200b;
+  --panel: rgba(56,34,12,.86);
+  --panel2: rgba(76,47,16,.95);
+  --line: rgba(255,219,148,.17);
+  --line2: rgba(241,175,63,.42);
+  --text: #fff8e9;
+  --muted: #c9af82;
+  --primary: #ffc45c;
+  --primary2: #c97d12;
+  --accent: #ffe2a3;
+  --glow: rgba(255,188,75,.20);
+  --on-primary: #241502;
+}
+
+/* A genuinely light option for users who do not want a dark glass surface. */
+
+html[data-theme="frost-light"] {
+  color-scheme: light;
+  --bg: #edf4fb;
+  --bg2: #dce9f5;
+  --panel: rgba(255,255,255,.88);
+  --panel2: rgba(246,250,255,.97);
+  --line: rgba(39,73,111,.15);
+  --line2: rgba(31,111,186,.34);
+  --text: #132033;
+  --muted: #62748a;
+  --primary: #1677c8;
+  --primary2: #0f5f9f;
+  --accent: #49a5e8;
+  --glow: rgba(22,119,200,.13);
+  --success: #12845b;
+  --warning: #a86900;
+  --danger: #c93450;
+  --info: #146da7;
+  --shadow: 0 18px 55px rgba(46,78,110,.18);
+  --on-primary: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,body {
+  margin: 0;
+  min-height: 100%;
+  font-family: var(--font);
+  background: radial-gradient(circle at 10% -10%,var(--glow),transparent 33%),radial-gradient(circle at 105% 25%,color-mix(in srgb,var(--primary) 9%,transparent),transparent 28%),linear-gradient(155deg,var(--bg),var(--bg2));
+  color: var(--text);
+}
+
+button,input,select,textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+::selection {
+  background: color-mix(in srgb,var(--primary) 30%,transparent);
+}
+
+:root {
+  --surface-input: color-mix(in srgb,var(--panel2) 68%,transparent);
+  --surface-input-hover: color-mix(in srgb,var(--panel2) 86%,var(--primary) 4%);
+  --surface-soft: color-mix(in srgb,var(--panel) 82%,transparent);
+  --surface-deep: color-mix(in srgb,var(--panel2) 94%,var(--bg) 6%);
+  --surface-highlight: color-mix(in srgb,var(--primary) 8%,var(--panel2));
+  --overlay-bg: color-mix(in srgb,var(--bg) 72%,transparent);
+}

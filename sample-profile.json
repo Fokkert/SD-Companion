@@ -1,0 +1,119 @@
+{
+  "format": "sd-companion-profile",
+  "version": 3,
+  "exportedAt": "2026-08-12T00:00:00.000Z",
+  "profile": {
+    "id": "sample-profile",
+    "siteId": "sample-site",
+    "name": "Empty Service Desk Profile",
+    "createdAt": "2026-08-08T00:00:00.000Z",
+    "updatedAt": "2026-08-08T00:00:00.000Z",
+    "monitoring": {
+      "enabled": false,
+      "intervalSeconds": 60,
+      "pollJitterPercent": 10,
+      "intervalUnit": "minutes"
+    },
+    "schedules": [],
+    "rules": [],
+    "alarmDefaults": {
+      "preset": "radar",
+      "useCustom": false,
+      "customDataUrl": "",
+      "customName": "",
+      "durationSeconds": 12,
+      "durationUnit": "seconds",
+      "volume": 0.8,
+      "loop": true,
+      "stopMethod": "duration-or-controls",
+      "showSystemNotification": true,
+      "showPagePopup": true
+    },
+    "radar": {
+      "enabled": true,
+      "maxMarkers": 12,
+      "retentionMinutes": 45
+    },
+    "runtime": {
+      "lastCycleAt": null,
+      "nextCycleAt": null,
+      "lastIssueCount": 0,
+      "lastDetectionCount": 0,
+      "lastPlanCount": 0,
+      "lastDetectionKeys": [],
+      "currentDetections": [],
+      "currentDetectionsAt": null
+    }
+  },
+  "server": {
+    "name": "Example Jira",
+    "baseUrl": "https://jira.example.local",
+    "icon": {
+      "mode": "auto",
+      "preset": "emerald",
+      "url": "https://jira.example.local/favicon.ico"
+    },
+    "network": {
+      "requestPolicy": {
+        "spacingMs": 350,
+        "jitterPercent": 15,
+        "timeoutMs": 30000,
+        "retries": 2,
+        "maxRequestsPerMinute": 120,
+        "maxConcurrent": 1,
+        "backoffMaxSeconds": 60,
+        "healthIntervalSeconds": 300,
+        "healthIntervalUnit": "minutes",
+        "backoffUnit": "seconds"
+      }
+    },
+    "inventorySettings": {
+      "maxUsers": 20000,
+      "buildTransitionCatalog": true,
+      "selectedProjectKeys": [],
+      "scopeRevision": 0,
+      "projectDatasets": {},
+      "globalDatasets": {
+        "priorities": true,
+        "resolutions": true
+      },
+      "autoSync": {
+        "enabled": false,
+        "intervalSeconds": 3600,
+        "unit": "hours",
+        "lastRunAt": null,
+        "nextRunAt": null
+      },
+      "transitionMethod": "workflow-designer"
+    },
+    "behavior": {
+      "autoRefreshJiraTabsOnDetection": false,
+      "focusJiraTabOnDetection": false,
+      "connectionLossAlarm": {
+        "enabled": true,
+        "trigger": "either",
+        "durationSeconds": 300,
+        "durationUnit": "minutes",
+        "failedChecks": 5
+      }
+    }
+  },
+  "appearance": {
+    "theme": "emerald-glass",
+    "openTarget": "popup",
+    "glassStrength": 0.82
+  },
+  "system": {
+    "logLevel": "info",
+    "safety": {
+      "maxIssuesPerCycle": 25,
+      "maxActionsPerCycle": 50,
+      "maxCommentsPerHour": 20,
+      "maxAssignmentsPerHour": 50,
+      "maxTransitionsPerHour": 50
+    },
+    "activityRefreshSeconds": 3,
+    "activityRefreshUnit": "seconds",
+    "completionToneEnabled": true
+  }
+}

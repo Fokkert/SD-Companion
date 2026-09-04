@@ -1,0 +1,22 @@
+const { textIncludes } = require('./source-assertions');
+const fs = require('fs');
+const assert = require('assert');
+const manifest = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+const constants = fs.readFileSync('src/shared/constants.js', 'utf8');
+const app = fs.readFileSync('src/ui/app/app.css', 'utf8');
+const components = fs.readFileSync('src/ui/common/components.css', 'utf8');
+const home = fs.readFileSync('src/ui/app/pages/home.js', 'utf8');
+const settings = fs.readFileSync('src/ui/app/pages/logs-more.js', 'utf8');
+assert.equal(manifest.version, '2.0.12');
+assert(textIncludes(constants, 'BUILD_VERSION:"2.0.12"'));
+assert(/<label class="master-switch"[^>]*>`\s*\+\s*`<input id="homeMonitor" type="checkbox"/.test(home));
+assert(/<label class="master-switch"[^>]*>`\s*\+\s*`<input type="checkbox" data-settings-prop="autoSync.enabled"/.test(settings));
+assert(/<label class="master-switch"[^>]*>`\s*\+\s*`<input type="checkbox" data-settings-prop="system.completionToneEnabled"/.test(settings));
+assert(!textIncludes(settings, 'class="switch"'));
+assert(textIncludes(app, '.master-switch{position:relative;display:block;width:56px;height:32px}'));
+assert(textIncludes(app, '.master-switch span::after{content:"";position:absolute;top:50%;left:4px;width:24px;height:24px'));
+assert(textIncludes(app, '.master-switch input:checked+span::after{transform:translate(24px,-50%)'));
+// There must be no duplicated checkbox-based imitation of master-switch geometry in components.css.
+assert(!textIncludes(components, '.switch input[type="checkbox"]'));
+assert(!textIncludes(components, '.toggle-card>input[type="checkbox"]'));
+console.log('v1517-exact-master-switch-reuse-test: OK');

@@ -1,0 +1,51 @@
+﻿# Environment / secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.jks
+*.keystore
+
+# Local credentials / configuration
+credentials.json
+secrets.json
+secret.json
+config.local.json
+*.secret
+*.secrets
+
+# SD Companion exports / backups
+*-Secure.json
+*secure-backup*.json
+*backup*.json
+
+# Archives
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+
+# Dependencies / build artifacts
+node_modules/
+dist/
+build/
+coverage/
+
+# Logs / temporary files
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
