@@ -1,6 +1,11 @@
 (() => {
   const A = globalThis.SDApp, SD = globalThis.SDCompanion;
-  const head = (title, copy = "", actions = "") => `<div class="page-head"><div class="page-head-copy"><h1>${A.esc(title)}</h1>${copy ? `<p>${A.esc(copy)}</p>` : ""}</div>${actions ? `<div class="page-head-actions">${actions}</div>` : ""}</div>`;
+  const head = (title, copy = "", actions = "") => {
+    const back = A.settingsBackTarget && A.page !== 'settings'
+      ? `<button type="button" class="btn btn-small settings-back-button" data-action="settings-back">← Back</button>`
+      : '';
+    return `<div class="page-head"><div class="page-head-copy">${back}<h1>${A.esc(title)}</h1>${copy ? `<p>${A.esc(copy)}</p>` : ""}</div>${actions ? `<div class="page-head-actions">${actions}</div>` : ""}</div>`;
+  };
   const noServer = () => `<section class="page">${head("Jira Servers")}<div class="card empty-state"><strong>No Jira server configured</strong><button class="btn btn-primary" data-action="go-servers">Add Jira server</button></div></section>`;
   const avatarUrl = u => u?.avatarUrls?.['48x48'] || u?.avatarUrls?.['32x32'] || u?.avatarUrls?.['24x24'] || u?.avatarUrl || "";
   const avatar = (u, size = "md") => {

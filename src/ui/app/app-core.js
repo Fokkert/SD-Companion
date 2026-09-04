@@ -19,6 +19,7 @@
     serverEditId: "",
     settingsSection: "general",
     settingsAutomationSection: "sync",
+    settingsBackTarget: null,
     homeDetectionView: "current",
     homeShowCompletedActions: true,
     bulkDraft: null,

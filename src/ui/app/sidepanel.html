@@ -41,24 +41,25 @@
         </div>
       </header>
       <section class="context-bar glass">
-        <div class="context-field server-field">
-          <span class="context-label">
-            Server
-          </span>
-          <div class="server-context">
-            <span id="serverAvatar" class="server-avatar">
-              SD
-            </span>
-            <select id="serverSelect" class="select compact-select">
-            </select>
+        <div class="context-field context-section server-field">
+          <span class="context-label">Server</span>
+          <div class="context-selection-row">
+            <span id="serverAvatar" class="context-avatar server-avatar">SD</span>
+            <div class="context-select-wrap">
+              <select id="serverSelect" class="select compact-select"></select>
+            </div>
           </div>
         </div>
-        <div class="context-field profile-field">
-          <span class="context-label">
-            Profile
-          </span>
-          <select id="profileSelect" class="select compact-select">
-          </select>
+        <div class="context-field context-section profile-field">
+          <span class="context-label">Profile</span>
+          <div class="context-selection-row">
+            <span class="context-avatar profile-context-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"></circle><path d="M5.5 19c.8-4 3.1-6 6.5-6s5.7 2 6.5 6"></path></svg>
+            </span>
+            <div class="context-select-wrap">
+              <select id="profileSelect" class="select compact-select"></select>
+            </div>
+          </div>
         </div>
       </section>
       <main id="pageHost" class="page-host">

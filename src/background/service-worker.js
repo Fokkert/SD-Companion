@@ -96,7 +96,9 @@ const alarmThemePalette = theme => ({
   "graphite-glass": { a: "#d0d5dc", b: "#8b939e", glow: "rgba(208,213,220,.18)" },
   "violet-glass": { a: "#c58cff", b: "#8747d4", glow: "rgba(197,140,255,.30)" },
   "amber-glass": { a: "#ffc45c", b: "#c97d12", glow: "rgba(255,196,92,.28)" },
-  "frost-light": { a: "#2875c7", b: "#55a5d9", glow: "rgba(40,117,199,.22)" }
+  "crimson-glass": { a: "#ff6f86", b: "#b92f4d", glow: "rgba(255,83,111,.28)" },
+  "ocean-glass": { a: "#4ed3e7", b: "#16869b", glow: "rgba(63,207,228,.26)" },
+  "copper-glass": { a: "#e9874f", b: "#a74821", glow: "rgba(226,111,56,.27)" }
 }[theme] || { a: "#35d49a", b: "#0d9f72", glow: "rgba(53,212,154,.34)" });
 const jiraAlarmPopupScript = payload => {
   const ID = "sd-companion-jira-alarm-popup";
@@ -349,7 +351,8 @@ const configureMetadataSyncAlarm = async (state, credentialIds = null) => {
   }
   if (due.length) await chrome.alarms.create(ALARMS.METADATA_SYNC, { when: Math.min(...due) });
 };
-const monitoringEnabledForSite = (state, siteId) => Boolean((state?.profiles || []).some(p => p.siteId === siteId && p.monitoring?.enabled));
+const profileHasEnabledRules = profile => Boolean((profile?.rules || []).some(rule => rule.enabled));
+const monitoringEnabledForSite = (state, siteId) => Boolean((state?.profiles || []).some(p => p.siteId === siteId && p.monitoring?.enabled && profileHasEnabledRules(p)));
 const monitoredSiteIds = state => new Set((state?.jiraSites || []).filter(s => s.auth?.configured && monitoringEnabledForSite(state, s.id)).map(s => s.id));
 const configureAlarms = async (state = null) => {
   state = state || await SD.Storage.ensureState();
@@ -357,7 +360,7 @@ const configureAlarms = async (state = null) => {
   await chrome.alarms.clear("sd-active-alarm-escalate").catch(() => {});
   await chrome.alarms.clear(ALARMS.MONITOR).catch(() => {});
   await chrome.alarms.clear(ALARMS.HEALTH).catch(() => {});
-  if (state.profiles.some(p => p.monitoring?.enabled && credentialIds.has(p.siteId))) await chrome.alarms.create(ALARMS.MONITOR, { periodInMinutes: .5 });
+  if (state.profiles.some(p => p.monitoring?.enabled && profileHasEnabledRules(p) && credentialIds.has(p.siteId))) await chrome.alarms.create(ALARMS.MONITOR, { periodInMinutes: .5 });
   if (state.jiraSites.some(s => credentialIds.has(s.id) && monitoringEnabledForSite(state, s.id))) await chrome.alarms.create(ALARMS.HEALTH, { periodInMinutes: 1 });
   await configureMetadataSyncAlarm(state, credentialIds);
 };
@@ -619,6 +622,7 @@ const scanCurrentMatches = async (siteId, profileId, { operationId = '' } = {}) 
   const state = await SD.Storage.ensureState(),
     { site, profile } = getSiteProfile(state, siteId, profileId);
   if (!site || !profile) throw new Error('Select a Jira server and profile.');
+  if (!profileHasEnabledRules(profile)) return { matches: [], checkedAt: null, skipped: true, reason: 'no-enabled-rules' };
   const token = await SD.Storage.getCredential(site.id);
   if (!token) throw new Error('PAT is missing.');
   const client = new SD.JiraApi.JiraClient(site, token, { operationId }),
@@ -805,6 +809,15 @@ const runCycle = async (siteId = null, profileId = null, { operationId = "", man
   let { site, profile } = getSiteProfile(state, siteId, profileId);
   if (!site || !profile) throw new Error("Select a Jira server and profile.");
   if (!manual && !profile.monitoring?.enabled) throw new Error("Monitoring is off.");
+  if (!profileHasEnabledRules(profile)) {
+    if (profile.runtime?.nextCycleAt) {
+      await SD.Storage.updateState(latest => {
+        const current = latest.profiles.find(item => item.id === profile.id);
+        if (current?.runtime) current.runtime.nextCycleAt = null;
+      }).catch(() => {});
+    }
+    return { skipped: true, reason: 'no-enabled-rules', issues: [], plans: [], detections: [], newDetections: [] };
+  }
   SD.Operations.throwIfCancelled(operationId);
   const q = await queryRuleIssues(site, profile, { operationId, safety: state.system?.safety });
   SD.Operations.throwIfCancelled(operationId);
@@ -857,7 +870,7 @@ const runCycle = async (siteId = null, profileId = null, { operationId = "", man
 };
 const monitorTick = async () => {
   let state = await SD.Storage.ensureState();
-  for (const seed of state.profiles.filter(p => p.monitoring?.enabled)) {
+  for (const seed of state.profiles.filter(p => p.monitoring?.enabled && profileHasEnabledRules(p))) {
     state = await SD.Storage.ensureState();
     const profile = state.profiles.find(p => p.id === seed.id);
     if (!profile?.monitoring?.enabled) continue;
@@ -936,6 +949,9 @@ const setMonitoringEnabled = async (profileId, enabled) => {
   let state = await SD.Storage.updateState(latest => {
     const p = latest.profiles.find(x => x.id === profileId);
     if (!p) throw new Error('Profile not found.');
+    if (enabled && !profileHasEnabledRules(p)) {
+      throw Object.assign(new Error('Enable at least one rule before Monitoring.'), { code: 'NO_ENABLED_RULES' });
+    }
     p.monitoring = p.monitoring || {};
     p.monitoring.enabled = Boolean(enabled);
     p.runtime = p.runtime || {};
@@ -1139,6 +1155,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           const before = await SD.Storage.ensureState(), was = monitoredSiteIds(before);
           let state = await SD.Storage.updateState(latest => {
             mergeClientState(latest, message.state, { fullImport: Boolean(message.fullImport) });
+            for (const profile of latest.profiles || []) {
+              if (profileHasEnabledRules(profile) || !profile.monitoring?.enabled) continue;
+              profile.monitoring.enabled = false;
+              profile.runtime = profile.runtime || {};
+              profile.runtime.nextCycleAt = null;
+            }
             const errors = validateProfileState(latest, message.validationScope || 'profile');
             if (errors.length)
               throw Object.assign(new Error(errors[0]), { code: 'VALIDATION_ERROR' });

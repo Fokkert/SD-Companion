@@ -21,7 +21,7 @@ for (const file of [
 const SD = SDCompanion;
 const { ACTION, JOB, MESSAGE } = SD.Constants;
 
-assert.equal(SD.Constants.BUILD_VERSION, '2.1.1');
+assert.equal(SD.Constants.BUILD_VERSION, '2.2.0');
 assert.equal(SD.Constants.SCHEMA_VERSION, 33);
 assert.equal(JOB.AWAITING_APPROVAL, 'awaiting-approval');
 assert.equal(MESSAGE.PREVIEW_BULK_OPERATION, 'PREVIEW_BULK_OPERATION');

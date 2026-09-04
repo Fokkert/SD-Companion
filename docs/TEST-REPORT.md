@@ -1,11 +1,18 @@
-# V2 Build 2.1.1 Test Report
+# V2 Build 2.2.0 Test Report
 
 ## Result
 
-- JavaScript regression files: 64/64 passed.
+- JavaScript regression files: 65/65 passed.
 - Static architecture/security test: passed.
-- JavaScript syntax validation: passed.
+- JavaScript syntax validation: 105/105 passed.
 - JSON parsing validation: passed.
+
+## V2.2.0 focused coverage
+
+- Removed empty-schedule and action-refresh helper text while keeping the useful primary Home states.
+- Scan Now / Check now and background monitoring are blocked when no enabled rules exist.
+- Server/profile ribbon spacing, dark-theme choices, Settings main-tab styling, Back navigation, and immediate Side Panel opening are covered by the v2.2.0 UI regression.
+- Device-local protection explanatory copy is absent from Settings while the security implementation remains unchanged.
 
 ## V2.1.1 focused coverage
 
@@ -88,3 +95,5 @@ validation, no forced targetAddressSpace, contextual workflow transitions, sched
 schedules, radar marker snapshot refresh with continuous V1 sweep, monitoring toggle serialization,
 profile import/export security, queue cancellation boundaries, anchored relative scheduling, and
 dependency cancelled/skipped/failed policies.
+
+- `tests/v211-final-ui-test.js` covers the final Home/status consolidation, no-rule scan guard, context ribbon, Settings navigation, side-panel opening, and dark-only theme set.

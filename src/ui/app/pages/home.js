@@ -150,15 +150,16 @@
       scoped = (A.jobs || []).filter(j => j.siteId === site.id && j.profileId === profile.id),
       pending = scoped.filter(j => j.status === JOB.PENDING).length,
       approvals = scoped.filter(j => j.status === JOB.AWAITING_APPROVAL).length,
-      upcoming = scoped.filter(j => [JOB.AWAITING_APPROVAL, JOB.PENDING].includes(j.status)).length;
+      upcoming = scoped.filter(j => [JOB.AWAITING_APPROVAL, JOB.PENDING].includes(j.status)).length,
+      enabledRules = (profile.rules || []).filter(rule => rule.enabled).length,
+      canCheck = Boolean(A.credentialStatus?.[site.id] && enabledRules);
     return `<div id="homeDetectionsActionsCard" class="card home-live-card detections-actions-card">` +
       `<div class="row-between detections-actions-head">` +
       `<div>` +
       `<div class="section-title">Detections &amp; Actions</div>` +
-      `<div class="list-meta">${view === 'current' ? `Checked ${A.esc(SD.Utils.formatDateTime(pr.currentDetectionsAt))}` : 'Recent detection history'} · Action history auto refresh ${activityRefreshLabel()}</div>` +
       `</div>` +
       `<div class="row detections-actions-primary-controls">` +
-      `<button class="btn btn-small" data-action="refresh-current-matches">Check now</button>` +
+      `<button class="btn btn-small" data-action="refresh-current-matches" ${canCheck ? '' : 'disabled'}>Check now</button>` +
       `<div class="detection-view-toggle" role="group" aria-label="Detection history view">` +
       `<button type="button" class="${view === 'current' ? 'active' : ''}" data-action="home-detection-view" data-view="current">Current <span>${current.length}</span></button>` +
       `<button type="button" class="${view === 'recent' ? 'active' : ''}" data-action="home-detection-view" data-view="recent">Recent <span>${recent.length}</span></button>` +
@@ -205,9 +206,9 @@
       `</div>` +
       `</div>` +
       `<div class="radar-monitor-controls">` +
-      `<button class="btn btn-primary btn-small" data-action="run-cycle" ${hasPat ? '' : 'disabled'}>Scan Now</button>` +
+      `<button class="btn btn-primary btn-small" data-action="run-cycle" ${hasPat && enabledRules ? '' : 'disabled'}>Scan Now</button>` +
       `<label class="master-switch" title="Continuous rule polling">` +
-      `<input id="homeMonitor" type="checkbox" ${monitor ? 'checked' : ''}>` +
+      `<input id="homeMonitor" type="checkbox" ${monitor ? 'checked' : ''} ${enabledRules ? '' : 'disabled'}>` +
       `<span>` +
       `</span>` +
       `</label>` +
@@ -228,7 +229,6 @@
       `</div>` +
       `</div>` +
       `<div class="monitor-timing">` +
-      `<span data-home-monitor-next>${monitor ? (hasPat ? 'Next ' + A.esc(SD.Utils.formatDateTime(pr.nextCycleAt)) : 'PAT required') : 'Monitoring stopped'}</span>` +
       `<span data-home-rule-count>${enabledRules}/${totalRules} rules</span></div></div></div></div>`;
   };
   const scheduleCard = p => {
@@ -243,7 +243,6 @@
       `<div class="schedule-card-copy">` +
       `<span>Active Schedule</span>` +
       `<strong>${A.esc(label)}</strong>` +
-      `<small>${active.length ? `${active.length} schedule${active.length === 1 ? '' : 's'} currently active` : 'No saved schedule currently matches this time'}</small>` +
       `</div>` +
       `<span class="pill ${active.length ? 'good' : 'neutral'}">${active.length ? 'ACTIVE' : 'NONE'}</span></div>`;
   };
@@ -251,26 +250,29 @@
     const st = s.runtime || {},
       pr = p.runtime || {},
       hasPat = Boolean(A.credentialStatus?.[s.id]),
-      healthy = Boolean(hasPat && st.apiHealthy);
+      healthy = Boolean(hasPat && st.apiHealthy),
+      degraded = st.healthState === 'degraded',
+      failures = Math.max(0, Number(st.apiStats?.failures) || 0),
+      requests = Math.max(0, Number(st.apiStats?.requests) || 0),
+      cycleValue = !hasPat ? 'PAUSED' : st.lastError ? 'ERROR' : SD.Utils.formatDateTime(pr.lastCycleAt || st.lastCycleAt),
+      requestValue = failures ? `${requests} · ${failures} FAILED` : String(requests);
     return `${hasPat ? '' : `<div class="notice warn credential-missing-notice home-credential-notice">` +
       `<b>PAT missing</b>` +
       `<span>This imported server has no stored PAT. API monitoring, health checks, synchronization and connection-loss alarms are paused.</span>` +
       `<button class="btn btn-small" data-action="go-servers">Configure PAT</button>` +
       `</div>`}<div id="homeOperationalHealth" class="grid-3 operational-health">` +
-      `<div class="status-tile ${!hasPat ? 'warning' : healthy ? 'ok' : 'error'}">` +
+      `<div class="status-tile ${!hasPat ? 'warning' : healthy ? (degraded ? 'warning' : 'ok') : 'error'}">` +
       `<span>API</span>` +
-      `<strong>${!hasPat ? 'PAT MISSING' : healthy ? 'ONLINE' : 'OFFLINE'}</strong>` +
-      `<small>${hasPat ? A.esc(st.lastTransport || '') : 'Credentials required'}</small>` +
+      `<strong>${!hasPat ? 'PAT MISSING' : healthy ? (degraded ? 'DEGRADED' : 'ONLINE') : 'OFFLINE'}</strong>` +
       `</div>` +
-      `<div class="status-tile">` +
+      `<div class="status-tile ${st.lastError ? 'error' : !hasPat ? 'warning' : ''}">` +
       `<span>Last cycle</span>` +
-      `<strong>${A.esc(SD.Utils.formatDateTime(pr.lastCycleAt || st.lastCycleAt))}</strong>` +
-      `<small>${!hasPat ? 'Paused until PAT is configured' : st.lastError ? 'Error occurred · see Logs / Audit' : 'No engine error'}</small>` +
+      `<strong>${A.esc(cycleValue)}</strong>` +
       `</div>` +
-      `<div class="status-tile">` +
+      `<div class="status-tile ${failures ? 'warning' : ''}">` +
       `<span>Requests</span>` +
-      `<strong>${st.apiStats?.requests || 0}</strong>` +
-      `<small>${st.apiStats?.failures || 0} failed</small></div></div>`;
+      `<strong>${A.esc(requestValue)}</strong>` +
+      `</div></div>`;
   };
   const alarmCard = () => {
     const active = A.state?.runtime?.activeAlarm;
@@ -297,8 +299,7 @@
       live = Boolean(enabled && hasPat),
       radarEl = card?.querySelector('.radar.radar-pro'),
       toggle = A.$('homeMonitor'),
-      stateLabel = card?.querySelector('[data-home-monitor-state]'),
-      next = card?.querySelector('[data-home-monitor-next]');
+      stateLabel = card?.querySelector('[data-home-monitor-state]');
     if (card) {
       card.classList.toggle('monitor-on', live);
       card.classList.toggle('monitor-off', !live);
@@ -309,10 +310,6 @@
     }
     if (toggle && toggle.checked !== Boolean(enabled)) toggle.checked = Boolean(enabled);
     if (stateLabel) stateLabel.textContent = enabled ? (hasPat ? 'ON' : 'ON · PAT REQUIRED') : 'OFF';
-    if (next) {
-      if (!enabled) next.textContent = 'Monitoring stopped';
-      else if (!hasPat) next.textContent = 'PAT required';
-    }
   };
   A.refreshHomeMonitorDom = (s, p) => {
     const card = A.$('homeMonitorCard');
@@ -327,11 +324,6 @@
     for (const [name, value] of Object.entries(values)) {
       const el = card.querySelector(`[data-home-stat="${name}"]`);
       if (el) el.textContent = String(value);
-    }
-    const next = card.querySelector('[data-home-monitor-next]');
-    if (next) {
-      const hasPat = Boolean(A.credentialStatus?.[s.id]);
-      next.textContent = monitor ? (hasPat ? `Next ${SD.Utils.formatDateTime(pr.nextCycleAt)}` : 'PAT required') : 'Monitoring stopped';
     }
     const count = card.querySelector('[data-home-rule-count]');
     if (count) count.textContent = `${enabledRules}/${totalRules} rules`;

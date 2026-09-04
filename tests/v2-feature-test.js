@@ -10,11 +10,11 @@ load('src/shared/condition-registry.js');
 load('src/shared/rule-query.js');
 const SD = SDCompanion, C = SD.Constants;
 assert.equal(C.DISPLAY_VERSION, 'V2');
-assert.equal(C.BUILD_VERSION, '2.1.1');
+assert.equal(C.BUILD_VERSION, '2.2.0');
 assert.equal(C.SCHEMA_VERSION, 33);
-assert.equal(JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'))).version, '2.1.1');
-for (const t of ['emerald-glass', 'midnight-glass', 'graphite-glass', 'violet-glass', 'amber-glass', 'frost-light']) assert(Object.values(C.THEME).includes(t));
-assert.equal(Object.values(C.THEME).length, 6);
+assert.equal(JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'))).version, '2.2.0');
+for (const t of ['emerald-glass', 'midnight-glass', 'graphite-glass', 'violet-glass', 'amber-glass', 'crimson-glass', 'ocean-glass', 'copper-glass']) assert(Object.values(C.THEME).includes(t));
+assert.equal(Object.values(C.THEME).length, 8);
 const site = {
   fields: [
     { id: 'customfield_10001', name: 'Story points', searchable: true, schema: { type: 'number', custom: 'com.atlassian.jira.plugin.system.customfieldtypes:float' } },

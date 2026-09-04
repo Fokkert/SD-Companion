@@ -1,9 +1,21 @@
+## V2 · Build 2.2.0 — Home status and navigation refinement
+
+- Removed redundant Home status subtitles and duplicate cycle timestamps.
+- Disabled rule scans and current-match checks when no enabled rules exist; the background monitor no longer performs rule scans in that state.
+- Removed the empty-schedule subtitle and repositioned the Home auto-refresh badge.
+- Rebuilt the server/profile selector ribbon as two balanced context sections.
+- Replaced the light theme with additional dark Crimson, Ocean, and Copper themes.
+- Unified Settings main-tab styling with Automation sub-tabs and added Back navigation for Settings-linked pages.
+- Saving Side Panel as the opening mode now configures the action target and opens the side panel immediately.
+- Removed device-local security explanatory copy from Settings; security details remain in Help.
+- Bumped build and manifest version to 2.2.0.
+
 ## V2 · Build 2.1.1 — Home consolidation and UI cleanup
 
 - Combined Home **Detections** and **Issue Action History** into one **Detections & Actions** workspace with Check now, Current/Recent selection, Approve all, Process all, Cancel all upcoming and Show completed controls.
 - Corrected **Show completed** semantics: with the toggle off, issue groups disappear only when every action for that issue is terminal; completed actions remain visible inside issue groups that still contain active work.
 - Moved **Bulk Operations** from Home to Rules beside **+ Rule**.
-- Simplified Last Cycle failures to a compact **Error occurred · see Logs / Audit** status so long connection/synchronization errors no longer expand the Home card. Synchronization warnings are also written to the audit journal.
+- Simplified Last Cycle failures to a compact **ERROR** primary state so long connection/synchronization errors no longer expand the Home card. Synchronization warnings are also written to the audit journal.
 - Replaced Home schedule wording that used “shift” with **Active Schedule / No Active Schedule**.
 - Added a consistent readable control-label typography standard for text paired with toggles/buttons.
 - Removed decorative left-edge color strips from list entries, including rules and detections.

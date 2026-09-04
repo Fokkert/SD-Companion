@@ -297,13 +297,14 @@
     s.appearance = { theme: "emerald-glass", openTarget: "popup", glassStrength: .82, ...(s.appearance || {}) };
     const retiredThemes = {
       "beacon-dark": "emerald-glass",
-      "light": "frost-light",
+      "light": "graphite-glass",
       "system": "emerald-glass",
-      "teal-glass": "midnight-glass",
-      "rose-glass": "violet-glass",
-      "ice-glass": "frost-light",
+      "teal-glass": "ocean-glass",
+      "rose-glass": "crimson-glass",
+      "ice-glass": "midnight-glass",
+      "frost-light": "graphite-glass",
       "obsidian-glass": "graphite-glass",
-      "crimson-night": "amber-glass"
+      "crimson-night": "crimson-glass"
     };
     if (retiredThemes[s.appearance.theme]) s.appearance.theme = retiredThemes[s.appearance.theme];
     s.system = { logLevel: 'info', activityRefreshSeconds: 3, activityRefreshUnit: 'seconds', completionToneEnabled: true, ...(s.system || {}), safety: globalSafety };

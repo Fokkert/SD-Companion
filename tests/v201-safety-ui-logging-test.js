@@ -8,7 +8,7 @@ globalThis.SDCompanion = {};
 load('src/shared/constants.js');
 load('src/shared/utils.js');
 const SD = SDCompanion, { ACTION, JOB } = SD.Constants;
-assert.equal(SD.Constants.BUILD_VERSION, '2.1.1');
+assert.equal(SD.Constants.BUILD_VERSION, '2.2.0');
 assert.equal(SD.Constants.SCHEMA_VERSION, 33);
 const appHtml = read('src/ui/app/app.html'),
   sideHtml = read('src/ui/app/sidepanel.html'),
@@ -36,7 +36,7 @@ assert.equal((settings.match(/nav\('/g) || []).length, 4, 'Settings tabs should 
 assert(textIncludes(settings, 'System & Support'));
 assert(textIncludes(settings, "link('logs','Logs')"));
 assert(textIncludes(settings, "link('audit','Audit Journal')"));
-for (const theme of ['emerald-glass', 'midnight-glass', 'graphite-glass', 'violet-glass', 'amber-glass', 'frost-light'])
+for (const theme of ['emerald-glass', 'midnight-glass', 'graphite-glass', 'violet-glass', 'amber-glass', 'crimson-glass', 'ocean-glass', 'copper-glass'])
   assert(textIncludes(appearance, theme));
 for (const retired of ['teal-glass', 'rose-glass', 'ice-glass', 'obsidian-glass', 'crimson-night'])
   assert(!textIncludes(appearance, `'${retired}'`));

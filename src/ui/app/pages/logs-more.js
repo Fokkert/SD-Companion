@@ -143,7 +143,6 @@
           `<span class="settings-card-icon">${icon('automation')}</span>` +
           `<b>Global safety limits</b>` +
           `</div>` +
-          `<div class="settings-section-copy">Limits apply across automation and one-time Bulk Operations. Use values appropriate for your Jira environment.</div>` +
           `<div class="grid-3 compact-settings-grid automation-safety-grid">` +
           `<div class="field"><label>Issues / cycle</label><input class="input" type="number" min="1" max="${SD.Constants.LIMITS.RULE_MAX_ISSUES}" data-settings-prop="system.safety.maxIssuesPerCycle" value="${safe.maxIssuesPerCycle}"></div>` +
           `<div class="field"><label>Actions / cycle</label><input class="input" type="number" min="1" max="${SD.Constants.LIMITS.RULE_MAX_ACTIONS}" data-settings-prop="system.safety.maxActionsPerCycle" value="${safe.maxActionsPerCycle}"></div>` +
@@ -210,10 +209,6 @@
         `<span>Session</span>` +
         `<strong>${sec.enabled ? `${A.esc(sessionValue)} ${A.esc(sessionUnit)}` : '—'}</strong>` +
         `</div>` +
-        `</div>` +
-        `<div class="notice info security-note">` +
-        `<b>Device-local protection</b>` +
-        `<span>The PIN/password is never stored or included in profile backups. SD Companion stores only a salted verifier. Sensitive operations require re-authentication even during an unlocked session.</span>` +
         `</div>` +
         `<div class="security-config-grid section-gap">` +
         `<div class="field">` +

@@ -232,9 +232,10 @@
     // safely save even while Chrome is still running a previous service worker.
     // SAVE_STATE is revision-checked and commits the staged settings atomically.
     const latestResponse = await A.send(MESSAGE.GET_STATE),
-      latest = structuredClone(latestResponse.state);
+      latest = structuredClone(latestResponse.state),
+      normalizedTarget = openTarget === 'sidepanel' ? 'sidepanel' : 'popup';
     latest.system = { ...latest.system, ...system, safety: system.safety ? { ...(latest.system?.safety || {}), ...system.safety } : latest.system?.safety };
-    latest.appearance = { ...(latest.appearance || {}), openTarget: openTarget === 'sidepanel' ? 'sidepanel' : 'popup' };
+    latest.appearance = { ...(latest.appearance || {}), openTarget: normalizedTarget };
     if (autoSync && siteId) {
       const site = latest.jiraSites?.find(x => x.id === siteId);
       if (!site) throw new Error('Server not found.');
@@ -246,7 +247,9 @@
       if (!profile) throw new Error('Profile not found.');
       profile.alarmDefaults = { ...profile.alarmDefaults, ...alarm };
     }
-    return (await A.send(MESSAGE.SAVE_STATE, { state: latest, baseRevision: latest.configRevision, validationScope: 'none' })).state;
+    const saved = await A.send(MESSAGE.SAVE_STATE, { state: latest, baseRevision: latest.configRevision, validationScope: 'none' }),
+      targetResult = await A.send(MESSAGE.SET_OPEN_TARGET, { openTarget: normalizedTarget });
+    return targetResult.state || saved.state;
   };
   const validateServerInputs = () => {
     const hu = A.$('healthIntervalUnit')?.value || 'minutes',
@@ -271,11 +274,21 @@
     if (!target?.closest) return false;
     const b = target.closest('[data-page]');
     if (b) {
+      if (A.page === 'settings' && b.dataset.page !== 'settings') {
+        A.settingsBackTarget = {
+          section: A.settingsSection || 'general',
+          automationSection: A.settingsAutomationSection || 'sync'
+        };
+      }
+      else if (b.dataset.page === 'settings') {
+        A.settingsBackTarget = null;
+      }
       A.setPage(b.dataset.page);
       return true;
     }
     const n = target.closest('[data-nav]');
     if (n) {
+      A.settingsBackTarget = null;
       A.setPage(n.dataset.nav);
       return true;
     }
@@ -1355,13 +1368,19 @@
               alarm.useCustom = true;
               d.alarm = { ...alarm };
             }
-            const target = d.appearance?.openTarget || 'popup';
+            const target = d.appearance?.openTarget || 'popup',
+              previousTarget = A.state?.appearance?.openTarget || 'popup',
+              openSidePanelNow = target === 'sidepanel' && previousTarget !== 'sidepanel',
+              sidePanelOpen = openSidePanelNow && chrome.sidePanel?.open
+                ? chrome.sidePanel.open({ windowId: chrome.windows.WINDOW_ID_CURRENT }).then(() => true).catch(() => false)
+                : Promise.resolve(true);
             A.state = await commitSettingsDraft({ system, siteId: s?.id || '', profileId: p?.id || '', autoSync, alarm, openTarget: target });
+            const sidePanelOpened = await sidePanelOpen;
             A.settingsDraft = null;
             A.scheduleHomeRefresh?.();
             A.renderShell();
             A.renderPage();
-            A.toast('Settings saved.');
+            A.toast(sidePanelOpened ? 'Settings saved.' : 'Settings saved, but the side panel could not open.', sidePanelOpened ? 'success' : 'error');
             return;
           }
           if (act === 'test-alarm') {
@@ -1473,6 +1492,14 @@
             A.appearanceDraftTheme = null;
             A.applyTheme();
             A.renderPage();
+            return;
+          }
+          if (act === 'settings-back') {
+            const target = A.settingsBackTarget || { section: 'general', automationSection: 'sync' };
+            A.settingsSection = target.section || 'general';
+            A.settingsAutomationSection = target.automationSection || 'sync';
+            A.settingsBackTarget = null;
+            A.setPage('settings');
             return;
           }
           if (act === 'settings-section') {

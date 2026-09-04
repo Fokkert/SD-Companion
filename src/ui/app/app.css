@@ -6653,7 +6653,7 @@ n.connection-policy-note {
   }
 }
 
-/* V2.1.1 focused UI consistency and workspace cleanup ---------------------- */
+/* V2.2.0 focused UI consistency and workspace cleanup ---------------------- */
 
 :root {
   --control-label-font-size: 14px;
@@ -6827,5 +6827,164 @@ n.connection-policy-note {
 
   .automation-feedback-grid {
     display: grid;
+  }
+}
+
+/* V2.2.0 final UI consolidation ------------------------------------------- */
+
+/* Keep the auto-refresh indicator at the far edge of the combined workspace. */
+.detections-actions-global-controls .freshness-chip {
+  margin-left: auto;
+}
+
+/* Operational status tiles use the main value as the only status message. */
+.operational-health .status-tile {
+  align-content: center;
+  min-height: 78px;
+}
+
+.operational-health .status-tile strong {
+  overflow-wrap: anywhere;
+}
+
+/* The server/profile ribbon is two balanced sections with equal inner gutters. */
+.context-bar {
+  padding: 8px !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+}
+
+.context-section {
+  min-width: 0;
+  padding: 9px !important;
+  border: 1px solid color-mix(in srgb,var(--line) 88%,transparent);
+  border-radius: 15px;
+  background: color-mix(in srgb,var(--panel2) 56%,transparent);
+}
+
+.context-label {
+  padding-left: 1px !important;
+  margin-bottom: 1px;
+}
+
+.context-selection-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0,1fr);
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.context-avatar,
+.server-avatar {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 12px !important;
+}
+
+.profile-context-icon {
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb,var(--primary) 24%,var(--line));
+  background: color-mix(in srgb,var(--primary) 8%,var(--surface-input));
+  color: var(--primary);
+}
+
+.profile-context-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.context-select-wrap,
+.context-select-wrap > .sd-soft-select,
+.context-select-wrap .sd-soft-select-button {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+
+.context-field .sd-soft-select-button {
+  min-height: 38px !important;
+  padding: 8px 36px 8px 12px !important;
+}
+
+/* Main Settings tabs intentionally use the same segmented-card language as
+ * Automation's internal tabs. */
+.settings-tabbar {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 5px !important;
+  margin: 0 !important;
+  overflow-x: auto !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 15px !important;
+  background: color-mix(in srgb,var(--panel2) 72%,transparent) !important;
+  scrollbar-width: thin;
+}
+
+.settings-page-tab {
+  position: static !important;
+  flex: 1 0 auto !important;
+  min-width: 118px !important;
+  min-height: 38px !important;
+  padding: 8px 12px !important;
+  border: 1px solid transparent !important;
+  border-radius: 11px !important;
+  background: transparent !important;
+  color: var(--muted) !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  text-align: center !important;
+  box-shadow: none !important;
+}
+
+.settings-page-tab:hover {
+  color: var(--text) !important;
+  background: color-mix(in srgb,var(--primary) 5%,var(--surface-soft)) !important;
+}
+
+.settings-page-tab.active {
+  color: var(--text) !important;
+  border-color: color-mix(in srgb,var(--primary) 34%,var(--line)) !important;
+  background: color-mix(in srgb,var(--primary) 10%,var(--panel2)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.settings-page-tab.active::after {
+  content: none !important;
+  display: none !important;
+}
+
+.settings-content {
+  margin-top: 0 !important;
+  padding-top: 13px !important;
+  border-radius: 20px !important;
+}
+
+.settings-back-button {
+  width: fit-content;
+  margin: 0 0 8px;
+}
+
+/* Theme cards now carry only the theme name and preview. */
+.theme-swatch {
+  min-height: 92px;
+}
+
+@container (max-width:560px) {
+  .context-bar {
+    grid-template-columns: 1fr !important;
+  }
+
+  .detections-actions-global-controls .freshness-chip {
+    margin-left: 0;
+    margin-inline-start: auto;
   }
 }

@@ -2,7 +2,7 @@ const { textIncludes } = require('./source-assertions');
 const fs = require('fs'), path = require('path'), assert = require('assert');
 const root = path.join(__dirname, '..'), read = f => fs.readFileSync(path.join(root, f), 'utf8');
 const manifest = JSON.parse(read('manifest.json'));
-assert.equal(manifest.version, '2.1.1');
+assert.equal(manifest.version, '2.2.0');
 assert.equal(manifest.version_name, 'V2');
 const core = read('src/ui/app/app-core.js'),
   base = read('src/ui/app/pages/base.js'),
@@ -32,7 +32,7 @@ assert(textIncludes(sw, 'const credentialSiteIds=async state'));
 assert(textIncludes(sw, 'await SD.Storage.hasCredential(siteId)'));
 assert(textIncludes(sw, "connectionStatus:'pat-missing'"));
 assert(textIncludes(sw, "Jira API check skipped because the PAT is missing."));
-assert(textIncludes(sw, "p.monitoring?.enabled&&credentialIds.has(p.siteId)"));
+assert(textIncludes(sw, "p.monitoring?.enabled&&profileHasEnabledRules(p)&&credentialIds.has(p.siteId)"));
 assert(textIncludes(sw, "!await SD.Storage.hasCredential(site.id))continue"));
 assert(textIncludes(sw, "!await SD.Storage.hasCredential(siteId)||!monitoringEnabledForSite"));
 // Import preview must use bounded table/cards/chips, not one touching text stream.

@@ -104,29 +104,63 @@ html[data-theme="amber-glass"] {
   --on-primary: #241502;
 }
 
-/* A genuinely light option for users who do not want a dark glass surface. */
+/* Deep crimson: warm red highlights over burgundy-black surfaces. */
 
-html[data-theme="frost-light"] {
-  color-scheme: light;
-  --bg: #edf4fb;
-  --bg2: #dce9f5;
-  --panel: rgba(255,255,255,.88);
-  --panel2: rgba(246,250,255,.97);
-  --line: rgba(39,73,111,.15);
-  --line2: rgba(31,111,186,.34);
-  --text: #132033;
-  --muted: #62748a;
-  --primary: #1677c8;
-  --primary2: #0f5f9f;
-  --accent: #49a5e8;
-  --glow: rgba(22,119,200,.13);
-  --success: #12845b;
-  --warning: #a86900;
-  --danger: #c93450;
-  --info: #146da7;
-  --shadow: 0 18px 55px rgba(46,78,110,.18);
-  --on-primary: #ffffff;
+html[data-theme="crimson-glass"] {
+  color-scheme: dark;
+  --bg: #160608;
+  --bg2: #300d13;
+  --panel: rgba(49,15,22,.91);
+  --panel2: rgba(69,20,30,.97);
+  --line: rgba(255,150,166,.15);
+  --line2: rgba(235,77,105,.40);
+  --text: #fff2f4;
+  --muted: #c49aa1;
+  --primary: #ff6f86;
+  --primary2: #b92f4d;
+  --accent: #ffadb9;
+  --glow: rgba(255,83,111,.20);
+  --on-primary: #250509;
 }
+
+/* Deep ocean: dark cyan/blue without the brightness of a light theme. */
+
+html[data-theme="ocean-glass"] {
+  color-scheme: dark;
+  --bg: #031013;
+  --bg2: #08252b;
+  --panel: rgba(8,35,41,.91);
+  --panel2: rgba(10,49,58,.97);
+  --line: rgba(132,232,246,.14);
+  --line2: rgba(47,191,212,.38);
+  --text: #effcff;
+  --muted: #8eb8bf;
+  --primary: #4ed3e7;
+  --primary2: #16869b;
+  --accent: #9bebf5;
+  --glow: rgba(63,207,228,.18);
+  --on-primary: #031619;
+}
+
+/* Copper night: darker rust/copper warmth than Amber Smoke. */
+
+html[data-theme="copper-glass"] {
+  color-scheme: dark;
+  --bg: #160b06;
+  --bg2: #2f170d;
+  --panel: rgba(49,24,14,.92);
+  --panel2: rgba(67,31,17,.97);
+  --line: rgba(245,171,123,.15);
+  --line2: rgba(204,101,48,.40);
+  --text: #fff5ee;
+  --muted: #c3a08c;
+  --primary: #e9874f;
+  --primary2: #a74821;
+  --accent: #ffc09a;
+  --glow: rgba(226,111,56,.19);
+  --on-primary: #210b03;
+}
+
 
 * {
   box-sizing: border-box;

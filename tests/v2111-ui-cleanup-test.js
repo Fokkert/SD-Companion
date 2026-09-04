@@ -14,8 +14,8 @@ const css = fs.readFileSync('src/ui/app/app.css', 'utf8');
 const discovery = fs.readFileSync('src/background/discovery.js', 'utf8');
 const worker = fs.readFileSync('src/background/service-worker.js', 'utf8');
 
-assert.equal(manifest.version, '2.1.1');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.1.1"'));
+assert.equal(manifest.version, '2.2.0');
+assert(textIncludes(constants, 'BUILD_VERSION:"2.2.0"'));
 
 // Home is one operational workspace, while Rules owns one-time Bulk Operations.
 assert(textIncludes(home, 'Detections &amp; Actions'));
@@ -39,7 +39,7 @@ assert(textIncludes(home, 'Active Schedule'));
 assert(textIncludes(home, 'No Active Schedule'));
 assert(!textIncludes(home, 'Active shift'));
 assert(!textIncludes(home, 'No active shift'));
-assert(textIncludes(home, 'Error occurred · see Logs / Audit'));
+assert(textIncludes(home, "st.lastError?'ERROR'"));
 
 // List accents and control-adjacent labels follow the new global UI rules.
 assert(textIncludes(css, '--control-label-font-size:14px'));
