@@ -7482,7 +7482,6 @@ n.connection-policy-note {
 }
 
 /* v2.4.0 interaction and configuration refinements */
-.master-switch>span{border-radius:7px!important}.master-switch>span::after{border-radius:4px!important}
 .show-completed-control{cursor:default!important}.show-completed-control>span:first-child{pointer-events:none}.show-completed-control .master-switch{cursor:pointer}
 .metadata-detail-card,.discovery-project-card{border:1px solid var(--line);border-radius:16px;background:var(--surface-soft);overflow:hidden}
 .metadata-detail-card+ .metadata-detail-card,.discovery-project-card+.discovery-project-card{margin-top:8px}
@@ -7492,8 +7491,252 @@ n.connection-policy-note {
 .metadata-detail-body,.discovery-project-card-body{padding:0 14px 14px}.metadata-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.metadata-detail-grid>div{padding:9px;border:1px solid var(--line);border-radius:11px;display:grid;gap:3px}.metadata-detail-grid span{font-size:10px;color:var(--muted);text-transform:uppercase}.metadata-detail-grid strong{font-size:12px;word-break:break-word}
 .metadata-remove{margin-left:auto}.discovery-project-cards{display:grid;gap:8px}.dataset-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.dataset-card-grid .toggle-card{min-height:54px}
 .restore-excluded-toggle{margin-top:12px}.alarm-file-picker{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface-input)}.alarm-file-picker .file-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.alarm-profile-toolbar{align-items:center}.alarm-profile-toolbar .sd-soft-select,.alarm-profile-toolbar>.select{flex:1}.settings-card.alarm-settings-card{padding-block:15px}.setting-line-card{min-height:48px;padding-block:8px}
-.rule-entry-icon{align-self:stretch;width:64px!important;min-height:58px!important;border-radius:14px!important}.rule-entry-icon svg{width:34px!important;height:34px!important}.rule-card.enabled .rule-entry-icon{color:var(--success)!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--success) 55%,transparent),0 0 20px color-mix(in srgb,var(--success) 25%,transparent)!important}.rule-card-main{cursor:pointer}.rule-editor-stats{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}.rule-editor-stats span{padding:5px 8px;border:1px solid var(--line);border-radius:999px;font-size:10px;color:var(--muted)}
+.rule-card.enabled .rule-entry-icon{color:var(--success)!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--success) 55%,transparent),0 0 20px color-mix(in srgb,var(--success) 25%,transparent)!important}
 .condition-groups{display:grid;gap:12px}.condition-group-card{border:1px solid var(--line2);border-radius:16px;padding:12px;background:var(--surface-soft)}.rule-section-inner{border-top:1px solid var(--line);padding-top:12px}
 .action-card{padding:0!important;overflow:hidden}.action-card>summary.action-head{padding:12px 14px;cursor:pointer;list-style:none}.action-card-body{padding:0 14px 14px;border-top:1px solid var(--line)}.action-summary-controls button{position:relative;z-index:2}
 @media(max-width:620px){.metadata-detail-grid,.dataset-card-grid{grid-template-columns:1fr}}
 .discovery-project-card summary{min-width:0}.dataset-card-grid strong{white-space:normal}.metadata-detail-card summary{min-width:0}
+
+/* V2.4.1 UI repair --------------------------------------------------------- */
+
+/* Standard switches are pill tracks with circular thumbs. Monitoring alone stays cubic. */
+.master-switch > span {
+  border-radius: 999px !important;
+}
+
+.master-switch > span::after {
+  border-radius: 50% !important;
+}
+
+/* Text/toggle cards always reserve the far-right edge for the switch. */
+.toggle-card,
+.setting-line,
+.server-behavior-toggle {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 16px !important;
+  width: 100%;
+  min-width: 0;
+}
+
+.toggle-card {
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--surface-soft);
+}
+
+.toggle-card > span,
+.setting-line > span:first-child,
+.server-behavior-toggle > span {
+  min-width: 0;
+}
+
+.toggle-card > .master-switch,
+.setting-line > .master-switch,
+.server-behavior-toggle > .master-switch,
+.row-between > .master-switch {
+  margin-left: auto !important;
+  justify-self: end !important;
+}
+
+.setting-line-card {
+  min-height: 46px !important;
+  padding: 9px 11px !important;
+}
+
+/* Rule rows are compact, readable, and use a genuinely square icon. */
+.rule-card {
+  padding: 8px 11px !important;
+  column-gap: 12px !important;
+}
+
+.rule-entry-icon {
+  width: 46px !important;
+  height: 46px !important;
+  min-height: 46px !important;
+  flex: 0 0 46px !important;
+  align-self: center !important;
+  border-radius: 13px !important;
+}
+
+.rule-entry-icon svg {
+  width: 25px !important;
+  height: 25px !important;
+}
+
+.rule-card .list-title {
+  font-size: 15px !important;
+  line-height: 1.25 !important;
+}
+
+.rule-card-main {
+  cursor: default !important;
+}
+
+.rule-card-actions {
+  gap: 7px !important;
+}
+
+.rule-card-actions .master-switch {
+  margin-left: 2px !important;
+}
+
+/* Editor cards and collapsible action bodies need breathing room on every edge. */
+.rule-inline-editor,
+.alarm-profile-editor {
+  margin-top: 8px;
+}
+
+.rule-editor-body {
+  gap: 12px !important;
+}
+
+.rule-section {
+  padding: 14px !important;
+}
+
+.rule-section-inner {
+  margin-top: 12px;
+  padding-top: 14px !important;
+}
+
+.condition-groups {
+  gap: 14px !important;
+}
+
+.condition-group-card {
+  padding: 14px !important;
+}
+
+.action-card + .action-card {
+  margin-top: 10px;
+}
+
+.action-card > summary.action-head {
+  padding: 12px 14px !important;
+}
+
+.action-card-body {
+  padding: 14px !important;
+  border-top: 1px solid var(--line);
+}
+
+.action-card-body > :first-child {
+  margin-top: 0 !important;
+}
+
+.action-card-body > :last-child {
+  margin-bottom: 0 !important;
+}
+
+/* JQL mode uses two equal-height work areas with labels kept close to controls. */
+.rule-jql-grid {
+  align-items: stretch;
+  gap: 14px !important;
+}
+
+.rule-jql-grid > .field {
+  display: grid;
+  grid-template-rows: auto minmax(150px, 1fr);
+  align-content: stretch;
+  gap: 7px;
+}
+
+.rule-jql-grid .glass-multi-wrap,
+.rule-jql-grid .glass-multi,
+.rule-additional-jql {
+  min-height: 150px !important;
+  height: 100%;
+}
+
+.rule-jql-grid .glass-multi-wrap {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 7px;
+}
+
+.rule-additional-jql {
+  resize: vertical;
+}
+
+/* Server project synchronization cards keep spacing and switches aligned. */
+.discovery-project-cards {
+  gap: 10px !important;
+}
+
+.discovery-project-card > summary {
+  padding: 12px 14px !important;
+}
+
+.discovery-project-card-body {
+  padding: 2px 14px 14px !important;
+}
+
+.dataset-card-grid {
+  gap: 10px !important;
+}
+
+.dataset-card-grid .toggle-card {
+  min-height: 52px !important;
+}
+
+/* Dedicated Alarm Profile page follows the same entry/editor rhythm as Profiles. */
+.alarm-profile-list {
+  gap: 8px !important;
+}
+
+.alarm-profile-entry {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding: 11px 13px !important;
+}
+
+.alarm-profile-entry-copy {
+  min-width: 0;
+}
+
+.alarm-profile-title-row {
+  gap: 8px !important;
+  flex-wrap: wrap;
+}
+
+.alarm-profile-entry-actions {
+  justify-self: end;
+}
+
+.alarm-profile-editor-body {
+  display: grid;
+  gap: 14px;
+  padding-top: 4px;
+}
+
+.alarm-profile-editor .toggle-card-grid {
+  gap: 10px !important;
+}
+
+.alarm-profile-editor .alarm-file-picker,
+.alarm-profile-editor .alarm-settings-actions {
+  margin-top: 0 !important;
+}
+
+@container (max-width: 560px) {
+  .rule-card,
+  .alarm-profile-entry {
+    grid-template-columns: 1fr !important;
+  }
+
+  .rule-card-actions,
+  .alarm-profile-entry-actions {
+    width: 100%;
+    justify-self: stretch !important;
+    justify-content: flex-end;
+  }
+
+  .rule-jql-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

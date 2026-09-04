@@ -3,7 +3,7 @@
   root.Constants = Object.freeze({
     APP_NAME: "SD Companion",
     DISPLAY_VERSION: "V2",
-    BUILD_VERSION: "2.4.0",
+    BUILD_VERSION: "2.4.1",
     SCHEMA_VERSION: 34,
     STORAGE_KEYS: Object.freeze({
       STATE: "sdCompanionState",

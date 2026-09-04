@@ -14,6 +14,7 @@ const servers = read('src/ui/app/pages/servers.js');
 const rules = read('src/ui/app/pages/rules.js');
 const actions = read('src/ui/app/pages/rule-actions.js');
 const settings = read('src/ui/app/pages/logs-more.js');
+const alarms = read('src/ui/app/pages/alarms.js');
 const events = read('src/ui/app/app-events.js');
 const appMain = read('src/ui/app/app-main.js');
 const worker = read('src/background/service-worker.js');
@@ -24,9 +25,9 @@ const css = read('src/ui/app/app.css');
 const readme = read('README.md');
 const sample = JSON.parse(read('sample-profile.json'));
 
-assert.equal(manifest.version, '2.4.0');
+assert.equal(manifest.version, '2.4.1');
 assert.equal(manifest.commands, undefined, 'alarm stop shortcut is now profile-configured, not a static extension command');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.4.0"'));
+assert(textIncludes(constants, 'BUILD_VERSION:"2.4.1"'));
 assert(textIncludes(constants, 'SCHEMA_VERSION:34'));
 for (const id of ['keyboard', 'duration', 'click-anywhere', 'popup']) assert(constants.includes(`id: "${id}"`));
 assert(!constants.includes('duration-or-controls'));
@@ -53,32 +54,34 @@ assert(defaults.includes('alarmProfiles: [alarmProfile]'));
 assert(defaults.includes('defaultAlarmProfileId: alarmProfile.id'));
 assert(actions.includes('Alarm profile'));
 assert(actions.includes('data-aprop="alarmProfileId"'));
-assert(settings.includes('<b>Alarm Profiles</b>'));
-assert(!settings.includes('Browser notification'));
-assert(settings.includes('Keyboard shortcut'));
-assert(settings.includes('Click anywhere') || constants.includes('Click anywhere'));
+assert(settings.includes("link('alarms', 'Alarm Profiles')"));
+assert(!alarms.includes('Browser notification'));
+assert(alarms.includes('Keyboard shortcut'));
+assert(alarms.includes('Click anywhere') || constants.includes('Click anywhere'));
 assert(events.includes('new-alarm-profile'));
 assert(events.includes('delete-alarm-profile'));
 assert(events.includes('MESSAGE.UPDATE_ALARM_VOLUME'));
 assert(offscreen.includes('SD_OFFSCREEN_VOLUME'));
 assert(appMain.includes("alarm.stopMethod === 'click-anywhere'"));
-assert(settings.includes('data-action="choose-alarm-file"'));
+assert(alarms.includes('data-action="choose-alarm-file"'));
 assert(settings.includes('<span>Action Completion Tone</span>'));
 
-// All switches use cubic geometry and dropdowns only flip when bottom space is insufficient.
-assert(textIncludes(css, '.master-switch>span{border-radius:7px!important}'));
-assert(textIncludes(css, '.master-switch>span::after{border-radius:4px!important}'));
+// Standard switches are circular; only Home Monitoring keeps cubic geometry.
+assert(textIncludes(css, '.master-switch>span{border-radius:999px!important}'));
+assert(textIncludes(css, '.master-switch>span::after{border-radius:50%!important}'));
+assert(textIncludes(css, '.radar-monitor-controls .master-switch>span{border-radius:7px!important}'));
 assert(softSelect.includes('below < desiredHeight && above >= desiredHeight'));
 
-// Rules: top-level enable toggle, body selection, duplicate toolbar action, large enabled icon.
+// Rules: per-card enable toggle + Duplicate, square enabled icon, no redundant editor chips.
 assert(rules.includes('data-rule-enabled-id='));
-assert(rules.includes('data-action="duplicate-selected-rule"'));
+assert(rules.includes('data-action="duplicate-rule"'));
+assert(!rules.includes('duplicate-selected-rule'));
 assert(rules.includes('data-rule-card-id='));
 assert(css.includes('.rule-card.enabled .rule-entry-icon'));
-assert(rules.includes('rule-editor-stats'));
+assert(!rules.includes('rule-editor-stats'));
 assert(rules.includes('Condition groups'));
 assert(rules.includes('Match all groups'));
-assert(rules.includes('Visual Conditions'));
+assert(rules.includes('>Manual</button>'));
 assert(rules.includes('>JQL</button>'));
 assert(actions.includes('<details class="action-card'));
 

@@ -4,12 +4,6 @@
     { EXECUTION_POLICY, CONFLICT_MODE } = SD.Constants,
     { head, noServer } = A.View,
     { conditionEditor, actionEditor, actionOptions } = A.RuleViews;
-  const executionLabel = m => ({
-    [EXECUTION_POLICY.ONCE_ISSUE]: 'Once / issue',
-    [EXECUTION_POLICY.ONCE_STATUS]: 'Once / status',
-    [EXECUTION_POLICY.ONCE_UPDATE]: 'Once / update',
-    [EXECUTION_POLICY.REPEAT]: 'Repeat after interval'
-  }[m] || m);
   const ruleIcons = [
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="7"/></svg>',
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2-7 11h6l-1 9 7-12h-6z"/></svg>',
@@ -44,7 +38,7 @@
       delayUnit = r.randomDelay?.unit || 'seconds',
       section = A.ruleEditorSection || 'setup';
     let body = '';
-    if (section === 'setup') body = `<div class="rule-editor-stats"><span>${r.enabled ? 'Enabled' : 'Disabled'}</span><span>${r.schedule?.mode === 'scheduled' ? `${(r.schedule.scheduleIds || []).length} schedule(s)` : 'Always on'}</span><span>${executionLabel(r.executionPolicy?.mode)}</span><span>${r.actions?.length || 0} actions</span><span>${c.matches || 0} matches</span></div><div class="rule-section">` +
+    if (section === 'setup') body = `<div class="rule-section">` +
       `<div class="section-title">Rule</div>` +
       `<div class="grid-2 section-gap">` +
       `<div class="field">` +
@@ -80,7 +74,7 @@
 `;
     else if (section === 'conditions') {
       const sourceMode = r.source?.mode === 'jql' ? 'jql' : 'conditions';
-      body = `<div class="rule-section detection-source-section"><div class="row-between"><div class="section-title">Detection method</div><div class="condition-match-toggle"><button type="button" class="${sourceMode === 'conditions' ? 'active' : ''}" data-action="rule-source-mode" data-value="conditions">Visual Conditions</button><button type="button" class="${sourceMode === 'jql' ? 'active' : ''}" data-action="rule-source-mode" data-value="jql">JQL</button></div></div>${sourceMode === 'jql' ? `<div class="grid-2 section-gap"><div class="field"><label>Saved filters · optional</label>${A.glassMulti(s.filters, x => String(x.id), x => x.name, (r.source?.filterIds || []).map(String), `data-multi-scope="rule" data-multi-prop="source.filterIds"`, 'No filters synchronized.', 'Search fetched filters…')}</div><div class="field"><label>Additional JQL · optional</label><textarea class="textarea mono" data-rule-prop="source.jql" placeholder="project = KEY AND status = Open">${A.esc(r.source?.jql || '')}</textarea></div></div>` : `<div class="rule-section-inner section-gap"><div class="row-between"><div class="row"><b>Condition groups</b><select class="select compact-select" data-rule-root-op="true"><option value="AND" ${r.logic?.operator !== 'OR' ? 'selected' : ''}>Match all groups</option><option value="OR" ${r.logic?.operator === 'OR' ? 'selected' : ''}>Match any group</option></select></div><button class="btn btn-small" data-action="add-condition-group">+ Group</button></div><div class="condition-groups section-gap">${(r.logic?.groups || []).map((g,i) => `<div class="condition-group-card"><div class="row-between"><div class="row"><span class="sequence-number">${i+1}</span><strong>Group ${i+1}</strong><select class="select compact-select" data-group-op="${g.id}"><option value="AND" ${g.operator !== 'OR' ? 'selected' : ''}>Match all</option><option value="OR" ${g.operator === 'OR' ? 'selected' : ''}>Match any</option></select></div>${(r.logic?.groups || []).length > 1 ? `<button class="btn btn-small btn-danger" data-action="delete-condition-group" data-id="${g.id}">Delete</button>` : ''}</div>${conditionEditor(g,s)}</div>`).join('')}</div></div>`}<div class="source-preview"><span>Effective JQL</span><code>${A.esc(preview.baseJql || 'No safe query constraint yet')}</code></div></div>`;
+      body = `<div class="rule-section detection-source-section"><div class="row-between"><div class="section-title">Detection method</div><div class="condition-match-toggle"><button type="button" class="${sourceMode === 'conditions' ? 'active' : ''}" data-action="rule-source-mode" data-value="conditions">Manual</button><button type="button" class="${sourceMode === 'jql' ? 'active' : ''}" data-action="rule-source-mode" data-value="jql">JQL</button></div></div>${sourceMode === 'jql' ? `<div class="grid-2 section-gap rule-jql-grid"><div class="field rule-filter-field"><label>Saved filters · optional</label>${A.glassMulti(s.filters, x => String(x.id), x => x.name, (r.source?.filterIds || []).map(String), `data-multi-scope="rule" data-multi-prop="source.filterIds"`, 'No filters synchronized.', 'Search fetched filters…')}</div><div class="field rule-jql-field"><label>Additional JQL · optional</label><textarea class="textarea mono rule-additional-jql" data-rule-prop="source.jql" placeholder="project = KEY AND status = Open">${A.esc(r.source?.jql || '')}</textarea></div></div>` : `<div class="rule-section-inner section-gap"><div class="row-between"><div class="row"><b>Condition groups</b><select class="select compact-select" data-rule-root-op="true"><option value="AND" ${r.logic?.operator !== 'OR' ? 'selected' : ''}>Match all groups</option><option value="OR" ${r.logic?.operator === 'OR' ? 'selected' : ''}>Match any group</option></select></div><button class="btn btn-small" data-action="add-condition-group">+ Group</button></div><div class="condition-groups section-gap">${(r.logic?.groups || []).map((g,i) => `<div class="condition-group-card"><div class="row-between"><div class="row"><span class="sequence-number">${i+1}</span><strong>Group ${i+1}</strong><select class="select compact-select" data-group-op="${g.id}"><option value="AND" ${g.operator !== 'OR' ? 'selected' : ''}>Match all</option><option value="OR" ${g.operator === 'OR' ? 'selected' : ''}>Match any</option></select></div>${(r.logic?.groups || []).length > 1 ? `<button class="btn btn-small btn-danger" data-action="delete-condition-group" data-id="${g.id}">Delete</button>` : ''}</div>${conditionEditor(g,s)}</div>`).join('')}</div></div>`}<div class="source-preview"><span>Effective JQL</span><code>${A.esc(preview.baseJql || 'No safe query constraint yet')}</code></div></div>`;
     }
     else if (section === 'actions') {
       const randomness = r.actionRandomness || { enabled: false, pools: [] },
@@ -230,9 +224,7 @@
     const rules = p.rules || [];
     if (A.selectedRuleId && !A.ruleDraft && !rules.some(r => r.id === A.selectedRuleId)) A.selectedRuleId = '';
     const rows = rules.map(x => {
-      const c = x.runtime?.counters || {},
-        sched = x.schedule?.mode === 'scheduled' ? `${(x.schedule.scheduleIds || []).length} schedule(s)` : 'Always on',
-        editing = x.id === A.selectedRuleId;
+      const editing = x.id === A.selectedRuleId;
       return `<div class="configured-object-stack">` +
         `<div class="list-item rule-card configured-object ${x.enabled ? 'enabled active-object' : ''} ${editing ? 'editing-object' : ''}" data-rule-card-id="${x.id}">` +
         `<div class="rule-card-main">` +
@@ -241,10 +233,14 @@
         `<div class="list-title">${A.esc(x.name)}</div>` +
         `</div>` +
         `</div>` +
-        `<div class="row rule-card-actions"><label class="master-switch" title="${x.enabled ? 'Disable rule' : 'Enable rule'}"><input type="checkbox" data-rule-enabled-id="${x.id}" ${x.enabled ? 'checked' : ''}><span></span></label><button class="btn btn-small" data-action="${editing ? 'cancel-rule-edit' : 'edit-rule'}" data-id="${x.id}">${editing ? 'Close' : 'Edit'}</button></div></div>${editing && A.ruleDraft ? editor(A.ruleDraft, s, p) : ''}</div>`;
+        `<div class="row rule-card-actions">` +
+        `<button class="btn btn-small" data-action="${editing ? 'cancel-rule-edit' : 'edit-rule'}" data-id="${x.id}">${editing ? 'Close' : 'Edit'}</button>` +
+        `<button class="btn btn-small" data-action="duplicate-rule" data-id="${x.id}">Duplicate</button>` +
+        `<label class="master-switch" title="${x.enabled ? 'Disable rule' : 'Enable rule'}"><input type="checkbox" data-rule-enabled-id="${x.id}" ${x.enabled ? 'checked' : ''}><span></span></label>` +
+        `</div></div>${editing && A.ruleDraft ? editor(A.ruleDraft, s, p) : ''}</div>`;
     }).join('');
     const newEditor = A.ruleDraftIsNew && A.ruleDraft ? `<div class="configured-object-stack new-rule-draft">${editor(A.ruleDraft, s, p)}</div>` : '';
-    return `<section class="page rules-page">${head('Rules', '', `<div class="row"><button class="btn btn-primary btn-small" data-action="new-rule">+ Rule</button><button class="btn btn-small" data-action="duplicate-selected-rule" ${A.selectedRuleId && !A.ruleDraftIsNew ? '' : 'disabled'}>Duplicate</button><button class="btn btn-small" data-page="bulk">Bulk Operations</button></div>`)}<div class="configured-section">` +
+    return `<section class="page rules-page">${head('Rules', '', `<div class="row"><button class="btn btn-primary btn-small" data-action="new-rule">+ Rule</button><button class="btn btn-small" data-page="bulk">Bulk Operations</button></div>`)}<div class="configured-section">` +
       `<div class="section-kicker">Configured rules</div>` +
       `<div class="card compact-configured-card">` +
       `<div class="list rule-list">${newEditor}${rows || (!newEditor ? '<div class="empty">No rules configured.</div>' : '')}</div></div></div></section>`;

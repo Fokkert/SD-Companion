@@ -74,23 +74,8 @@
         `</button>` +
         `</div>` +
         `</div>` +
-        `<div class="settings-tile-grid">${link('appearance', 'Appearance')}${link('profiles', 'Profiles')}</div>` +
-        `${profile ? (() => {
-          const profiles = profile.alarmProfiles || [], selectedAlarm = profiles.find(x => x.id === A.alarmProfileDraftId) || profiles.find(x => x.id === profile.defaultAlarmProfileId) || profiles[0] || {};
-          A.alarmProfileDraftId = selectedAlarm.id || '';
-          const du = selectedAlarm.durationUnit || 'seconds';
-          return `<div class="settings-card alarm-settings-card">` +
-            `<div class="settings-card-head"><span class="settings-card-icon">${icon('general')}</span><b>Alarm Profiles</b><span class="freshness-chip">${profiles.length}</span></div>` +
-            `<div class="row alarm-profile-toolbar"><select id="alarmProfileSelect" class="select" data-searchable="true">${profiles.map(x => A.option(x.id, x.name, x.id === selectedAlarm.id)).join('')}</select><button class="btn btn-small" data-action="new-alarm-profile">+ Alarm Profile</button>${profiles.length > 1 ? `<button class="btn btn-small btn-danger" data-action="delete-alarm-profile">Delete</button>` : ''}</div>` +
-            `<div class="grid-2 section-gap"><div class="field"><label>Name</label><input id="alarmProfileName" class="input" maxlength="80" value="${A.esc(selectedAlarm.name || '')}"></div><div class="field"><label>Sound</label><select id="alarmPreset" class="select" data-searchable="true">${SD.Constants.ALARM_PRESETS.map(x => A.option(x.id, x.name, selectedAlarm.preset === x.id)).join('')}</select></div>` +
-            `<div class="field"><label>Stop method</label><select id="alarmStopMethod" class="select">${SD.Constants.ALARM_STOP_METHODS.map(x => A.option(x.id, x.name, selectedAlarm.stopMethod === x.id)).join('')}</select></div>` +
-            `${selectedAlarm.stopMethod === 'keyboard' ? `<div class="field"><label>Keyboard shortcut</label><input id="alarmKeyboardShortcut" class="input" value="${A.esc(selectedAlarm.keyboardShortcut || '')}" placeholder="Ctrl+Shift+S"></div>` : ''}` +
-            `${selectedAlarm.stopMethod === 'duration' ? `<div class="field"><label>Duration</label><div class="duration-control"><input id="alarmDuration" class="input" type="number" min="1" value="${A.esc(SD.Utils.timeFromSeconds(selectedAlarm.durationSeconds || 12, du))}"><select id="alarmDurationUnit" class="select">${unitOptions(du)}</select></div></div>` : ''}` +
-            `<div class="field"><label>Volume · <strong id="alarmVolumeValue">${Math.round((Number(selectedAlarm.volume) || 0) * 100)}%</strong></label><input id="alarmVolume" class="range" data-range-key="alarm-volume" type="range" min="0" max="1" step="0.01" value="${Number(selectedAlarm.volume) || 0}"></div></div>` +
-            `<div class="toggle-card-grid compact-toggle-grid"><div class="toggle-card"><span><strong>Loop sound</strong></span><label class="master-switch"><input id="alarmLoop" type="checkbox" ${selectedAlarm.loop !== false ? 'checked' : ''}><span></span></label></div><div class="toggle-card"><span><strong>Use custom audio</strong></span><label class="master-switch"><input id="alarmUseCustom" type="checkbox" ${selectedAlarm.useCustom ? 'checked' : ''}><span></span></label></div></div>` +
-            `<div class="field alarm-file-field"><label>Custom audio</label><div class="alarm-file-picker"><span class="file-name">${A.esc(selectedAlarm.customName || 'No custom file')}</span><button class="btn btn-small" type="button" data-action="choose-alarm-file">Choose File</button><input id="alarmFile" type="file" accept="audio/*" hidden></div></div>` +
-            `<div class="row alarm-settings-actions"><button class="btn btn-primary" data-action="save-alarm">Save Alarm Profile</button><button class="btn" data-action="test-alarm">Test Alarm</button>${selectedAlarm.customDataUrl ? `<button class="btn btn-small" data-action="clear-custom-alarm">Clear Custom Audio</button>` : ''}</div></div>`;
-        })() : ''}`;
+        `<div class="settings-tile-grid">${link('appearance', 'Appearance')}${link('profiles', 'Profiles')}${link('alarms', 'Alarm Profiles')}</div>` +
+        '';
     }
     else if (section === 'automation') {
       title = 'Automation';

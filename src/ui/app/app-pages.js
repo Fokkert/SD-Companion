@@ -13,6 +13,7 @@
       profiles: A.pageProfiles,
       health: A.pageHealth,
       appearance: A.pageAppearance,
+      alarms: A.pageAlarms,
       logs: A.pageLogs,
       audit: A.pageAudit,
       maintenance: A.pageMaintenance,

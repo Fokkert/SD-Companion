@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.4.1
+
+- Restored circular toggles throughout the extension while keeping the Home Monitoring toggle cubic.
+- Repaired toggle/card alignment and spacing across Settings, Rules, Actions and Jira Server synchronization cards.
+- Restored per-rule Duplicate controls, tightened rule cards, squared rule icons, and removed redundant expanded-rule status chips.
+- Renamed the rule detection choice from Visual Conditions to Manual and aligned the Additional JQL editor with saved-filter selection.
+- Improved live UI indicator refresh after configuration changes.
+- Moved Alarm Profiles to a dedicated General Settings page with profile-style entries and explicit editing.
+
 ## 2.4.0
 
 - Added profile-owned Alarm Profiles and per-Alarm-action profile selection; migrated the legacy single alarm configuration forward.

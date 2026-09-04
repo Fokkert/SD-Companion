@@ -7,6 +7,7 @@ const manifest = JSON.parse(read('manifest.json')),
   actions = read('src/ui/app/pages/rule-actions.js'),
   conditions = read('src/ui/app/pages/rule-conditions.js'),
   settings = read('src/ui/app/pages/logs-more.js'),
+  alarms = read('src/ui/app/pages/alarms.js'),
   events = read('src/ui/app/app-events.js'),
   pages = read('src/ui/app/app-pages.js'),
   worker = read('src/background/service-worker.js'),
@@ -15,15 +16,15 @@ const manifest = JSON.parse(read('manifest.json')),
   migrations = read('src/shared/migrations.js'),
   css = read('src/ui/app/app.css'),
   servers = read('src/ui/app/pages/servers.js');
-assert.equal(manifest.version, '2.4.0');
+assert.equal(manifest.version, '2.4.1');
 assert.equal(manifest.version_name, 'V2');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.4.0"'));
+assert(textIncludes(constants, 'BUILD_VERSION:"2.4.1"'));
 // Alarm configuration is profile-owned and actions reference Alarm Profiles.
 assert(textIncludes(settings, 'Alarm Profiles'));
-assert(textIncludes(settings, 'id="alarmPreset"'));
-assert(!textIncludes(settings, 'id="alarmSystemNotification"'));
-assert(!textIncludes(settings, 'id="alarmPagePopup"'));
-assert(!textIncludes(pages, 'alarms:A.pageAlarms'));
+assert(textIncludes(alarms, 'id="alarmPreset"'));
+assert(!textIncludes(alarms, 'id="alarmSystemNotification"'));
+assert(!textIncludes(alarms, 'id="alarmPagePopup"'));
+assert(textIncludes(pages, 'alarms:A.pageAlarms'));
 assert(textIncludes(actions, 'Alarm profile'));
 assert(textIncludes(actions, 'data-aprop="alarmProfileId"'));
 assert(textIncludes(engine, 'profile.alarmProfiles||[]'));
@@ -35,7 +36,7 @@ const setup = compactSlice(rules, "if(section==='setup')", "else if(section==='c
 const cond = compactSlice(rules, "else if(section==='conditions')", "else if(section==='actions')");
 assert(!textIncludes(setup, 'Detection source'));
 assert(textIncludes(cond, 'Detection method'));
-assert(textIncludes(cond, 'Visual Conditions'));
+assert(textIncludes(cond, 'Manual'));
 assert(textIncludes(cond, 'Saved filters · optional'));
 // Conditional action header and shared switches have bounded geometry / spacing.
 assert(textIncludes(conditions, 'action-condition-head'));

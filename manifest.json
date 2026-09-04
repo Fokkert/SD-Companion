@@ -3,7 +3,7 @@
   "name": "SD Companion",
   "short_name": "SD Companion",
   "description": "API-first Jira Service Desk automation with profiles, rules, schedules, alarms and multi-server monitoring.",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "version_name": "V2",
   "minimum_chrome_version": "116",
   "permissions": [

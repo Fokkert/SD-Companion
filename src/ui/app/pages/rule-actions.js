@@ -305,7 +305,7 @@
       `<div class="row">` +
       `<span class="sequence-number">${index + 1}</span>` +
       `<span class="action-type">${A.esc(actionLabel(a.type))}</span>` +
-      `<span class="toggle-caption">Enabled</span>` +
+      `<span class="toggle-caption">${a.enabled !== false ? 'Enabled' : 'Disabled'}</span>` +
       `<label class="master-switch">` +
       `<input type="checkbox" data-action-id="${a.id}" data-aprop="enabled" ${a.enabled !== false ? 'checked' : ''}>` +
       `<span>` +

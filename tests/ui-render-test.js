@@ -63,6 +63,7 @@ for (const f of [
   'src/ui/app/pages/profiles.js',
   'src/ui/app/pages/health.js',
   'src/ui/app/pages/logs-more.js',
+  'src/ui/app/pages/alarms.js',
   'src/ui/app/pages/help.js'
 ]) vm.runInThisContext(fs.readFileSync(f, 'utf8'), { filename: f });
 profile.rules = [SD.Defaults.rule('Test rule')];
@@ -147,8 +148,11 @@ assert(automation.includes('Global safety limits'));
 A.settingsSection = 'general';
 const generalSettings = A.pageSettings();
 assert(generalSettings.includes('Alarm Profiles'));
-assert(generalSettings.includes('alarmVolumeValue'));
-assert(!generalSettings.includes('Browser notification'));
+assert(!generalSettings.includes('alarmVolumeValue'));
+const alarmProfiles = A.pageAlarms();
+assert(alarmProfiles.includes('Alarm Profiles'));
+assert(alarmProfiles.includes('Edit'));
+assert(!alarmProfiles.includes('Browser notification'));
 const help = A.pageHelp();
 assert(help.includes('Execution Policy'));
 assert(help.includes('API pacing'));

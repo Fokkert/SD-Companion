@@ -503,7 +503,7 @@
             return;
           }
           setPath(d, path, typed(el));
-          if (path === 'autoSync.enabled' || path === 'system.completionToneEnabled') A.renderPage();
+          if (el.type === 'checkbox' || path === 'autoSync.enabled' || path === 'system.completionToneEnabled') A.renderPage();
           return;
         }
         if (el.id === 'homeShowCompletedActions') {
@@ -523,8 +523,15 @@
           A.state = res.state;
           const updated = A.site(),
             count = SD.Utils.discoveryProjectKeys(updated?.inventorySettings).length,
-            label = A.$('discoverySelectedCount');
+            label = A.$('discoverySelectedCount'),
+            projectCard = el.closest('.discovery-project-card'),
+            projectConfig = { ...SD.Defaults.projectDatasets(false), ...(updated?.inventorySettings?.projectDatasets?.[key] || {}) },
+            enabledCount = Object.values(projectConfig).filter(Boolean).length;
           if (label) label.textContent = `${count}/${updated.projects.length} projects configured`;
+          if (projectCard) {
+            const chip = projectCard.querySelector('.freshness-chip');
+            if (chip) chip.textContent = `${enabledCount}/5`;
+          }
           const btn = A.$('syncSelectedDataBtn');
           if (btn) btn.disabled = !count;
           return;
@@ -552,7 +559,6 @@
           await saveRule(r, true);
           return;
         }
-        if (el.id === 'alarmProfileSelect') { A.alarmProfileDraftId = el.value; A.alarmDraft = null; const selected=A.profile()?.alarmProfiles?.find(x=>x.id===el.value); if (A.settingsDraft && selected) A.settingsDraft.alarm=structuredClone(selected); A.renderPage(); return; }
         if (el.id === 'alarmStopMethod') { const cfg=alarmConfigFromControls(); A.alarmDraft={profileId:A.profile()?.id||'',alarmProfileId:cfg.id,config:cfg}; A.renderPage(); return; }
         if (el.dataset.ruleRootOp) { const rr=activeRule(); if(!rr) return; rr.logic=rr.logic||{groups:[]}; rr.logic.operator=el.value==='OR'?'OR':'AND'; await saveRule(rr,true); return; }
         if (el.dataset.ruleEnabledId) {
@@ -733,7 +739,7 @@
               } : null;
             }
           }
-          await saveRule(r, ['mode', 'delay.mode', 'transitionId', 'toStatusId', 'manualTransitionName', 'when.enabled', 'needsApproval', 'randomPoolId'].includes(prop));
+          await saveRule(r, ['mode', 'enabled', 'delay.mode', 'transitionId', 'toStatusId', 'manualTransitionName', 'when.enabled', 'needsApproval', 'randomPoolId'].includes(prop));
           return;
         }
         if (el.dataset.scheduleProp) {
@@ -1132,17 +1138,6 @@
             A.renderPage();
             return;
           }
-          if (act === 'duplicate-selected-rule') {
-            const stored = p.rules.find(x => x.id === A.selectedRuleId);
-            if (!stored) throw new Error('Select a rule first.');
-            const copy = duplicateRuleObject(stored);
-            p.rules.push(copy);
-            await A.save(false, 'none');
-            A.selectedRuleId = copy.id;
-            A.toast(`Duplicated as ${copy.name}. The copy is disabled until you enable it.`);
-            A.renderPage();
-            return;
-          }
           if (act === 'rule-source-mode') {
             const r = activeRule(); if (!r) return;
             r.source = r.source || {}; r.source.mode = b.dataset.value === 'jql' ? 'jql' : 'conditions';
@@ -1444,6 +1439,29 @@
             A.toast(sidePanelOpened ? 'Settings saved.' : 'Settings saved, but the side panel could not open.', sidePanelOpened ? 'success' : 'error');
             return;
           }
+          if (act === 'edit-alarm-profile') {
+            const profile = A.profile(), id = b.dataset.id;
+            if (!profile?.alarmProfiles?.some(x => x.id === id)) return;
+            A.alarmProfileDraftId = id;
+            A.alarmDraft = null;
+            A.renderPage();
+            return;
+          }
+          if (act === 'close-alarm-profile') {
+            A.alarmProfileDraftId = '';
+            A.alarmDraft = null;
+            A.renderPage();
+            return;
+          }
+          if (act === 'set-default-alarm-profile') {
+            const profile = A.profile(), id = b.dataset.id || A.alarmProfileDraftId;
+            if (!profile?.alarmProfiles?.some(x => x.id === id)) return;
+            profile.defaultAlarmProfileId = id;
+            await A.save(false, 'none');
+            A.renderPage();
+            A.toast('Default Alarm Profile updated.');
+            return;
+          }
           if (act === 'save-alarm') {
             const profile=A.profile(); if(!profile) return; const cfg=alarmConfigFromControls(), file=A.$('alarmFile')?.files?.[0];
             if(file){ if(file.size>L.CUSTOM_SOUND_MAX_BYTES) throw new Error(`Custom sound must be ${L.CUSTOM_SOUND_MAX_BYTES/1024/1024} MB or smaller.`); cfg.customDataUrl=await A.fileDataUrl(file); cfg.customName=file.name; cfg.useCustom=true; }
@@ -1454,7 +1472,7 @@
             const profile = A.profile(); if (!profile) return; const next = { ...(SD.Defaults.profile().alarmProfiles?.[0] || {}), id: crypto.randomUUID(), name: `Alarm Profile ${(profile.alarmProfiles || []).length + 1}` }; profile.alarmProfiles = [...(profile.alarmProfiles || []), next]; A.alarmProfileDraftId = next.id; A.alarmDraft = null; await A.save(false,'none'); A.renderPage(); return;
           }
           if (act === 'delete-alarm-profile') {
-            const profile=A.profile(); if (!profile || (profile.alarmProfiles||[]).length<=1) return; profile.alarmProfiles = profile.alarmProfiles.filter(x=>x.id!==A.alarmProfileDraftId); if (profile.defaultAlarmProfileId===A.alarmProfileDraftId) profile.defaultAlarmProfileId=profile.alarmProfiles[0]?.id||''; for (const rule of profile.rules||[]) for (const action of rule.actions||[]) if(action.alarmProfileId===A.alarmProfileDraftId) action.alarmProfileId=profile.defaultAlarmProfileId; A.alarmProfileDraftId=profile.defaultAlarmProfileId; A.alarmDraft=null; await A.save(false,'none'); A.renderPage(); return;
+            const profile=A.profile(); if (!profile || (profile.alarmProfiles||[]).length<=1) return; profile.alarmProfiles = profile.alarmProfiles.filter(x=>x.id!==A.alarmProfileDraftId); if (profile.defaultAlarmProfileId===A.alarmProfileDraftId) profile.defaultAlarmProfileId=profile.alarmProfiles[0]?.id||''; for (const rule of profile.rules||[]) for (const action of rule.actions||[]) if(action.alarmProfileId===A.alarmProfileDraftId) action.alarmProfileId=profile.defaultAlarmProfileId; A.alarmProfileDraftId=''; A.alarmDraft=null; await A.save(false,'none'); A.renderPage(); return;
           }
           if (act === 'test-alarm') {
             const file = A.$('alarmFile')?.files?.[0], cfg = alarmConfigFromControls();
