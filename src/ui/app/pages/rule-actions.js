@@ -2,6 +2,22 @@
   const A = globalThis.SDApp,
     SD = globalThis.SDCompanion,
     { ACTION, LIMITS: L, TRANSITION_METHOD } = SD.Constants;
+  const actionLabels = Object.freeze({
+    [ACTION.ALARM]: 'Alarm',
+    [ACTION.ASSIGN]: 'Assign',
+    [ACTION.COMMENT]: 'Comment',
+    [ACTION.EDIT_FIELDS]: 'Edit fields',
+    [ACTION.LABELS]: 'Labels',
+    [ACTION.NOTIFICATION]: 'Notification',
+    [ACTION.PRIORITY]: 'Priority',
+    [ACTION.TRANSITION]: 'Transition'
+  });
+  const actionLabel = type => actionLabels[type] || String(type || 'Action');
+  const actionOptions = () => Object.values(ACTION)
+    .map(value => ({ value, label: actionLabel(value) }))
+    .sort((a, b) => a.label.localeCompare(b.label))
+    .map(item => A.option(item.value, item.label))
+    .join('');
   const unitOptions = u => ['seconds', 'minutes', 'hours'].map(x => A.option(x, x[0].toUpperCase() + x.slice(1), u === x)).join('');
   const delayEditor = (a, index) => {
     const u = a.delay?.unit || 'seconds',
@@ -289,7 +305,7 @@
       `<div class="action-head">` +
       `<div class="row">` +
       `<span class="sequence-number">${index + 1}</span>` +
-      `<span class="action-type">${A.esc(a.type)}</span>` +
+      `<span class="action-type">${A.esc(actionLabel(a.type))}</span>` +
       `<span class="toggle-caption">Enabled</span>` +
       `<label class="master-switch">` +
       `<input type="checkbox" data-action-id="${a.id}" data-aprop="enabled" ${a.enabled !== false ? 'checked' : ''}>` +
@@ -302,5 +318,5 @@
       `<button class="btn btn-small" data-action="move-action-down" data-id="${a.id}">↓</button>` +
       `<button class="btn btn-small btn-danger" data-action="delete-action" data-id="${a.id}">Delete</button></div></div>${body}${poolEditor}${approval}${when}${delayEditor(a, index)}</div>`;
   };
-  A.RuleViews = { ...(A.RuleViews || {}), actionEditor, transitionChoices, relevantTransitionRows, targetStatusChoices, transitionMethod };
+  A.RuleViews = { ...(A.RuleViews || {}), actionEditor, actionLabel, actionOptions, transitionChoices, relevantTransitionRows, targetStatusChoices, transitionMethod };
 })();

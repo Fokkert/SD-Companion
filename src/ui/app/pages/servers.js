@@ -83,22 +83,121 @@
       tm = s.inventorySettings?.transitionMethod || TRANSITION_METHOD.WORKFLOW_DESIGNER,
       cl = { enabled: true, trigger: 'either', durationSeconds: 300, durationUnit: 'minutes', failedChecks: 5, ...(s.behavior?.connectionLossAlarm || {}) },
       clu = cl.durationUnit || 'minutes',
-      clv = SD.Utils.timeFromSeconds(cl.durationSeconds || 300, clu);
+      clv = SD.Utils.timeFromSeconds(cl.durationSeconds || 300, clu),
+      connectionLabel = !hasPat ? 'PAT missing' : s.runtime?.apiHealthy ? 'API online' : 'Check required';
     return `<div class="card editor-card server-editor">` +
-      `<div class="row-between">` +
+      `<div class="server-editor-head">` +
+      `<div class="server-editor-identity">` +
+      `<span class="server-editor-icon">${iconFor(s)}</span>` +
       `<div>` +
       `<div class="section-title">${A.esc(s.name)}</div>` +
       `<div class="list-meta mono">${A.esc(s.baseUrl)}</div>` +
       `</div>` +
+      `</div>` +
+      `<div class="row server-editor-head-actions">` +
+      `<span class="freshness-chip ${!hasPat || !s.runtime?.apiHealthy ? 'warn' : ''}">${connectionLabel}</span>` +
       `<button class="btn btn-small" data-action="close-server-editor">Done</button>` +
-      `</div>
-<details class="glass-disclosure">` +
+      `</div>` +
+      `</div>` +
+      `<div class="server-settings-stack">` +
+      `<details class="glass-disclosure server-settings-section server-connection-section" open>` +
       `<summary>` +
-      `<span>Discovery</span>` +
+      `<span>Connection & behavior</span>` +
+      `<span class="disclosure-meta">${connectionLabel}</span>` +
+      `</summary>` +
+      `<div class="disclosure-body">${hasPat ? '' : `<div class="notice warn credential-missing-notice">` +
+        `<b>PAT missing</b>` +
+        `<span>This server cannot make authenticated Jira API requests until a PAT is saved below. Monitoring, health checks, sync and connection-loss alarms are paused.</span>` +
+        `</div>`}${s.runtime?.lastErrorCode === 'NETWORK_REQUEST_FAILED' ? `<div class="notice bad">` +
+          `<b>Jira API unreachable</b>` +
+          `<br>The browser did not receive an HTTP response from Jira. Check Jira reachability, Local Network Access/CORS policy, TLS trust, DNS, proxy or VPN routing. SD Companion does not bypass browser security checks or use a Jira tab for REST.</div>` : ''}` +
+      `<div class="server-settings-group">` +
+      `<div class="server-settings-group-title">Identity</div>` +
+      `<div class="grid-2 server-identity-grid">` +
+      `<div class="field">` +
+      `<label>Friendly name</label>` +
+      `<input id="serverNameEdit" class="input" maxlength="80" value="${A.esc(s.name)}">` +
+      `</div>` +
+      `<div class="field">` +
+      `<label>Icon</label>` +
+      `<select id="serverIconEdit" class="select">` +
+      `<option value="auto" ${s.icon?.mode === 'auto' ? 'selected' : ''}>Jira favicon</option>${['emerald', 'teal', 'violet', 'amber', 'rose', 'ice'].map(x => `<option value="${x}" ${s.icon?.mode !== 'auto' && s.icon?.preset === x ? 'selected' : ''}>${x[0].toUpperCase() + x.slice(1)}</option>`).join('')}</select>` +
+      `</div>` +
+      `<div class="field server-url-field">` +
+      `<label>Jira base URL</label>` +
+      `<input id="serverUrlEdit" class="input mono" autocomplete="off" spellcheck="false" value="${A.esc(s.baseUrl)}">` +
+      `</div>` +
+      `</div>` +
+      `</div>` +
+      `<div class="server-settings-group">` +
+      `<div class="server-settings-group-title">Detection behavior</div>` +
+      `<div class="connection-behavior-grid">` +
+      `<div class="toggle-card server-behavior-toggle" title="Refresh Jira tab on new detection">` +
+      `<label class="master-switch">` +
+      `<input id="autoRefreshOnDetection" type="checkbox" ${s.behavior?.autoRefreshJiraTabsOnDetection ? 'checked' : ''}>` +
+      `<span></span>` +
+      `</label>` +
+      `<span><strong>Refresh Jira tab on new detection</strong></span>` +
+      `</div>` +
+      `<div class="toggle-card server-behavior-toggle" title="Focus Jira tab on new detection">` +
+      `<label class="master-switch">` +
+      `<input id="focusJiraTabOnDetection" type="checkbox" ${s.behavior?.focusJiraTabOnDetection ? 'checked' : ''}>` +
+      `<span></span>` +
+      `</label>` +
+      `<span><strong>Focus Jira tab on detection</strong></span>` +
+      `</div>` +
+      `</div>` +
+      `</div>` +
+      `<div class="server-settings-group connection-loss-settings">` +
+      `<div class="row-between connection-loss-settings-head">` +
+      `<div>` +
+      `<div class="server-settings-group-title">Connection-loss alarm</div>` +
+      `${s.runtime?.connectionLossStartedAt ? `<span class="freshness-chip warn">Outage since ${A.esc(SD.Utils.formatDateTime(s.runtime.connectionLossStartedAt))}</span>` : ''}` +
+      `</div>` +
+      `<label class="master-switch" title="Connection-loss alarm">` +
+      `<input id="connectionLossAlarmEnabled" type="checkbox" ${cl.enabled ? 'checked' : ''}>` +
+      `<span></span>` +
+      `</label>` +
+      `</div>` +
+      `<div class="grid-2 connection-loss-grid">` +
+      `<div class="field">` +
+      `<label>Alarm threshold</label>` +
+      `<select id="connectionLossTrigger" class="select">` +
+      `<option value="either" ${cl.trigger === 'either' ? 'selected' : ''}>Duration OR failed checks</option>` +
+      `<option value="duration" ${cl.trigger === 'duration' ? 'selected' : ''}>Duration only</option>` +
+      `<option value="failures" ${cl.trigger === 'failures' ? 'selected' : ''}>Failed checks only</option>` +
+      `</select>` +
+      `</div>` +
+      `<div class="field">` +
+      `<label>Failed health checks</label>` +
+      `<input id="connectionLossFailures" class="input" type="number" min="${L.CONNECTION_LOSS_FAILURES_MIN}" max="${L.CONNECTION_LOSS_FAILURES_MAX}" value="${A.esc(cl.failedChecks || 5)}">` +
+      `</div>` +
+      `<div class="time-value-row connection-loss-duration-row">` +
+      `<div class="field">` +
+      `<label>Connection-loss duration</label>` +
+      `<input id="connectionLossDuration" class="input" type="number" min="1" step="1" value="${A.esc(clv)}">` +
+      `</div>` +
+      `<div class="field time-unit-field">` +
+      `<label>Unit</label>` +
+      `<select id="connectionLossDurationUnit" class="select">${unitOptions(clu)}</select>` +
+      `</div>` +
+      `</div>` +
+      `</div>` +
+      `</div>` +
+      `<div class="row server-settings-actions">` +
+      `<button class="btn btn-primary" data-action="save-server-settings">Save Server</button>` +
+      `<button class="btn" data-action="refresh-health" ${hasPat ? '' : 'disabled'}>Test API</button>` +
+      `<button class="btn" data-action="open-jira">Open Jira</button>` +
+      `</div>` +
+      `</div>` +
+      `</details>` +
+      `<details class="glass-disclosure server-settings-section server-discovery-section">` +
+      `<summary>` +
+      `<span>Discovery & synchronized data</span>` +
       `<span class="disclosure-meta">${selected}/${s.projects.length} projects</span>` +
       `</summary>` +
       `<div class="disclosure-body">` +
-      `<div class="row">` +
+      `<div class="row server-discovery-actions">` +
       `<button class="btn" data-action="discover-projects" ${hasPat ? '' : 'disabled'}>Refresh Projects & Filters</button>` +
       `<button class="btn btn-small" data-action="enable-all-project-data">All data</button>` +
       `<button class="btn btn-small" data-action="clear-project-data">Clear</button>` +
@@ -110,27 +209,25 @@
       `<span>Shared Jira data</span>` +
       `<label class="circle-check text-check">` +
       `<input type="checkbox" data-global-dataset="priorities" ${global.priorities !== false ? 'checked' : ''}>` +
-      `<span>` +
-      `</span>Priorities</label>` +
+      `<span></span>Priorities</label>` +
       `<label class="circle-check text-check">` +
       `<input type="checkbox" data-global-dataset="resolutions" ${global.resolutions !== false ? 'checked' : ''}>` +
-      `<span>` +
-      `</span>Resolutions</label>` +
+      `<span></span>Resolutions</label>` +
       `</div>` +
-      `<div class="row">` +
+      `<div class="row server-discovery-footer">` +
       `<button id="syncSelectedDataBtn" class="btn btn-primary" data-action="sync-data" ${selected && hasPat ? '' : 'disabled'}>Sync Configured Data</button>` +
       `<span id="discoverySelectedCount" class="freshness-chip">${selected}/${s.projects.length} projects configured</span>` +
       `<span class="freshness-chip ${coverage === 'favourites-only' ? 'warn' : ''}">Filters: ${coverage === 'owned-and-favourites' ? 'owned + favourites' : coverage === 'favourites-only' ? 'favourites only' : coverage}</span>` +
       `</div>` +
       `</div>` +
-      `</details>
-<details class="glass-disclosure">` +
+      `</details>` +
+      `<details class="glass-disclosure server-settings-section server-api-section">` +
       `<summary>` +
-      `<span>API pacing</span>` +
+      `<span>API pacing & health</span>` +
       `<span class="disclosure-meta">${rp.maxRequestsPerMinute}/min</span>` +
       `</summary>` +
       `<div class="disclosure-body">` +
-      `<div class="grid-2">` +
+      `<div class="grid-2 server-api-grid">` +
       `<div class="field">` +
       `<label>Min request spacing (ms)</label>` +
       `<input id="requestSpacing" class="input" type="number" min="${L.REQUEST_SPACING_MIN_MS}" max="${L.REQUEST_SPACING_MAX_MS}" step="50" value="${rp.spacingMs}">` +
@@ -176,102 +273,12 @@
       `</div>` +
       `</div>` +
       `</div>` +
-      `<button class="btn" data-action="save-server-settings">Save API pacing</button>` +
-      `</div>` +
-      `</details>
-<details class="glass-disclosure">` +
-      `<summary>` +
-      `<span>Connection</span>` +
-      `<span class="disclosure-meta">${!hasPat ? 'PAT missing' : s.runtime?.apiHealthy ? 'Online' : 'Check required'}</span>` +
-      `</summary>` +
-      `<div class="disclosure-body">${hasPat ? '' : `<div class="notice warn credential-missing-notice">` +
-        `<b>PAT missing</b>` +
-        `<span>This server cannot make authenticated Jira API requests until a PAT is saved below. Monitoring, health checks, sync and connection-loss alarms are paused.</span>` +
-        `</div>`}${s.runtime?.lastErrorCode === 'NETWORK_REQUEST_FAILED' ? `<div class="notice bad">` +
-          `<b>Jira API unreachable</b>` +
-          `<br>The browser did not receive an HTTP response from Jira. Check Jira reachability, Local Network Access/CORS policy, TLS trust, DNS, proxy or VPN routing. SD Companion does not bypass browser security checks or use a Jira tab for REST.</div>` : ''}<div class="grid-2">` +
-      `<div class="field">` +
-      `<label>Friendly name</label>` +
-      `<input id="serverNameEdit" class="input" maxlength="80" value="${A.esc(s.name)}">` +
-      `</div>` +
-      `<div class="field">` +
-      `<label>Icon</label>` +
-      `<select id="serverIconEdit" class="select">` +
-      `<option value="auto" ${s.icon?.mode === 'auto' ? 'selected' : ''}>Jira favicon</option>${['emerald', 'teal', 'violet', 'amber', 'rose', 'ice'].map(x => `<option value="${x}" ${s.icon?.mode !== 'auto' && s.icon?.preset === x ? 'selected' : ''}>${x[0].toUpperCase() + x.slice(1)}</option>`).join('')}</select>` +
-      `</div>` +
-      `<div class="field server-url-field">` +
-      `<label>Jira base URL</label>` +
-      `<input id="serverUrlEdit" class="input mono" autocomplete="off" spellcheck="false" value="${A.esc(s.baseUrl)}">` +
+      `<div class="row server-settings-actions">` +
+      `<button class="btn btn-primary" data-action="save-server-settings">Save API Pacing</button>` +
       `</div>` +
       `</div>` +
-      `<div class="connection-behavior-grid">` +
-      `<div class="toggle-card server-behavior-toggle" title="Refresh Jira tab on new detection">` +
-      `<label class="master-switch">` +
-      `<input id="autoRefreshOnDetection" type="checkbox" ${s.behavior?.autoRefreshJiraTabsOnDetection ? 'checked' : ''}>` +
-      `<span>` +
-      `</span>` +
-      `</label>` +
-      `<span>` +
-      `<strong>Refresh Jira tab on new detection</strong>` +
-      `</span>` +
-      `</div>` +
-      `<div class="toggle-card server-behavior-toggle" title="Focus Jira tab on new detection">` +
-      `<label class="master-switch">` +
-      `<input id="focusJiraTabOnDetection" type="checkbox" ${s.behavior?.focusJiraTabOnDetection ? 'checked' : ''}>` +
-      `<span>` +
-      `</span>` +
-      `</label>` +
-      `<span>` +
-      `<strong>Focus Jira tab on detection</strong>` +
-      `</span>` +
-      `</div>` +
-      `<div class="toggle-card server-behavior-toggle" title="Connection-loss alarm">` +
-      `<label class="master-switch">` +
-      `<input id="connectionLossAlarmEnabled" type="checkbox" ${cl.enabled ? 'checked' : ''}>` +
-      `<span>` +
-      `</span>` +
-      `</label>` +
-      `<span>` +
-      `<strong>Connection-loss alarm</strong>` +
-      `</span>` +
-      `</div>` +
-      `</div>` +
-      `<div class="grid-2 connection-loss-grid">` +
-      `<div class="field">` +
-      `<label>Alarm threshold</label>` +
-      `<select id="connectionLossTrigger" class="select">` +
-      `<option value="either" ${cl.trigger === 'either' ? 'selected' : ''}>Duration OR failed checks</option>` +
-      `<option value="duration" ${cl.trigger === 'duration' ? 'selected' : ''}>Duration only</option>` +
-      `<option value="failures" ${cl.trigger === 'failures' ? 'selected' : ''}>Failed checks only</option>` +
-      `</select>` +
-      `</div>` +
-      `<div class="field">` +
-      `<label>Failed health checks</label>` +
-      `<input id="connectionLossFailures" class="input" type="number" min="${L.CONNECTION_LOSS_FAILURES_MIN}" max="${L.CONNECTION_LOSS_FAILURES_MAX}" value="${A.esc(cl.failedChecks || 5)}">` +
-      `</div>` +
-      `<div class="time-value-row">` +
-      `<div class="field">` +
-      `<label>Connection-loss duration</label>` +
-      `<input id="connectionLossDuration" class="input" type="number" min="1" step="1" value="${A.esc(clv)}">` +
-      `</div>` +
-      `<div class="field time-unit-field">` +
-      `<label>Unit</label>` +
-      `<select id="connectionLossDurationUnit" class="select">${unitOptions(clu)}</select>` +
-      `</div>` +
-      `</div>` +
-      `<div class="connection-loss-state">` +
-      `<span class="freshness-chip ${s.runtime?.connectionLossStartedAt ? 'warn' : ''}">${s.runtime?.connectionLossStartedAt ? `Loss since ${A.esc(SD.Utils.formatDateTime(s.runtime.connectionLossStartedAt))}` : 'No active outage'}</span>` +
-      `<small>${Number(s.runtime?.connectionLossFailures) || 0} consecutive failed check(s)</small>` +
-      `</div>` +
-      `</div>` +
-      `<div class="row">` +
-      `<button class="btn" data-action="save-server-settings">Save</button>` +
-      `<button class="btn" data-action="refresh-health" ${hasPat ? '' : 'disabled'}>Test API</button>` +
-      `<button class="btn" data-action="open-jira">Open Jira</button>` +
-      `</div>` +
-      `</div>` +
-      `</details>
-<details class="glass-disclosure">` +
+      `</details>` +
+      `<details class="glass-disclosure server-settings-section server-credentials-section">` +
       `<summary>` +
       `<span>Credentials & deletion</span>` +
       `<span class="disclosure-meta">${hasPat ? 'PAT stored' : 'PAT missing'}</span>` +
@@ -280,12 +287,13 @@
       `<label>${hasPat ? 'Replacement PAT' : 'Personal Access Token'}</label>` +
       `<input id="serverPatEdit" class="input mono" type="password" autocomplete="off">` +
       `</div>` +
-      `<div class="row">` +
+      `<div class="row server-settings-actions">` +
       `<button class="btn" data-action="change-pat">Replace & Test PAT</button>` +
       `<button class="btn btn-danger" data-action="delete-server">Delete Server</button>` +
       `</div>` +
       `</div>` +
       `</details>` +
+      `</div>` +
       `</div>`;
   };
   A.pageServers = () => {

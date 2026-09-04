@@ -1,11 +1,21 @@
-# V2 Build 2.2.1 Test Report
+# V2 Build 2.3.0 Test Report
 
 ## Result
 
-- JavaScript regression files: 66/66 passed.
+- JavaScript regression files: 67/67 passed.
 - Static architecture/security test: passed.
-- JavaScript syntax validation: 106/106 passed.
+- JavaScript syntax validation: 107/107 passed.
 - JSON parsing validation: passed.
+
+## V2.3.0 focused coverage
+
+- Add action options use one alphabetically sorted readable label source across normal Rules and Bulk Operations.
+- Home Monitoring renders MONITORING ON/OFF on one line, separates controls from Detected/Actions/Rules with a divider, and scopes the cubic switch geometry to Monitoring only.
+- Action Bell terminology is visible in Settings/Help while the persisted compatibility key remains unchanged.
+- Jira Server editing order and section labels are regression-covered, including removal of the consecutive failed-check status sentence.
+- Rule action helper copy is absent from the editor and its behavior remains documented in Help.
+- Extension action badges use a compact colored-dot glyph with a transparent badge background and status tooltip rather than multi-character status labels.
+- Release archives are validated after build to ensure `SD-Companion-v2.3.0/` is the sole top-level folder.
 
 ## V2.2.1 focused coverage
 

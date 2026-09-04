@@ -127,7 +127,7 @@
           `</div>` +
           `</div>` +
           `<div class="setting-line setting-line-card">` +
-          `<span>Action completion tone</span>` +
+          `<span>Action Bell</span>` +
           `<label class="master-switch">` +
           `<input type="checkbox" data-settings-prop="system.completionToneEnabled" ${draft.system.completionToneEnabled !== false ? 'checked' : ''}>` +
           `<span></span>` +

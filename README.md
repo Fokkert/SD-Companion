@@ -62,7 +62,7 @@ Extract the downloaded ZIP to a permanent location. The release archive contains
 top-level folder, for example:
 
 ```text
-C:\Users\<you>\Documents\SD-Companion-v2.2.1\
+C:\Users\<you>\Documents\SD-Companion-v2.3.0\
 ```
 
 Do not delete that folder while the extension is installed. Chrome/Edge loads the unpacked extension

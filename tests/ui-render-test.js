@@ -135,7 +135,7 @@ let automation = A.pageSettings();
 assert(automation.includes('Sync & Refresh'));
 assert(automation.includes('Periodic project-data sync'));
 assert(automation.includes('Home history refresh'));
-assert(automation.includes('Action completion tone'));
+assert(automation.includes('Action Bell'));
 A.settingsAutomationSection = 'safety';
 automation = A.pageSettings();
 assert(automation.includes('Global safety limits'));

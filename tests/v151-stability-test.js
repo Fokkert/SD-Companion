@@ -14,7 +14,7 @@ for (const f of [
 ])
   load(f);
 const SD = SDCompanion;
-assert.equal(SD.Constants.BUILD_VERSION, '2.2.1');
+assert.equal(SD.Constants.BUILD_VERSION, '2.3.0');
 assert.equal(SD.Constants.SCHEMA_VERSION, 33);
 assert.deepEqual(SD.Defaults.profile().schedules, [], 'fresh profiles must have zero named schedules');
 const base = SD.Defaults.state(),

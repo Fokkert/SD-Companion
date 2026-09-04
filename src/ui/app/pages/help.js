@@ -68,7 +68,7 @@ ${topic('rules', '5. Rule model', '<p>A rule defines what should match and what 
                 '<li>Rule-level timing controls the default randomized action delay; an individual action may override it or wait a configured delay after the previous planned action succeeds.</li>' +
                 '<li>Actions may have their own typed conditions, allowing different actions in one rule to apply to different issue types/statuses/projects or other fields.</li>' +
                 '<li>Optional random action pools can choose a configured number of matching actions from a pool.</li>' +
-                '<li>Local alert rate limiting can cap Alarm/Notification actions from this rule within a configurable rolling minute window.</li>' +
+                '<li>Local alert rate limiting caps Alarm/Notification actions from a rule within a configurable rolling time window.</li>' +
                 '<li>The Effective JQL preview shows the query derived from the configured source and conditions.</li>' +
                 '<li>Rule edits are staged locally. Use Save Rule to apply them; Cancel discards the draft.</li>' +
                 '</ul>')}
@@ -97,7 +97,7 @@ ${topic('actions', '8. Actions and sequencing', '<p>Actions execute in their dis
                     '<li>Edit Fields, Labels and Priority modify Jira fields using the configured values.</li>' +
                     '<li>Alarm and Notification are local attention actions.</li>' +
                     '<li>Any individual action can enable Needs approval. It then remains Awaiting approval until the user approves it from Home → Detections &amp; Actions.</li>' +
-                    '<li>Each action may inherit the rule delay range, use its own independent min/max delay, or use After previous action. Rules decide separately whether cancelled, skipped/not-run, or failed predecessors continue or stop the chain. Manual Process can either update later relative schedules from the actual manual completion time or preserve their existing schedule.</li>' +
+                    '<li>Each action may inherit the rule delay range, use its own independent min/max delay, or use After previous action. Chained action dependency decides separately whether cancelled, skipped/not-run, or failed predecessors continue or stop the next After previous action. Manual Process can either update later relative schedules from the actual manual completion time or preserve their existing schedule.</li>' +
                     '<li>Action-level conditions are revalidated against the exact issue immediately before execution. Stale-state checks are action-specific: transitions watch status, assignments assignee, priority actions priority, labels labels, and Edit Fields only the fields it modifies. Comments, alarms and notifications are not cancelled just because status changed.</li>' +
                     '</ul>')}
 ${topic('schedules', '9. Schedules, polling and time units', '<p>Named schedules support days of week, start/end time, timezone, optional effective dates and overnight windows. Schedule edits are staged until Save Schedule is pressed; Cancel discards the draft. No named schedule is created automatically; create only the schedules you need. Rules can always choose Always On.</p>' +
@@ -148,7 +148,7 @@ ${topic('security', '14. Security and protected actions', '<p>Settings → Secur
 ${topic('health', '15. Compatibility and permissions', '<p>Health shows connection status, authenticated identity, server capabilities, permissions and request statistics. SD Companion learns capabilities from the Jira endpoints that are actually available instead of assuming all Jira deployments expose identical APIs.</p>' +
                                 '<p>PAT authentication does not require browser-session token renewal. Authentication failures are tracked separately from pre-HTTP network failures. SD Companion does not force a Local Network Access target address space; Chrome/Edge determine the resolved destination and enforce LNA/CORS/TLS/network policy.</p>')}
 ${topic('diagnostics', '16. Logs and Audit Journal', '<p>Logs are technical diagnostics and obey the configured log level. The Audit Journal records operational events such as synchronization, detection, job scheduling, execution, deduplication, cancellation and failure. Both can be exported as JSON and cleared independently.</p>' +
-                                  '<p>Normal Settings edits are staged until Save is pressed. Reset restores the saved Settings state. The optional action-completion tone is a fixed soft low-volume cue that can be enabled or disabled under Settings → Automation.</p>')}
+                                  '<p>Normal Settings edits are staged until Save is pressed. Reset restores the saved Settings state. The optional Action Bell is a short low-volume completion cue that can be enabled or disabled under Settings → Automation.</p>')}
 ${topic('storage', '17. Data maintenance', '<ul>' +
                                     '<li>Clear Current Server Cache removes synchronized metadata while preserving server configuration and discovery choices.</li>' +
                                     '<li>Clear Current Profile Runtime Data clears counters, cursors, jobs and ledger state while preserving rules and schedules.</li>' +

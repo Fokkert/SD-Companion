@@ -1,9 +1,9 @@
 (() => {
   const A = globalThis.SDApp,
     SD = globalThis.SDCompanion,
-    { ACTION, EXECUTION_POLICY, CONFLICT_MODE } = SD.Constants,
+    { EXECUTION_POLICY, CONFLICT_MODE } = SD.Constants,
     { head, noServer } = A.View,
-    { conditionEditor, actionEditor } = A.RuleViews;
+    { conditionEditor, actionEditor, actionOptions } = A.RuleViews;
   const executionLabel = m => ({
     [EXECUTION_POLICY.ONCE_ISSUE]: 'Once / issue',
     [EXECUTION_POLICY.ONCE_STATUS]: 'Once / status',
@@ -124,7 +124,7 @@
         `<div class="row-between">` +
         `<div class="section-title">Actions</div>` +
         `<select id="addActionType" class="select compact-select">` +
-        `<option value="">+ Add action</option>${Object.values(ACTION).map(x => A.option(x, x)).join('')}</select>` +
+        `<option value="">+ Add action</option>${actionOptions()}</select>` +
         `</div>` +
         `<div class="setting-line section-gap">` +
         `<span>Random action selection</span>` +
@@ -138,7 +138,6 @@
         `<div class="row-between">` +
         `<div>` +
         `<div class="section-title small-section-title">Local alert rate limit</div>` +
-        `<div class="list-meta">Limits Alarm and Notification actions from this rule within a rolling time window.</div>` +
         `</div>` +
         `<label class="master-switch">` +
         `<input type="checkbox" data-rule-prop="alertThrottle.enabled" ${r.alertThrottle?.enabled ? 'checked' : ''}>` +
@@ -151,7 +150,6 @@
         `<div class="row-between">` +
         `<div>` +
         `<div class="section-title small-section-title">Chained action dependency</div>` +
-        `<div class="list-meta">Choose whether an After previous action continues when the preceding action does not succeed.</div>` +
         `</div>` +
         `</div>` +
         `<div class="grid-3 chain-policy-grid section-gap">` +

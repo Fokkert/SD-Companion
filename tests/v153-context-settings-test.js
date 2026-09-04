@@ -14,7 +14,7 @@ for (const f of [
 ])
   vm.runInThisContext(fs.readFileSync(f, 'utf8'), { filename: f });
 const SD = SDCompanion;
-assert.equal(SD.Constants.BUILD_VERSION, '2.2.1');
+assert.equal(SD.Constants.BUILD_VERSION, '2.3.0');
 assert.equal(SD.Constants.SCHEMA_VERSION, 33);
 const state = SD.Defaults.state();
 assert.equal(state.system.activityRefreshSeconds, 3);
@@ -90,7 +90,7 @@ const settings = fs.readFileSync('src/ui/app/pages/logs-more.js', 'utf8');
 assert(textIncludes(settings, 'Periodic project-data sync'));
 assert(textIncludes(settings, 'type="checkbox" data-settings-prop="autoSync.enabled"'));
 assert(textIncludes(settings, 'Home history refresh'));
-assert(textIncludes(settings, 'Action completion tone'));
+assert(textIncludes(settings, 'Action Bell'));
 const worker = fs.readFileSync('src/background/service-worker.js', 'utf8');
 assert(!textIncludes(events, 'A.send(MESSAGE.SAVE_SETTINGS'));
 assert(textIncludes(events, 'commitSettingsDraft'));

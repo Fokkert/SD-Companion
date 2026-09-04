@@ -1,9 +1,8 @@
 (() => {
   const A = globalThis.SDApp,
     SD = globalThis.SDCompanion,
-    { ACTION } = SD.Constants,
     { head, noServer } = A.View,
-    { conditionEditor, actionEditor } = A.RuleViews;
+    { conditionEditor, actionEditor, actionOptions } = A.RuleViews;
 
   const unitOptions = unit => ['seconds', 'minutes', 'hours']
     .map(value => A.option(value, value[0].toUpperCase() + value.slice(1), unit === value))
@@ -107,7 +106,7 @@
       `<div class="list-meta">Actions use the same configuration and preflight checks as rule actions.</div>` +
       `</div>` +
       `<select id="addActionType" class="select compact-select">` +
-      `<option value="">+ Add action</option>${Object.values(ACTION).map(type => A.option(type, type)).join('')}` +
+      `<option value="">+ Add action</option>${actionOptions()}` +
       `</select>` +
       `</div>` +
       `<div class="chain-policy-card section-gap">` +

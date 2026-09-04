@@ -1,3 +1,14 @@
+## V2 · Build 2.3.0 — Monitoring, action, server and packaging refinement
+
+- Fixed release packaging so the runtime ZIP contains the versioned `SD-Companion-vX.Y.Z/` top-level folder instead of placing runtime files at ZIP root.
+- Sorted the Add action chooser alphabetically with readable labels in Rules and Bulk Operations.
+- Reworked the Home Monitoring deck so MONITORING ON/OFF is inline, controls are separated from the three statistics by a divider, and the Monitoring switch uses a cubic square-thumb treatment.
+- Renamed the optional Action completion tone setting to **Action Bell** while preserving its stored compatibility key.
+- Replaced large extension-action badge labels such as ON/OFF/ERR/PAT with a compact colored-dot indicator and status tooltip.
+- Reorganized Jira Server editing around Connection & behavior, Discovery & synchronized data, API pacing & health, and Credentials & deletion; removed low-value consecutive-failure status copy.
+- Removed redundant explanatory copy from rule action settings and retained the explanations in Help.
+- Bumped build and manifest version to 2.3.0.
+
 ## V2 · Build 2.2.1 — Unified activity and Home card refinement
 
 - Removed Help disclosure arrows and added stable local icons to Rules list entries.

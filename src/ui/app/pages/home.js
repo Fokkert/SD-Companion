@@ -203,10 +203,7 @@
       `<div class="radar-monitor-head">` +
       `<div class="monitor-state">` +
       `<span class="monitor-light"></span>` +
-      `<div>` +
-      `<div class="monitor-label">Monitoring</div>` +
-      `<strong data-home-monitor-state>${monitor ? (hasPat ? 'ON' : 'ON · PAT REQUIRED') : 'OFF'}</strong>` +
-      `</div>` +
+      `<strong class="monitor-status-line">Monitoring <span data-home-monitor-state>${monitor ? (hasPat ? 'ON' : 'ON · PAT REQUIRED') : 'OFF'}</span></strong>` +
       `</div>` +
       `<div class="radar-monitor-controls">` +
       `<label class="master-switch" title="Continuous rule polling">` +
@@ -216,6 +213,7 @@
       `<button class="btn btn-primary btn-small monitoring-scan-button" data-action="run-cycle" ${hasPat && enabledRules ? '' : 'disabled'}>Scan Now</button>` +
       `</div>` +
       `</div>` +
+      `<div class="monitor-section-divider" aria-hidden="true"></div>` +
       `<div class="compact-radar-stats">` +
       `<div>` +
       `<strong data-home-stat="detected">${pr.lastDetectionCount || 0}</strong>` +

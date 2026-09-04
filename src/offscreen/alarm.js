@@ -91,7 +91,7 @@ const tone = async cfg => {
     notifyEnded();
   }, Math.max(.2, Number(cfg.durationSeconds) || 12) * 1000);
 };
-const completionTone = async () => {
+const actionBell = async () => {
   ctx = ctx || new AudioContext();
   await ctx.resume();
   const start = ctx.currentTime + .01;
@@ -127,7 +127,7 @@ const custom = cfg => {
 };
 chrome.runtime.onMessage.addListener(m => {
   if (m?.type === "SD_OFFSCREEN_COMPLETION") {
-    completionTone().catch(() => {});
+    actionBell().catch(() => {});
     return;
   }
   if (m?.type === "SD_OFFSCREEN_STOP") {

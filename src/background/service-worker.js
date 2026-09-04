@@ -271,7 +271,7 @@ SD.Audio = Object.freeze({
       await chrome.runtime.sendMessage({ type: "SD_OFFSCREEN_COMPLETION" });
       return true;
     } catch (e) {
-      await log(LEVEL.DEBUG, "Completion tone could not be played.", SD.Utils.safeError(e));
+      await log(LEVEL.DEBUG, "Action Bell could not be played.", SD.Utils.safeError(e));
       return false;
     }
   }
@@ -368,30 +368,35 @@ const setBadge = async () => {
   const state = await SD.Storage.ensureState(),
     { site, profile } = getSiteProfile(state),
     hasPat = site ? await SD.Storage.hasCredential(site.id) : false;
-  let text = '', color = '#64748b';
+  let color = '#64748b', status = 'Ready';
   if (state.runtime?.activeAlarm?.active) {
-    text = '!';
     color = '#ef4444';
+    status = 'Alarm active';
   }
   else if (site && !hasPat) {
-    text = 'PAT';
     color = '#d97706';
+    status = 'PAT missing';
   }
   else if (site?.runtime?.connectionStatus === 'authentication-failed' || (site && !site.runtime?.apiHealthy)) {
-    text = 'ERR';
     color = '#ef4444';
+    status = 'Jira connection error';
   }
   else if (profile?.monitoring?.enabled) {
-    const n = Number(profile.runtime?.lastDetectionCount) || 0;
-    text = n > 0 ? String(Math.min(99, n)) : 'ON';
     color = '#16a36a';
+    status = 'Monitoring on';
   }
   else if (profile) {
-    text = 'OFF';
     color = '#64748b';
+    status = 'Monitoring off';
   }
-  await chrome.action.setBadgeText({ text });
-  if (text) await chrome.action.setBadgeBackgroundColor({ color });
+  else if (!site) {
+    color = '#64748b';
+    status = 'No Jira server selected';
+  }
+  await chrome.action.setBadgeText({ text: '●' });
+  await chrome.action.setBadgeBackgroundColor({ color: [0, 0, 0, 0] });
+  if (chrome.action.setBadgeTextColor) await chrome.action.setBadgeTextColor({ color });
+  if (chrome.action.setTitle) await chrome.action.setTitle({ title: `SD Companion · ${status}` });
 };
 const mergeApiStats = (old = {}, stats = {}) => {
   const prev = Number(old.requests) || 0, add = Number(stats.requests) || 0, total = prev + add;
