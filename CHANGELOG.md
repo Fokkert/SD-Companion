@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.6.5
+
+- Restored group-local smart condition recommendations: Project, Issue Type, Status and project-scoped user choices are derived from the conditions in the group being edited instead of leaking context from Group 1 or another condition group.
+- Reworked Rule action transition scoping to evaluate the complete multi-group rule logic. Match-any groups contribute the union of their valid Jira contexts, while match-all groups restrict actions to contexts that can satisfy every group.
+- Preserved context-specific transitions even when Jira reuses the same transition ID or name across issue types/workflows, and made multi-select context changes refresh dependent recommendations immediately.
+
 ## 2.6.4
 
 - Fixed Rule Condition persistence so multiple condition groups, each group's own Match all/Match any operator, and the root Match all groups/Match any groups operator survive Save, page changes, extension reloads and normal state migration without being flattened into Group 1.

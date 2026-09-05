@@ -1,6 +1,7 @@
 (() => {
   const A = globalThis.SDApp,
     SD = globalThis.SDCompanion,
+    C = A.RuleContext,
     { ACTION, LIMITS: L, TRANSITION_METHOD } = SD.Constants;
   const actionLabels = Object.freeze({
     [ACTION.ALARM]: 'Alarm',
@@ -131,32 +132,6 @@
     }
     return out;
   };
-  const intersect = (base, vals) => {
-    const next = new Set(vals.map(x => String(x).toLowerCase()));
-    if (!base) return next;
-    return new Set([...base].filter(x => next.has(x)));
-  };
-  const logicScope = logic => {
-    const out = { project: null, issueType: null, status: null, has: false },
-      g = logic?.groups?.[0],
-      conds = (g?.conditions || []).filter(c => !c.negate && ['project', 'issueType', 'status'].includes(c.field) && ['equals', 'is-any-of'].includes(c.operator));
-    if (!conds.length) return out;
-    if (g?.operator === 'OR') {
-      const fields = new Set(conds.map(c => c.field));
-      if (fields.size !== 1 || (g.conditions || []).length !== conds.length) return out;
-      const field = conds[0].field, vals = conds.flatMap(c => SD.ConditionRegistry.conditionValues(c));
-      out[field] = new Set(vals.map(x => String(x).toLowerCase()));
-      out.has = out[field].size > 0;
-      return out;
-    }
-    for (const c of conds) {
-      const vals = SD.ConditionRegistry.conditionValues(c);
-      if (!vals.length) continue;
-      out[c.field] = intersect(out[c.field], vals);
-      out.has = true;
-    }
-    return out;
-  };
   const candidates = (ctx, key) => key === 'project' ? [ctx.projectId, ctx.projectKey, ctx.projectName] : key === 'issueType' ? [ctx.issueTypeId, ctx.issueTypeName] : [ctx.fromStatusId, ctx.fromStatusName];
   const scopeMatches = (ctx, scope, keys = ['project', 'issueType', 'status']) => {
     for (const key of keys) {
@@ -172,23 +147,22 @@
       canRestrict = filters.length > 0 && scopes.length === filters.length && scopes.every(x => x.has);
     return { filters, scopes, canRestrict };
   };
+  const logicAllowsContext = (logic, ctx) => C?.logicAllowsContext?.(logic, ctx) !== false;
+  const ruleAllowsContext = (rule, ctx) => rule?.source?.mode === 'jql' || logicAllowsContext(rule?.logic, ctx);
+  const actionAllowsContext = (action, ctx) => !action?.when?.enabled || logicAllowsContext(action.when.logic, ctx);
   const relevantTransitionRows = (s, rule, action = null) => {
     const all = transitionRows(s);
     if (!rule) return all;
-    const cond = logicScope(rule.logic),
-      act = action?.when?.enabled ? logicScope(action.when.logic) : null,
-      raw = parseJqlScope(rule.source?.jql || ''),
+    const raw = parseJqlScope(rule.source?.jql || ''),
       fs = filterScopesFor(s, rule);
-    return all.filter(ctx => scopeMatches(ctx, cond) && (!act || scopeMatches(ctx, act)) && scopeMatches(ctx, raw) && (!fs.canRestrict || fs.scopes.some(sc => scopeMatches(ctx, sc))));
+    return all.filter(ctx => ruleAllowsContext(rule, ctx) && actionAllowsContext(action, ctx) && scopeMatches(ctx, raw) && (!fs.canRestrict || fs.scopes.some(sc => scopeMatches(ctx, sc))));
   };
   const transitionChoices = (s, rule, action = null) => relevantTransitionRows(s, rule, action).map(t => ({ ...t, contextKey: `${t.projectKey}|${t.issueTypeId}|${t.fromStatusId}|${t.id}|${t.toStatusId}|${t.name}` }));
   const targetStatusChoices = (s, rule, action = null) => {
-    const cond = logicScope(rule?.logic),
-      act = action?.when?.enabled ? logicScope(action.when.logic) : null,
-      raw = parseJqlScope(rule?.source?.jql || ''),
+    const raw = parseJqlScope(rule?.source?.jql || ''),
       fs = filterScopesFor(s, rule),
       keys = ['project', 'issueType'],
-      rows = statusRows(s).filter(ctx => scopeMatches(ctx, cond, keys) && (!act || scopeMatches(ctx, act, keys)) && scopeMatches(ctx, raw, keys) && (!fs.canRestrict || fs.scopes.some(sc => scopeMatches(ctx, sc, keys)))),
+      rows = statusRows(s).filter(ctx => ruleAllowsContext(rule, ctx) && actionAllowsContext(action, ctx) && scopeMatches(ctx, raw, keys) && (!fs.canRestrict || fs.scopes.some(sc => scopeMatches(ctx, sc, keys)))),
       map = new Map();
     for (const x of rows) {
       if (!map.has(x.toStatusId)) map.set(x.toStatusId, { id: x.toStatusId, name: x.toStatusName || x.toStatusId });

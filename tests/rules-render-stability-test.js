@@ -18,7 +18,7 @@ const rule = SD.Defaults.rule('Condition rule');
 rule.logic.groups = [{ id: 'g', operator: 'AND', negate: false, conditions: [{ id: 'c1', field: 'issueType', operator: 'is-any-of', values: ['100'] }, { id: 'c2', field: 'status', operator: 'is-any-of', values: ['1'] }] }];
 profile.rules = [rule];
 A.state = { jiraSites: [site], profiles: [profile], activeSiteId: site.id, activeProfileId: profile.id, appearance: {}, system: {}, runtime: {} };
-for (const f of ['src/ui/app/pages/base.js', 'src/ui/app/pages/rule-conditions.js', 'src/ui/app/pages/rule-actions.js', 'src/ui/app/pages/rules.js']) vm.runInThisContext(fs.readFileSync(f, 'utf8'), { filename: f });
+for (const f of ['src/ui/app/pages/base.js', 'src/ui/app/rule-context.js', 'src/ui/app/pages/rule-conditions.js', 'src/ui/app/pages/rule-actions.js', 'src/ui/app/pages/rules.js']) vm.runInThisContext(fs.readFileSync(f, 'utf8'), { filename: f });
 A.beginRuleEdit(rule);
 A.ruleEditorSection = 'setup';
 let html = A.pageRules();

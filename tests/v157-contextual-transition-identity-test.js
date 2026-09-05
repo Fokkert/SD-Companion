@@ -6,6 +6,7 @@ const load = f => vm.runInThisContext(fs.readFileSync(f, 'utf8'), { filename: f 
 for (const f of ['src/shared/constants.js', 'src/shared/utils.js', 'src/shared/schedule.js', 'src/shared/condition-registry.js', 'src/shared/rule-query.js', 'src/shared/defaults.js'])
   load(f);
 load('src/ui/app/app-core.js');
+load('src/ui/app/rule-context.js');
 load('src/ui/app/pages/rule-actions.js');
 const SD = SDCompanion, A = SDApp, site = SD.Defaults.site({ baseUrl: 'https://jira.test' });
 site.transitionCatalog = [

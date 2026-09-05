@@ -11,8 +11,8 @@ const settings = read('src/ui/app/pages/logs-more.js');
 const actions = read('src/ui/app/pages/rule-actions.js');
 const css = read('src/ui/app/app.css');
 
-assert.equal(manifest.version, '2.6.4');
-assert(constants.includes('BUILD_VERSION: "2.6.4"'));
+assert.equal(manifest.version, '2.6.5');
+assert(constants.includes('BUILD_VERSION: "2.6.5"'));
 
 // Connection-loss pair is bounded rather than stretched across the card.
 assert(servers.includes('class="time-value-row connection-loss-duration-row"'));
@@ -33,4 +33,4 @@ assert(css.includes('height: 56px !important;'));
 assert(css.includes('align-items: center !important;'));
 assert(!actions.includes('class="toggle-caption"'));
 
-console.log('v2.6.4 corrective layout regression: OK');
+console.log('v2.6.5 corrective layout regression: OK');

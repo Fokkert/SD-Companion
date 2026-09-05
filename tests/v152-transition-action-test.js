@@ -14,7 +14,7 @@ for (const f of [
 ])
   load(f);
 const SD = SDCompanion;
-assert.equal(SD.Constants.BUILD_VERSION, '2.6.4');
+assert.equal(SD.Constants.BUILD_VERSION, '2.6.5');
 const enabled = SD.Defaults.rule('Open Incidents');
 enabled.enabled = true;
 enabled.source.jql = 'project = IT';
@@ -38,6 +38,7 @@ globalThis.SDApp = {
   glassMulti: () => '',
   uniqueStatuses: s => s.statuses || []
 };
+vm.runInThisContext(fs.readFileSync('src/ui/app/rule-context.js', 'utf8'), { filename: 'rule-context' });
 vm.runInThisContext(fs.readFileSync('src/ui/app/pages/rule-actions.js', 'utf8'), { filename: 'rule-actions.js' });
 const site = {
   filters: [],

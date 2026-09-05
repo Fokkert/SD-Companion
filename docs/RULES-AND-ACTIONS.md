@@ -29,6 +29,14 @@ Manual rules contain one or more condition groups. Each group independently uses
 **Match any**, and the rule independently chooses whether all groups or any group must match. Empty
 condition groups are invalid and block **Save Rule**.
 
+Condition recommendations are context-aware per group. Within a **Match all** group, synchronized
+Project, Issue Type and Status selections narrow each other using that group's own Jira metadata
+context; for example, selecting one issue type limits Status choices to statuses valid for that issue
+type (and selected project, when present). Another condition group never contributes options to the
+group currently being edited. **Match any** groups remain conservative because sibling conditions are
+alternatives and therefore cannot safely restrict each other. Project-scoped synchronized users are
+also narrowed when the group provides enough project/type/status context.
+
 The condition registry determines valid operators, data source and cardinality from Jira field
 schema. Text, number, date/datetime, boolean, user/choice and array fields receive type-appropriate
 operators and editors. Single-value operators accept one value; set operators accept multiple
@@ -190,8 +198,12 @@ Actions:
 - Assignment: Myself / Specific user / Random pool / Unassign issue
 - Comment: individual constant/random templates with variables
 - Transition: the editor changes with the Jira server's transition handling method. Workflow
-  Designer and Issue extraction keep the contextual synchronized-transition selector, narrowed by
-  project, issue type, source status, raw JQL and selected-filter JQL. Target-status mode shows
+  Designer and Issue extraction keep the contextual synchronized-transition selector. Manual rules
+  evaluate the complete condition-group tree: Match-any groups contribute all valid contexts from
+  their alternatives, while Match-all groups retain only contexts compatible with every group. This
+  keeps transitions from every applicable project/issue type/workflow visible, including separate
+  contextual entries when Jira reuses the same transition ID or name. JQL rules additionally narrow
+  by raw JQL and selected-filter JQL. Target-status mode shows
   contextual destination statuses and resolves the exact issue at execution time; if several
   currently available transitions reach that destination, one is randomly selected. Manual-name mode
   accepts an exact name and fails if zero or multiple currently available transitions match.

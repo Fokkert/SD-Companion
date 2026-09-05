@@ -13,8 +13,8 @@ load('src/shared/utils.js');
 
 const SD = globalThis.SDCompanion;
 const manifest = JSON.parse(read('manifest.json'));
-assert.equal(manifest.version, '2.6.4');
-assert.equal(SD.Constants.BUILD_VERSION, '2.6.4');
+assert.equal(manifest.version, '2.6.5');
+assert.equal(SD.Constants.BUILD_VERSION, '2.6.5');
 
 // Variables are first-class for comments and JSON field edits.
 const issue = {
@@ -77,4 +77,4 @@ assert(css.includes('grid-template-columns: minmax(210px, 254px) minmax(150px, m
 assert(css.includes('align-items: end !important;'));
 assert(css.includes('height: 40px !important;'));
 
-console.log('v2.6.4 final features regression: OK');
+console.log('v2.6.5 final features regression: OK');

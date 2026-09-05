@@ -837,13 +837,13 @@
           if (group.dataset.multiScope === 'condition') {
             const r = activeRule(), c = findCond(group.dataset.multiId);
             if (c) c.values = vals;
-            await saveRule(r, false);
+            await saveRule(r, Boolean(c && ['project', 'issueType', 'status'].includes(c.field)));
             return;
           }
           if (group.dataset.multiScope === 'action-condition') {
             const r = activeRule(), c = findActionCond(group.dataset.actionId, group.dataset.multiId);
             if (c) c.values = vals;
-            await saveRule(r, false);
+            await saveRule(r, Boolean(c && ['project', 'issueType', 'status'].includes(c.field)));
             return;
           }
           if (group.dataset.multiScope === 'action') {

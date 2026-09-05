@@ -54,6 +54,7 @@ A.logs = [];
 A.audit = [];
 for (const f of [
   'src/ui/app/pages/base.js',
+  'src/ui/app/rule-context.js',
   'src/ui/app/pages/rule-conditions.js',
   'src/ui/app/pages/rule-actions.js',
   'src/ui/app/pages/rules.js',

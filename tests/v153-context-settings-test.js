@@ -14,7 +14,7 @@ for (const f of [
 ])
   vm.runInThisContext(fs.readFileSync(f, 'utf8'), { filename: f });
 const SD = SDCompanion;
-assert.equal(SD.Constants.BUILD_VERSION, '2.6.4');
+assert.equal(SD.Constants.BUILD_VERSION, '2.6.5');
 assert.equal(SD.Constants.SCHEMA_VERSION, 34);
 const state = SD.Defaults.state();
 assert.equal(state.system.activityRefreshSeconds, 3);
@@ -25,6 +25,7 @@ globalThis.SDApp = {
   multiOptions: () => '',
   glassMulti: () => ''
 };
+vm.runInThisContext(fs.readFileSync('src/ui/app/rule-context.js', 'utf8'), { filename: 'rule-context' });
 vm.runInThisContext(fs.readFileSync('src/ui/app/pages/rule-actions.js', 'utf8'), { filename: 'rule-actions' });
 const site = {
   filters: [{ id: 'f1', name: 'Open incidents', jql: 'project = IT AND issuetype = "Incident" AND status = "Open"' }, { id: 'f2', name: 'HR incidents', jql: 'project = HR AND issuetype = Incident' }],

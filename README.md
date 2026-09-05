@@ -64,7 +64,7 @@ Extract the downloaded ZIP to a permanent location. The release archive contains
 top-level folder, for example:
 
 ```text
-C:\Users\<you>\Documents\SD-Companion-v2.6.4\
+C:\Users\<you>\Documents\SD-Companion-v2.6.5\
 ```
 
 Do not delete that folder while the extension is installed. Chrome/Edge loads the unpacked extension
@@ -149,7 +149,7 @@ organization-specific configuration to a public repository.
 
 Rules determine which Jira issues SD Companion should detect.
 
-Each rule chooses one detection method: **JQL** (saved filters and/or Additional JQL) or **Manual**. The two methods are not evaluated concurrently. Manual can be organized into condition groups, with Match all/Match any behavior both within groups and across groups.
+Each rule chooses one detection method: **JQL** (saved filters and/or Additional JQL) or **Manual**. The two methods are not evaluated concurrently. Manual can be organized into condition groups, with Match all/Match any behavior both within groups and across groups. Condition choices are context-aware inside each group, and Action transition choices are derived from the complete multi-group rule context rather than only the first group.
 
 Rules can also be restricted by schedules so that monitoring or automation only applies during the
 intended operating periods. Monitoring stays armed locally while scheduled rules are inactive, but

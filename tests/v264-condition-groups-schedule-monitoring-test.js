@@ -21,8 +21,8 @@ for (const file of [
 ]) load(file);
 
 const SD = SDCompanion;
-assert.equal(SD.Constants.BUILD_VERSION, '2.6.4');
-assert.equal(JSON.parse(read('manifest.json')).version, '2.6.4');
+assert.equal(SD.Constants.BUILD_VERSION, '2.6.5');
+assert.equal(JSON.parse(read('manifest.json')).version, '2.6.5');
 
 // Rule Condition groups are first-class persisted structure. A normal state
 // migration/load must never flatten multiple groups into Group 1 or replace
@@ -101,4 +101,4 @@ assert(worker.includes("reason: 'no-active-scheduled-rules'"));
 assert(worker.includes('state.jiraSites.filter(s => s.auth.configured && monitoringActiveForSite(state, s.id))'), 'health checks must be gated by current schedule activity');
 assert(worker.indexOf("if (!profileHasActiveEnabledRules(profile, new Date()))") < worker.indexOf('const q = await queryRuleIssues'), 'schedule gate must happen before Jira rule queries');
 
-console.log('v2.6.4 condition-group and schedule-aware monitoring regression: OK');
+console.log('v2.6.5 condition-group and schedule-aware monitoring regression: OK');

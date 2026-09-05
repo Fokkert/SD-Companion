@@ -1,11 +1,21 @@
-# V2 Build 2.6.4 Test Report
+# V2 Build 2.6.5 Test Report
 
 ## Result
 
-- JavaScript regression files: 79/79 passed.
+- JavaScript regression files: 80/80 passed.
 - Static architecture/security test: passed.
-- JavaScript syntax validation: 119/119 passed.
+- JavaScript syntax validation: 121/121 passed.
 - JSON parsing validation: passed.
+
+## V2.6.5 focused coverage
+
+- Condition choice recommendations are isolated to the condition group being edited, including project/issue-type/status dependency filtering and project-aware user narrowing.
+- A second condition group cannot leak its Issue Type or Status context into another group's choices.
+- Rule Action transition choices evaluate all Manual condition groups using the root/group Match all/Match any semantics instead of reading Group 1 only.
+- Context-specific transitions remain separate when Jira reuses the same transition ID/name across workflows or issue types.
+- Context-driving multi-select changes rerender dependent condition/action choices immediately.
+- The v2.6.4 multi-group persistence and schedule-aware Monitoring regressions remain covered.
+- Release archives remain validated to ensure `SD-Companion-v2.6.5/` is the sole top-level folder.
 
 ## V2.6.4 focused coverage
 
