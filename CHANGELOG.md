@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.5.4
+
+- Corrected Connection-loss duration sizing so the value/unit pair stays compact and clear of the Server card border at narrow Side Panel widths.
+- Removed the Action Completion Tone card; Operational Feedback now presents it as plain inline text with its toggle on a separate row.
+- Rebuilt Action headers as true centered flex rows and removed the hidden grid-gap geometry that visually biased controls toward the top of collapsed cards.
+
 ## 2.5.3
 
 - Fixed responsive Connection-loss Alarm duration/unit geometry in Server Settings so the controls do not collide in compact side-panel widths.

@@ -1,19 +1,19 @@
-# V2 Build 2.5.3 Test Report
+# V2 Build 2.5.4 Test Report
 
 ## Result
 
-- JavaScript regression files: 73/73 passed.
+- JavaScript regression files: 74/74 passed.
 - Static architecture/security test: passed.
-- JavaScript syntax validation: 113/113 passed.
+- JavaScript syntax validation: 114/114 passed.
 - JSON parsing validation: passed.
 
-## V2.5.3 focused coverage
+## V2.5.4 focused coverage
 
-- Connection-loss duration/unit controls span the complete Server connection-loss grid and keep a responsive fixed-width unit column so compact Side Panel widths cannot squeeze the two controls together.
-- Operational Feedback reserves more width for Action Completion Tone, keeps its label on one line with ellipsis at narrow widths, reduces the Home history refresh share, and bottom-aligns both controls to the same visual level.
-- Action headers remove the Enabled/Disabled text caption, keep the delete X and movement arrows before the rightmost enable switch, and use an explicit centered header height rather than min-height plus vertical padding.
+- Connection-loss duration is a bounded value/unit pair rather than a full-width nested grid, with a fixed Unit width and protected gutter at narrow Side Panel widths.
+- Action Completion Tone is no longer a bordered settings card; it renders as plain inline text with its toggle on a separate Operational Feedback row.
+- Collapsed Action cards use block card geometry plus a single centered flex summary, removing the hidden grid-row gap that visually biased controls toward the top.
 - Searchable multi-select option rows retain normal height when filtering leaves a single visible result.
-- Release archives remain validated to ensure `SD-Companion-v2.5.3/` is the sole top-level folder.
+- Release archives remain validated to ensure `SD-Companion-v2.5.4/` is the sole top-level folder.
 
 ## V2.5.1 focused coverage
 

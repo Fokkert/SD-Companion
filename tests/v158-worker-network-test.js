@@ -12,7 +12,7 @@ for (const f of [
   'src/shared/migrations.js'
 ]) load(f);
 const SD = SDCompanion;
-assert.equal(SD.Constants.BUILD_VERSION, '2.5.3');
+assert.equal(SD.Constants.BUILD_VERSION, '2.5.4');
 assert.equal(SD.Constants.SCHEMA_VERSION, 34);
 const legacy = SD.Defaults.state();
 legacy.schemaVersion = 24;

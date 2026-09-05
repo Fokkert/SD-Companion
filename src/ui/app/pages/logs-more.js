@@ -127,9 +127,9 @@
           `<select class="select" data-settings-prop="system.activityRefreshUnit">${unitOptions(activityUnit, ['seconds', 'minutes'])}</select>` +
           `</div>` +
           `</div>` +
-          `<div class="setting-line setting-line-card">` +
+          `<div class="completion-tone-control">` +
           `<span>Action Completion Tone</span>` +
-          `<label class="master-switch">` +
+          `<label class="master-switch" title="Action Completion Tone">` +
           `<input type="checkbox" data-settings-prop="system.completionToneEnabled" ${draft.system.completionToneEnabled !== false ? 'checked' : ''}>` +
           `<span></span>` +
           `</label>` +

@@ -11,32 +11,35 @@ const settings = read('src/ui/app/pages/logs-more.js');
 const actions = read('src/ui/app/pages/rule-actions.js');
 const css = read('src/ui/app/app.css');
 
-assert.equal(manifest.version, '2.5.3');
-assert(constants.includes('BUILD_VERSION: "2.5.3"'));
+assert.equal(manifest.version, '2.5.4');
+assert(constants.includes('BUILD_VERSION: "2.5.4"'));
 
-// Connection-loss duration/unit pair spans the full connection-loss grid.
+// Connection-loss duration/unit pair is bounded and keeps a fixed unit gutter.
 assert(servers.includes('class="time-value-row connection-loss-duration-row"'));
 assert(css.includes('.connection-loss-grid > .connection-loss-duration-row {'));
 assert(css.includes('grid-column: 1 / -1 !important;'));
-assert(css.includes('grid-template-columns: minmax(0, 1fr) minmax(96px, 110px) !important;'));
+assert(css.includes('grid-template-columns: minmax(112px, 160px) 96px !important;'));
+assert(css.includes('width: min(100%, 268px) !important;'));
 
-// Operational Feedback remains side-by-side and the completion label truncates instead of wrapping.
+// Operational Feedback stacks the refresh pair and plain Completion Tone control.
+assert(settings.includes('class="completion-tone-control"'));
 assert(settings.includes('<span>Action Completion Tone</span>'));
-assert(css.includes('grid-template-columns: minmax(138px, .82fr) minmax(0, 1.18fr) !important;'));
-assert(css.includes('white-space: nowrap !important;'));
+assert(css.includes('.automation-feedback-grid {'));
+assert(css.includes('grid-template-columns: minmax(0, 1fr) !important;'));
+assert(css.includes('white-space: nowrap;'));
 assert(css.includes('text-overflow: ellipsis;'));
-assert(css.includes('align-items: end !important;'));
 
-// Action controls are icon-only on the right and centered by explicit header geometry.
+// Action controls are icon-only and the card no longer has a hidden grid gap.
 assert(!actions.includes('class="toggle-caption"'));
 const deletePos = actions.indexOf('class="btn btn-small btn-danger action-delete-button"');
 const upPos = actions.indexOf('data-action="move-action-up"');
 const downPos = actions.indexOf('data-action="move-action-down"');
 const togglePos = actions.indexOf('class="master-switch action-enabled-switch"');
 assert(deletePos >= 0 && deletePos < upPos && upPos < downPos && downPos < togglePos);
-assert(css.includes('height: 58px !important;'));
+assert(css.includes('.action-card {\n  display: block !important;\n  gap: 0 !important;'));
+assert(css.includes('height: 56px !important;'));
 assert(css.includes('padding: 0 14px !important;'));
-assert(css.includes('align-content: center !important;'));
-assert(css.includes('.action-summary-main > *,\n.action-summary-controls > * {\n  align-self: center !important;'));
+assert(css.includes('justify-content: space-between !important;'));
+assert(css.includes('.action-summary-main > *,\n.action-summary-controls > * {'));
 
-console.log('v2.5.3 responsive/action centering regression: OK');
+console.log('v2.5.4 responsive/action centering regression: OK');

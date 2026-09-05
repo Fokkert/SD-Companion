@@ -8,7 +8,7 @@ const SD = SDCompanion;
 SD.Storage = { appendLog: async () => {} };
 SD.Operations = { throwIfCancelled: () => {} };
 load('src/background/discovery.js');
-assert.equal(SD.Constants.BUILD_VERSION, '2.5.3');
+assert.equal(SD.Constants.BUILD_VERSION, '2.5.4');
 const workflow = {
   isDraft: false,
   layout: {
