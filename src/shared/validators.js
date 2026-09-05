@@ -90,7 +90,9 @@
     for (const alarm of alarmProfiles) {
       if (!String(alarm.id || '').trim()) errors.push('Alarm profile ID is required.');
       if (!String(alarm.name || '').trim()) errors.push('Alarm profile name is required.');
-      num(alarm.durationSeconds ?? 12, 1, 86400, 'Alarm profile duration', errors);
+      const alarmDuration = Number(alarm.durationSeconds ?? 12);
+      if (!Number.isFinite(alarmDuration) || alarmDuration < 0 || alarmDuration > 86400) errors.push('Alarm profile duration must be blank/unlimited or between 1 and 86400 seconds.');
+      else if (alarmDuration > 0 && alarmDuration < 1) errors.push('Alarm profile duration must be at least 1 second when set.');
       num(alarm.volume ?? .8, 0, 1, 'Alarm profile volume', errors);
       if (!root.Constants.ALARM_PRESETS.some(x => x.id === (alarm.preset || 'radar'))) errors.push('Alarm profile sound is invalid.');
       if (!root.Constants.ALARM_STOP_METHODS.some(x => x.id === (alarm.stopMethod || 'duration'))) errors.push('Alarm profile stop method is invalid.');

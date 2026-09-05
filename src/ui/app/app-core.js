@@ -503,6 +503,7 @@
     return [...map.values()].sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
   };
   A.setPage = p => {
+    if (p === 'audit') p = 'logs';
     A.closeSoftSelects?.();
     if (A.page === 'appearance' && p !== 'appearance' && A.appearanceDraftTheme) {
       A.appearanceDraftTheme = null;
@@ -513,8 +514,7 @@
       A.renderPage();
       document.querySelectorAll("[data-nav]").forEach(b => b.classList.toggle("active", b.dataset.nav === p || (p !== "home" && p !== "servers" && p !== "rules" && p !== "data" && b.dataset.nav === "settings")));
     };
-    if (p === 'logs') A.refreshLogs().then(finish).catch(() => finish());
-    else if (p === 'audit') A.refreshAudit().then(finish).catch(() => finish());
+    if (p === 'logs') Promise.all([A.refreshLogs(), A.refreshAudit()]).then(finish).catch(() => finish());
     else if (p === 'home') A.pullHomeActivity().then(finish).catch(() => finish());
     else finish();
   };

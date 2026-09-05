@@ -3,7 +3,7 @@
   root.Constants = Object.freeze({
     APP_NAME: "SD Companion",
     DISPLAY_VERSION: "V2",
-    BUILD_VERSION: "2.5.4",
+    BUILD_VERSION: "2.6.0",
     SCHEMA_VERSION: 34,
     STORAGE_KEYS: Object.freeze({
       STATE: "sdCompanionState",
@@ -32,6 +32,7 @@
       EXPORT_LOGS: "EXPORT_LOGS",
       GET_AUDIT: "GET_AUDIT",
       CLEAR_AUDIT: "CLEAR_AUDIT",
+      CLEAR_ACTIVITY_JOURNAL: "CLEAR_ACTIVITY_JOURNAL",
       ADD_SERVER: "ADD_SERVER",
       UPDATE_SERVER: "UPDATE_SERVER",
       DELETE_SITE: "DELETE_SITE",

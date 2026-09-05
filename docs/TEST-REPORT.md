@@ -1,11 +1,21 @@
-# V2 Build 2.5.4 Test Report
+# V2 Build 2.6.0 Test Report
 
 ## Result
 
-- JavaScript regression files: 74/74 passed.
+- JavaScript regression files: 75/75 passed.
 - Static architecture/security test: passed.
-- JavaScript syntax validation: 114/114 passed.
+- JavaScript syntax validation: 115/115 passed.
 - JSON parsing validation: passed.
+
+## V2.6.0 focused coverage
+
+- Alarm Profile duration is independent of the selected stop method; any positive duration schedules automatic stop and a blank duration persists as unlimited.
+- Comment templates preserve variables until execution so delayed actions expand against the current Jira issue.
+- Edit Fields and Transition Fields JSON use JSON-safe variable expansion and custom `issue.fields.*` references are requested during Jira discovery.
+- Alarm Popup injection enumerates all eligible HTTP/HTTPS browser tabs rather than only configured Jira candidate tabs.
+- Logs and Audit Journal are combined into one chronological Activity Journal with unified export/clear controls while legacy storage remains compatible.
+- Operational Feedback keeps Home history refresh and Action Completion Tone on one compact aligned row.
+- Release archives remain validated to ensure `SD-Companion-v2.6.0/` is the sole top-level folder.
 
 ## V2.5.4 focused coverage
 

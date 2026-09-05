@@ -210,7 +210,10 @@
     base.id = A.alarmProfileDraftId || base.id || crypto.randomUUID();
     if (A.$('alarmProfileName')) base.name = A.$('alarmProfileName').value.trim() || 'Alarm Profile';
     if (du) base.durationUnit = du.value;
-    if (duration) base.durationSeconds = seconds(duration.value, base.durationUnit || 'seconds', 1, 86400);
+    if (duration) {
+      const rawDuration = String(duration.value || '').trim();
+      base.durationSeconds = rawDuration ? seconds(rawDuration, base.durationUnit || 'seconds', 1, 86400) : 0;
+    }
     if (volume) base.volume = clamp(volume.value, 0, 1);
     if (loop) base.loop = loop.checked;
     if (custom) base.useCustom = custom.checked;
@@ -1649,6 +1652,22 @@
           if (act === 'save-log-level') {
             const logLevel = A.$('logLevel').value;
             A.state = (await A.send(MESSAGE.UPDATE_SYSTEM, { system: { logLevel } })).state;
+            A.renderPage();
+            return;
+          }
+          if (act === 'export-journal') {
+            const rows = [
+              ...(A.logs || []).map(row => ({ source: 'log', ...row })),
+              ...(A.audit || []).map(row => ({ source: 'audit', ...row }))
+            ].sort((a, b) => new Date(b.at || 0).getTime() - new Date(a.at || 0).getTime());
+            SD.Utils.downloadJson(`SD-Companion-Activity-Journal-${new Date().toISOString().slice(0, 10)}.json`, rows);
+            return;
+          }
+          if (act === 'clear-journal') {
+            const securityAuthToken = await A.requestSecurityReauth('clear the activity journal');
+            await A.send(MESSAGE.CLEAR_ACTIVITY_JOURNAL, { securityAuthToken });
+            A.logs = [];
+            A.audit = [];
             A.renderPage();
             return;
           }

@@ -1,20 +1,31 @@
 (() => {
   const A = globalThis.SDApp, SD = globalThis.SDCompanion, { head } = A.View;
-  const logRows = rows => rows.map(l => `<div class="log-line level-${A.esc(l.level || 'info')}">` +
-    `<div class="row-between">` +
-    `<b>${A.esc(l.message || l.event || 'Event')}</b>` +
-    `<span class="muted">${A.esc(SD.Utils.formatDateTime(l.at))}</span>` +
-    `</div>` +
-    `<div class="list-meta">${A.esc(l.issueKey || l.ruleName || l.siteId || '')}${l.details?.message ? ` · ${A.esc(l.details.message)}` : ''}</div></div>`).join('') || '<div class="empty">No records.</div>';
-  A.pageLogs = () => `<section class="page">${head('Logs', '', `<div class="row"><button class="btn btn-small" data-action="export-logs">Export JSON</button><button class="btn btn-small btn-danger" data-action="clear-logs">Clear</button></div>`)}<div class="card">` +
-    `<div class="field">` +
-    `<label>Log level</label>` +
-    `<select id="logLevel" class="select">${SD.Constants.LOG_LEVELS.map(x => A.option(x, x.toUpperCase(), A.state.system?.logLevel === x)).join('')}</select>` +
-    `</div>` +
-    `<button class="btn section-gap" data-action="save-log-level">Save</button>` +
-    `</div>` +
-    `<div class="card log-panel">${logRows(A.logs.slice(0, 500))}</div></section>`;
-  A.pageAudit = () => `<section class="page">${head('Audit Journal', '', `<div class="row"><button class="btn btn-small" data-action="export-audit">Export JSON</button><button class="btn btn-small btn-danger" data-action="clear-audit">Clear</button></div>`)}<div class="card log-panel">${logRows(A.audit.slice(0, 800))}</div></section>`;
+  const journalRows = () => [
+    ...(A.logs || []).map(row => ({ ...row, journalKind: 'LOG' })),
+    ...(A.audit || []).map(row => ({ ...row, journalKind: 'AUDIT', level: row.level || 'info' }))
+  ].sort((a, b) => new Date(b.at || 0).getTime() - new Date(a.at || 0).getTime());
+
+  const renderJournalRows = rows => rows.map(row => {
+    const title = row.message || row.event || 'Event',
+      context = row.issueKey || row.ruleName || row.siteId || '',
+      detailMessage = row.details?.message || row.details?.error?.message || '',
+      meta = [context, detailMessage].filter(Boolean).join(' · ');
+    return `<div class="log-line level-${A.esc(row.level || 'info')}">` +
+      `<div class="row-between">` +
+      `<div class="row journal-title"><span class="journal-kind">${A.esc(row.journalKind)}</span><b>${A.esc(title)}</b></div>` +
+      `<span class="muted">${A.esc(SD.Utils.formatDateTime(row.at))}</span>` +
+      `</div>` +
+      `${meta ? `<div class="list-meta">${A.esc(meta)}</div>` : ''}` +
+      `</div>`;
+  }).join('') || '<div class="empty">No activity recorded.</div>';
+
+  A.pageLogs = () => `<section class="page">${head('Activity Journal', '', `<div class="row"><button class="btn btn-small" data-action="export-journal">Export JSON</button><button class="btn btn-small btn-danger" data-action="clear-journal">Clear</button></div>`)}` +
+    `<div class="card journal-settings-card"><div class="field"><label>Diagnostic log level</label><select id="logLevel" class="select">${SD.Constants.LOG_LEVELS.map(x => A.option(x, x.toUpperCase(), A.state.system?.logLevel === x)).join('')}</select></div><button class="btn btn-small" data-action="save-log-level">Save Level</button></div>` +
+    `<div class="card log-panel">${renderJournalRows(journalRows().slice(0, 1200))}</div></section>`;
+
+  // Preserve the old route for any already-open extension surface, but both
+  // diagnostics now render through the single Activity Journal page.
+  A.pageAudit = A.pageLogs;
   A.pageMaintenance = () => {
     const s = A.site(), p = A.profile();
     return `<section class="page">${head('Data Maintenance')}<div class="card maintenance-card">` +
@@ -227,7 +238,7 @@
     }
     else {
       title = 'System & Support';
-      body = `<div class="settings-tile-grid settings-tile-grid-rich">${link('health', 'Compatibility & Permissions')}${link('logs', 'Logs')}${link('audit', 'Audit Journal')}${link('maintenance', 'Data Maintenance', 'danger-soft')}${link('help', 'Help & Reference')}</div>`;
+      body = `<div class="settings-tile-grid settings-tile-grid-rich">${link('health', 'Compatibility & Permissions')}${link('logs', 'Activity Journal')}${link('maintenance', 'Data Maintenance', 'danger-soft')}${link('help', 'Help & Reference')}</div>`;
     }
     return `<section class="page settings-page">${head('Settings', '', `<div class="row"><button class="btn btn-primary btn-small" data-action="save-settings">Save</button><button class="btn btn-small" data-action="cancel-settings">Reset</button></div>`)}<div class="settings-workspace">` +
       `<div class="settings-tabbar" role="tablist" aria-label="Settings pages">${nav('general', 'General')}${nav('automation', 'Automation')}${nav('security', 'Security')}${nav('support', 'System & Support')}</div>` +

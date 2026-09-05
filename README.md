@@ -18,9 +18,9 @@ SD Companion can:
 - Run one-time **Bulk Operations** from Rules using the same filters, conditions and action-chain model as rules, without saving a rule.
 - Run automated Jira actions, including:
   - assign or unassign issues;
-  - post comments;
+  - post comments with issue variables such as `{{issue.key}}` and `{{issue.assignee}}`;
   - transition issues;
-  - edit fields;
+  - edit fields with variable expansion, including custom Jira fields;
   - add or remove labels;
   - change priority.
 - Schedule actions with configurable delays and dependencies.
@@ -34,7 +34,9 @@ SD Companion can:
 - Create password-encrypted profile backups that can include Jira credentials.
 - Protect the extension UI and sensitive operations with an optional local PIN/password lock.
 - Review action history with active/new work first and optionally hide completed history.
+- Review technical diagnostics and operational audit events together in one Activity Journal.
 - Run from the normal extension popup or Chrome/Edge side panel.
+- Show Alarm Profile stop popups across eligible open web tabs so an active alarm can be stopped without returning to Jira.
 
 Jira permissions remain authoritative: SD Companion can only read or change data that the Jira user
 associated with the configured PAT is allowed to access.
@@ -62,7 +64,7 @@ Extract the downloaded ZIP to a permanent location. The release archive contains
 top-level folder, for example:
 
 ```text
-C:\Users\<you>\Documents\SD-Companion-v2.5.4\
+C:\Users\<you>\Documents\SD-Companion-v2.6.0\
 ```
 
 Do not delete that folder while the extension is installed. Chrome/Edge loads the unpacked extension

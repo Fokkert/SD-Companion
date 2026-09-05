@@ -5,8 +5,8 @@ const constants = fs.readFileSync('src/shared/constants.js', 'utf8');
 const manifest = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
 const components = fs.readFileSync('src/ui/common/components.css', 'utf8');
 const app = fs.readFileSync('src/ui/app/app.css', 'utf8');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.5.4"'));
-assert.equal(manifest.version, '2.5.4');
+assert(textIncludes(constants, 'BUILD_VERSION:"2.6.0"'));
+assert.equal(manifest.version, '2.6.0');
 // Ordinary boolean switches now reuse the exact Home monitoring component; no second geometry exists.
 assert(!textIncludes(components, '.switch input[type="checkbox"]'));
 assert(!textIncludes(components, '.toggle-card>input[type="checkbox"]'));

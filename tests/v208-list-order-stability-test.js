@@ -10,8 +10,8 @@ const home = fs.readFileSync(path.join(root, 'src/ui/app/pages/home.js'), 'utf8'
 const engine = fs.readFileSync(path.join(root, 'src/background/rule-engine.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'src/ui/app/app.css'), 'utf8');
 const soft = fs.readFileSync(path.join(root, 'src/ui/app/soft-select.js'), 'utf8');
-assert.equal(manifest.version, '2.5.4');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.5.4"'));
+assert.equal(manifest.version, '2.6.0');
+assert(textIncludes(constants, 'BUILD_VERSION:"2.6.0"'));
 // Schedule selector: name only, no appended human schedule description.
 assert(textIncludes(rules, 'A.glassMulti(p.schedules,x=>x.id,x=>x.name'));
 assert(!textIncludes(rules, 'x=>`${x.name} · ${SD.Schedule.describe(x)}`'));

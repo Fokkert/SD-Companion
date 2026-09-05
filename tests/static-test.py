@@ -23,7 +23,7 @@ def source_in(source, expected):
 manifest = json.loads(read('manifest.json'))
 
 assert manifest['manifest_version'] == 3
-assert manifest['version'] == '2.5.4'
+assert manifest['version'] == '2.6.0'
 assert manifest['version_name'] == 'V2'
 assert 'content_scripts' not in manifest
 assert 'options_page' not in manifest
@@ -216,8 +216,8 @@ assert 'REST transport' not in servers
 assert 'Network destination' not in servers
 assert 'Certificate handling' not in servers
 assert 'Factory reset' in settings
-assert 'Audit Journal' in settings
-assert 'Log level' in settings
+assert 'Activity Journal' in settings
+assert 'Diagnostic log level' in settings
 assert 'activityRefreshSeconds' in defaults
 assert 'completionToneEnabled' in defaults
 

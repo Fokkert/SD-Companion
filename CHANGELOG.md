@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.6.0
+
+- Made Alarm Profile duration an independent optional maximum for every stop method; blank duration means unlimited playback.
+- Added documented rule variables for Comment and Edit Fields/Transition Fields JSON, including runtime expansion against the current Jira issue and custom-field references.
+- Combined Logs and Audit Journal into one chronological **Activity Journal** with one export and protected clear action while preserving the existing underlying diagnostic/audit data stores for compatibility.
+- Expanded Alarm Profile popup stop controls to every eligible open HTTP/HTTPS browser tab instead of only configured Jira tabs.
+- Re-aligned Operational Feedback onto one compact row so Home history refresh and Action Completion Tone share the same vertical control baseline without unnecessarily increasing the card height.
+
 ## 2.5.4
 
 - Corrected Connection-loss duration sizing so the value/unit pair stays compact and clear of the Server card border at narrow Side Panel widths.

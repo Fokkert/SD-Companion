@@ -8171,3 +8171,124 @@ n.connection-policy-note {
   padding: 14px !important;
   border-top: 1px solid var(--line);
 }
+
+/* V2.6.0 focused layout and editor refinements --------------------------- */
+
+/* Keep Operational Feedback on one compact centerline. The completion-tone
+ * control is plain text + switch, not a card, and shares the same control
+ * baseline as Home history refresh. */
+.automation-feedback-grid {
+  display: grid !important;
+  grid-template-columns: minmax(210px, 254px) minmax(150px, max-content) !important;
+  align-items: end !important;
+  gap: 18px !important;
+}
+
+.automation-feedback-grid > .time-value-row {
+  width: 100% !important;
+  max-width: 254px !important;
+  margin: 0 !important;
+}
+
+.completion-tone-control {
+  display: inline-flex !important;
+  align-items: center !important;
+  align-self: end !important;
+  min-height: 40px !important;
+  height: 40px !important;
+  width: auto !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.completion-tone-control > span:first-child {
+  max-width: 150px;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+@container (max-width: 470px) {
+  .automation-feedback-grid {
+    grid-template-columns: minmax(190px, 1fr) minmax(120px, auto) !important;
+    gap: 12px !important;
+  }
+
+  .completion-tone-control > span:first-child {
+    max-width: 112px;
+  }
+}
+
+.action-variable-guide {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--panel2) 72%, transparent);
+  overflow: hidden;
+}
+
+.action-variable-guide > summary {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.action-variable-grid {
+  display: grid;
+  gap: 7px;
+  padding: 0 12px 12px;
+}
+
+.action-variable-row {
+  display: grid;
+  grid-template-columns: minmax(150px, max-content) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.action-variable-row code {
+  font-size: 11px;
+  color: var(--primary);
+  overflow-wrap: anywhere;
+}
+
+.action-variable-row span {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.journal-settings-card {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+}
+
+.journal-settings-card .field {
+  width: min(260px, 100%);
+  margin: 0;
+}
+
+.journal-title {
+  min-width: 0;
+  gap: 8px;
+}
+
+.journal-kind {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .7px;
+}

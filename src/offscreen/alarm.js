@@ -24,7 +24,7 @@ const stop = (notify = false) => {
   clearLocal();
   if (notify) notifyEnded();
 };
-const timed = cfg => (cfg.stopMethod || "duration") === "duration";
+const timed = cfg => Number.isFinite(Number(cfg.durationSeconds)) && Number(cfg.durationSeconds) > 0;
 const scheduleTone = (cfg, preset) => {
   const boost = Math.max(.25, Number(preset.gainBoost) || 1),
     start = ctx.currentTime + .01;
@@ -90,7 +90,7 @@ const tone = async cfg => {
   if (timed(cfg)) stopTimer = setTimeout(() => {
     clearLocal();
     notifyEnded();
-  }, Math.max(.2, Number(cfg.durationSeconds) || 12) * 1000);
+  }, Math.max(.2, Number(cfg.durationSeconds)) * 1000);
 };
 const actionBell = async () => {
   ctx = ctx || new AudioContext();
@@ -124,7 +124,7 @@ const custom = cfg => {
   if (timed(cfg)) stopTimer = setTimeout(() => {
     clearLocal();
     notifyEnded();
-  }, Math.max(.2, Number(cfg.durationSeconds) || 12) * 1000);
+  }, Math.max(.2, Number(cfg.durationSeconds)) * 1000);
 };
 chrome.runtime.onMessage.addListener(m => {
   if (m?.type === "SD_OFFSCREEN_COMPLETION") {

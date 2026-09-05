@@ -73,13 +73,54 @@
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   };
   const getPath = (obj, path) => String(path || "").split(".").reduce((v, k) => v?.[k], obj);
-  const template = (text, issue, extra = {}) => String(text ?? "").replace(/\{\{\s*([^}]+)\s*\}\}/g, (_, path) => {
-    const key = path.trim();
+  const templateValue = value => {
+    if (value === null || value === undefined) return "";
+    if (Array.isArray(value)) return value.map(templateValue).filter(Boolean).join(", ");
+    if (typeof value === "object") {
+      for (const key of ["displayName", "name", "key", "value", "id"]) {
+        if (value[key] !== null && value[key] !== undefined && String(value[key]).trim()) return String(value[key]);
+      }
+      try { return JSON.stringify(value); } catch { return String(value); }
+    }
+    return String(value);
+  };
+  const resolveTemplatePath = (issue, path, extra = {}) => {
+    const key = String(path || "").trim();
     if (key === "now") return new Date().toISOString();
-    const map = { issue, project: { key: issue?.projectKey, name: issue?.projectName }, assignee: issue?.assignee || {}, reporter: issue?.reporter || {}, ...extra };
-    const v = getPath(map, key.startsWith("issue.") || key.startsWith("project.") || key.startsWith("assignee.") || key.startsWith("reporter.") ? key : `issue.${key}`);
-    return v === null || v === undefined ? "" : Array.isArray(v) ? v.join(", ") : String(v);
-  });
+    const map = {
+      issue,
+      project: { key: issue?.projectKey, name: issue?.projectName, id: issue?.projectId },
+      assignee: issue?.assignee || {},
+      reporter: issue?.reporter || {},
+      creator: issue?.creator || {},
+      ...extra
+    };
+    const rooted = key.startsWith("issue.") || key.startsWith("project.") || key.startsWith("assignee.") || key.startsWith("reporter.") || key.startsWith("creator.") ? key : `issue.${key}`;
+    return getPath(map, rooted);
+  };
+  const template = (text, issue, extra = {}) => String(text ?? "").replace(/\{\{\s*([^}]+)\s*\}\}/g, (_, path) => templateValue(resolveTemplatePath(issue, path, extra)));
+  const insideJsonString = (text, at) => {
+    let quoted = false, escaped = false;
+    for (let i = 0; i < at; i++) {
+      const ch = text[i];
+      if (escaped) { escaped = false; continue; }
+      if (ch === "\\") { escaped = true; continue; }
+      if (ch === '"') quoted = !quoted;
+    }
+    return quoted;
+  };
+  const templateJson = (text, issue, extra = {}) => {
+    const source = String(text ?? "");
+    return source.replace(/\{\{\s*([^}]+)\s*\}\}/g, (token, path, offset) => {
+      const raw = resolveTemplatePath(issue, path, extra);
+      if (insideJsonString(source, offset)) {
+        const encoded = JSON.stringify(templateValue(raw));
+        return encoded.slice(1, -1);
+      }
+      if (raw === undefined) return 'null';
+      try { return JSON.stringify(raw); } catch { return JSON.stringify(templateValue(raw)); }
+    });
+  };
   const normalizeTimeUnit = u => ["seconds", "minutes", "hours"].includes(String(u)) ? String(u) : "seconds";
   const timeUnitMultiplier = u => ({ seconds: 1, minutes: 60, hours: 3600 }[normalizeTimeUnit(u)] || 1);
   const timeToSeconds = (value, unit) => Number(value || 0) * timeUnitMultiplier(unit);
@@ -106,6 +147,7 @@
     userKey,
     safeError,
     downloadJson,
-    template
+    template,
+    templateJson
   });
 })();

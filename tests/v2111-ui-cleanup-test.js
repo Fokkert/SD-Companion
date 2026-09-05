@@ -14,8 +14,8 @@ const css = fs.readFileSync('src/ui/app/app.css', 'utf8');
 const discovery = fs.readFileSync('src/background/discovery.js', 'utf8');
 const worker = fs.readFileSync('src/background/service-worker.js', 'utf8');
 
-assert.equal(manifest.version, '2.5.4');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.5.4"'));
+assert.equal(manifest.version, '2.6.0');
+assert(textIncludes(constants, 'BUILD_VERSION:"2.6.0"'));
 
 // Home is one operational workspace, while Rules owns one-time Bulk Operations.
 assert(textIncludes(home, 'Detections &amp; Actions'));

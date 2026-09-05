@@ -90,11 +90,11 @@ ${topic('conditions', '7. Typed conditions', '<p>Conditions are type-aware. Jira
 ${topic('actions', '8. Actions and sequencing', '<p>Actions execute in their displayed order.</p>' +
                     '<ul>' +
                     '<li>Assignment supports Myself, one Specific user, a Random user pool, or Unassign issue.</li>' +
-                    '<li>Comments use separate template entries. Constant mode uses one configured template; random mode selects from the configured template set.</li>' +
+                    '<li>Comments use separate template entries. Constant mode uses one configured template; random mode selects from the configured template set. Comment text supports variables such as <code>{{issue.key}}</code>, <code>{{issue.assignee}}</code>, <code>{{issue.status}}</code> and <code>{{now}}</code>.</li>' +
                     '<li>Transitions use synchronized workflow data when the selected server method provides a catalog. The editor narrows transitions and target statuses by Project, Issue Type, Status, raw JQL, and synchronized JQL from selected filters, then revalidates against the exact target issue before execution.</li>' +
                     '<li>In Target Status + Runtime Choice mode, Jira is queried at execution time. If one available transition reaches the selected status it is used; if several do, one is selected randomly. Different transitions can have different screens, validators, conditions, or post-functions, so this mode is intentionally nondeterministic.</li>' +
                     '<li>In Manual Transition Name mode, matching is case-insensitive against transitions currently available on the issue. Zero matches fail and multiple exact-name matches fail as ambiguous.</li>' +
-                    '<li>Edit Fields, Labels and Priority modify Jira fields using the configured values.</li>' +
+                    '<li>Edit Fields, Labels and Priority modify Jira fields using the configured values. Edit Fields and Transition Fields JSON support the same variables, including custom fields through <code>{{issue.fields.customfield_12345}}</code>. Variables are expanded against the current Jira issue immediately before execution.</li>' +
                     '<li>Alarm and Notification are local attention actions.</li>' +
                     '<li>Any individual action can enable Needs approval. It then remains Awaiting approval until the user approves it from Home → Detections &amp; Actions.</li>' +
                     '<li>Each action may inherit the rule delay range, use its own independent min/max delay, or use After previous action. Chained action dependency decides separately whether cancelled, skipped/not-run, or failed predecessors continue or stop the next After previous action. Manual Process can either update later relative schedules from the actual manual completion time or preserve their existing schedule.</li>' +
@@ -123,9 +123,9 @@ ${topic('alarms', '12. Alarms', '<p>Alarm Profiles are owned by the active SD Co
                             '<ul>' +
                             '<li>Built-in generated sounds and custom audio.</li>' +
                             '<li>Volume, duration, looping and stop behavior.</li>' +
-                            '<li>Alarm stop methods are Keyboard Shortcut, Duration, Click anywhere and Popup. Browser Notification remains a separate rule action.</li>' +
+                            '<li>Alarm stop methods are Keyboard Shortcut, Duration, Click anywhere and Popup. Duration is always independently configurable as a maximum playback time regardless of the selected stop method; leave Duration blank for unlimited playback. Browser Notification remains a separate rule action.</li>' +
                             '<li>Connection-loss alarms use the active profile\'s default Alarm Profile.</li>' +
-                            '<li>The toolbar alarm control remains an emergency stop for the shared active alarm and queued/scheduled rule Alarm actions. A configured Keyboard Shortcut stops playback only when that Alarm Profile uses the Keyboard Shortcut stop method.</li>' +
+                            '<li>The toolbar alarm control remains an emergency stop for the shared active alarm and queued/scheduled rule Alarm actions. A configured Keyboard Shortcut stops playback only when that Alarm Profile uses the Keyboard Shortcut stop method. Popup stop controls are injected into every eligible open HTTP/HTTPS browser tab so the alarm can be stopped without returning to Jira; Chrome internal pages cannot accept extension injection.</li>' +
                             '<li>Each rule can rate-limit its Alarm and Notification actions to avoid local alert floods.</li>' +
                             '</ul>')}
 ${topic('profiles', '13. Profiles and portability', '<p>A profile contains rules, schedules, monitoring configuration and Alarm Profiles for one Jira server.</p>' +
@@ -147,17 +147,17 @@ ${topic('security', '14. Security and protected actions', '<p>Settings → Secur
                                 '</ul>')}
 ${topic('health', '15. Compatibility and permissions', '<p>Health shows connection status, authenticated identity, server capabilities, permissions and request statistics. SD Companion learns capabilities from the Jira endpoints that are actually available instead of assuming all Jira deployments expose identical APIs.</p>' +
                                 '<p>PAT authentication does not require browser-session token renewal. Authentication failures are tracked separately from pre-HTTP network failures. SD Companion does not force a Local Network Access target address space; Chrome/Edge determine the resolved destination and enforce LNA/CORS/TLS/network policy.</p>')}
-${topic('diagnostics', '16. Logs and Audit Journal', '<p>Logs are technical diagnostics and obey the configured log level. The Audit Journal records operational events such as synchronization, detection, job scheduling, execution, deduplication, cancellation and failure. Both can be exported as JSON and cleared independently.</p>' +
+${topic('diagnostics', '16. Activity Journal', '<p>Activity Journal combines technical diagnostics and operational audit events into one chronological view. Diagnostic rows still obey the configured log level; operational events such as synchronization, detection, job scheduling, execution, deduplication, cancellation and failure remain recorded independently underneath so existing data is preserved. The combined journal has one JSON export and one protected Clear action.</p>' +
                                   '<p>Normal Settings edits are staged until Save is pressed. Reset restores the saved Settings state. The optional Action Completion Tone is a short low-volume completion cue that can be enabled or disabled under Settings → Automation.</p>')}
 ${topic('storage', '17. Data maintenance', '<ul>' +
                                     '<li>Clear Current Server Cache removes synchronized metadata while preserving server configuration and discovery choices.</li>' +
                                     '<li>Clear Current Profile Runtime Data clears counters, cursors, jobs and ledger state while preserving rules and schedules.</li>' +
-                                    '<li>Factory Reset erases all SD Companion configuration, credentials, metadata, logs, audit and runtime data.</li>' +
+                                    '<li>Factory Reset erases all SD Companion configuration, credentials, metadata, Activity Journal records and runtime data.</li>' +
                                     '<li>Deleting a profile or server removes data belonging to that object.</li>' +
                                     '</ul>')}
 ${topic('trouble', '18. Troubleshooting', '<ul>' +
                                       '<li>If metadata is missing, run Stage 1 first, enable the desired per-project datasets, then run the configured-data sync.</li>' +
-                                      '<li>If a filter is missing, inspect filter coverage and Logs; Jira editions differ in which owned-filter enumeration endpoints they expose.</li>' +
+                                      '<li>If a filter is missing, inspect filter coverage and the Activity Journal; Jira editions differ in which owned-filter enumeration endpoints they expose.</li>' +
                                       '<li>If Jira fails before returning HTTP, inspect the Health error and check Jira reachability, Chrome/Edge Local Network Access or CORS policy, certificate trust, DNS, proxy/PAC and VPN routing. SD Companion does not bypass those browser/network checks.</li>' +
                                       '<li>If a rule does not run, verify Enabled, Monitoring, schedule, Effective JQL, permissions, execution policy and global safety limits.</li>' +
                                       '<li>If a transition is missing, refresh the relevant project datasets and confirm an appropriate issue context exists for transition discovery.</li>' +

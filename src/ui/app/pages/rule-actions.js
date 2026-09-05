@@ -195,6 +195,28 @@
     }
     return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
   };
+  const variableGuide = () => `<details class="action-variable-guide">` +
+    `<summary>Variables</summary>` +
+    `<div class="action-variable-grid">` +
+    `${[
+      ['{{issue.key}}', 'Issue key'],
+      ['{{issue.summary}}', 'Summary'],
+      ['{{issue.status}}', 'Status'],
+      ['{{issue.projectKey}}', 'Project key'],
+      ['{{issue.projectName}}', 'Project name'],
+      ['{{issue.issueType}}', 'Issue type'],
+      ['{{issue.assignee}}', 'Assignee display name'],
+      ['{{issue.reporter}}', 'Reporter display name'],
+      ['{{issue.priority}}', 'Priority'],
+      ['{{issue.created}}', 'Created time'],
+      ['{{issue.updated}}', 'Updated time'],
+      ['{{issue.dueDate}}', 'Due date'],
+      ['{{issue.labels}}', 'Labels'],
+      ['{{issue.fields.customfield_12345}}', 'Custom Jira field'],
+      ['{{now}}', 'Current time']
+    ].map(([token, label]) => `<div class="action-variable-row"><code>${A.esc(token)}</code><span>${A.esc(label)}</span></div>`).join('')}` +
+    `</div></details>`;
+
   const commentTemplates = a => `<div class="comment-template-list">${(a.templates || []).map((t, i) => `<div class="comment-template-row">` +
     `<div class="field">` +
     `<label>Comment ${i + 1}</label>` +
@@ -244,7 +266,7 @@
       `<input class="input" data-action-id="${a.id}" data-aprop="manualTransitionName" maxlength="200" placeholder="Resolve" value="${A.esc(a.manualTransitionName || '')}"></div>`;
     return `${selector}${missingFilterJql && (method !== TRANSITION_METHOD.MANUAL_NAME) ? `<div class="inline-note warn">${missingFilterJql} selected filter(s) do not expose JQL, so those filters cannot narrow this selector.</div>` : ''}<div class="field">` +
       `<label>Transition fields JSON</label>` +
-      `<textarea class="textarea mono" data-action-id="${a.id}" data-aprop="fieldsJson">${A.esc(a.fieldsJson || '{}')}</textarea></div>`;
+      `<textarea class="textarea mono" data-action-id="${a.id}" data-aprop="fieldsJson">${A.esc(a.fieldsJson || '{}')}</textarea></div>${variableGuide()}`;
   };
   const actionEditor = (a, s, p, index, rule = null) => {
     let body = '';
@@ -265,9 +287,9 @@
       `<label>Selection</label>` +
       `<select class="select" data-action-id="${a.id}" data-aprop="selection">` +
       `<option value="constant" ${a.selection === 'constant' ? 'selected' : ''}>Use first comment</option>` +
-      `<option value="random" ${a.selection !== 'constant' ? 'selected' : ''}>Random comment</option></select></div>${commentTemplates(a)}`;
+      `<option value="random" ${a.selection !== 'constant' ? 'selected' : ''}>Random comment</option></select></div>${commentTemplates(a)}${variableGuide()}`;
     else if (a.type === ACTION.TRANSITION) body = transitionEditor(a, s, rule);
-    else if (a.type === ACTION.EDIT_FIELDS) body = `<div class="field"><label>Fields JSON</label><textarea class="textarea mono" data-action-id="${a.id}" data-aprop="fieldsJson">${A.esc(a.fieldsJson || '{}')}</textarea></div>`;
+    else if (a.type === ACTION.EDIT_FIELDS) body = `<div class="field"><label>Fields JSON</label><textarea class="textarea mono" data-action-id="${a.id}" data-aprop="fieldsJson" placeholder='{"description":"Issue {{issue.key}} assigned to {{issue.assignee}}"}'>${A.esc(a.fieldsJson || '{}')}</textarea></div>${variableGuide()}`;
     else if (a.type === ACTION.LABELS) body = `<div class="grid-2">` +
       `<div class="field">` +
       `<label>Add labels</label>` +

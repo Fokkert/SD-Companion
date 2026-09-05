@@ -1,7 +1,7 @@
 (() => {
   const root = globalThis.SDCompanion = globalThis.SDCompanion || {},
     { ACTION, JOB, LEVEL } = root.Constants,
-    { nowIso, safeError, template, userKey, normalizeText } = root.Utils;
+    { nowIso, safeError, template, templateJson, userKey, normalizeText } = root.Utils;
   let processing = false;
   const issueLocks = new Set(),
     shortTimers = new Map(),
@@ -528,17 +528,19 @@
           };
         }
         else if (job.action === ACTION.COMMENT) {
+          const comment = template(job.payload.commentTemplate || job.payload.comment || "", issue);
+          if (!String(comment).trim()) throw new Error("Comment text is empty after variable expansion.");
           await reserve();
           markWriteStarted();
-          await client.comment(job.issueKey, job.payload.comment);
-          job.result = { commentPosted: true };
+          await client.comment(job.issueKey, comment);
+          job.result = { commentPosted: true, comment };
         }
         else if (job.action === ACTION.TRANSITION) {
           const t = await resolveTransition(client, site, job, issue);
           throwIfCancelled();
           let fields = {};
           try {
-            fields = JSON.parse(template(job.payload.rule.fieldsJson || "{}", issue));
+            fields = JSON.parse(templateJson(job.payload.rule.fieldsJson || "{}", issue));
           } catch {
             throw new Error("Transition fields JSON is invalid after variable expansion.");
           }
@@ -550,7 +552,7 @@
         else if (job.action === ACTION.EDIT_FIELDS) {
           let fields = {};
           try {
-            fields = JSON.parse(template(job.payload.fieldsJson || "{}", issue));
+            fields = JSON.parse(templateJson(job.payload.fieldsJson || "{}", issue));
           } catch {
             throw new Error("Edit-fields JSON is invalid after variable expansion.");
           }

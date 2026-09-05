@@ -106,6 +106,10 @@
       const items = (action.templates || []).filter(Boolean),
         chosen = action.selection === "constant" ? items[0] : randomChoice(items);
       if (!chosen) return null;
+      // Keep the original template so delayed jobs expand variables against the
+      // current Jira issue immediately before execution. The rendered snapshot
+      // remains useful for Action History and backwards-compatible preflight.
+      payload.commentTemplate = chosen;
       payload.comment = template(chosen, issue);
     }
     else if (action.type === ACTION.TRANSITION) payload.rule = {
@@ -507,8 +511,17 @@
   const requiredIssueFields = rule => {
     const base = ["summary", "description", "issuetype", "status", "assignee", "reporter", "creator", "project", "priority", "created", "updated", "labels", "components", "resolution", "duedate"],
       aliases = new Set(["project", "issueType", "status", "assignee", "reporter", "priority", "resolution", "label", "summary", "description", "component", "createdAgeMinutes", "updatedAgeMinutes"]),
-      all = [...(rule?.logic?.groups || []).flatMap(g => g.conditions || []), ...(rule?.actions || []).filter(a => a.when?.enabled).flatMap(a => (a.when.logic?.groups || []).flatMap(g => g.conditions || []))];
+      all = [...(rule?.logic?.groups || []).flatMap(g => g.conditions || []), ...(rule?.actions || []).filter(a => a.when?.enabled).flatMap(a => (a.when.logic?.groups || []).flatMap(g => g.conditions || []))],
+      variableSources = [];
     for (const c of all) if (c?.field && !aliases.has(c.field)) base.push(c.field);
+    for (const action of rule?.actions || []) {
+      if (action.type === ACTION.COMMENT) variableSources.push(...(action.templates || []));
+      if (action.type === ACTION.EDIT_FIELDS || action.type === ACTION.TRANSITION) variableSources.push(action.fieldsJson || "");
+    }
+    for (const source of variableSources) {
+      const text = String(source || "");
+      for (const match of text.matchAll(/\{\{\s*issue\.fields\.([A-Za-z0-9_:-]+)(?:\.[^}]*)?\s*\}\}/g)) base.push(match[1]);
+    }
     return [...new Set(base)];
   };
   root.RuleEngine = Object.freeze({ planCycle, planOneTime, validateAction, matchesLogic, actionMatches, valuesFor, ruleScheduleActive, policyFingerprint, delayFor, requiredIssueFields, actionPrecondition });

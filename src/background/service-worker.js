@@ -224,11 +224,15 @@ const removeJiraAlarmPopupScript = () => {
   document.getElementById("sd-companion-jira-alarm-popup")?.remove();
   return true;
 };
+const alarmPopupTabs = async () => {
+  const tabs = await chrome.tabs.query({});
+  return tabs.filter(tab => tab.id && /^https?:\/\//i.test(String(tab.url || "")));
+};
 const showJiraAlarmPopup = async (alarm, meta = {}) => {
-  if (alarm.showPagePopup === false || !meta.siteId) return false;
-  const state = await SD.Storage.ensureState(), site = state.jiraSites.find(s => s.id === meta.siteId);
-  if (!site) return false;
-  const tabs = await SD.JiraTabs.candidateTabs(site);
+  if (alarm.showPagePopup === false) return false;
+  const state = await SD.Storage.ensureState(),
+    site = state.jiraSites.find(s => s.id === meta.siteId),
+    tabs = await alarmPopupTabs();
   if (!tabs.length) return false;
   const payload = {
     issueKey: meta.issueKey || "",
@@ -236,29 +240,26 @@ const showJiraAlarmPopup = async (alarm, meta = {}) => {
     ruleName: meta.ruleName || "",
     source: meta.source || "",
     kind: meta.source === "Connection monitor" ? "API Unreachable" : "Jira issue detected",
-    serverName: site.name,
+    serverName: site?.name || "SD Companion",
     palette: alarmThemePalette(state.appearance?.theme),
     clickAnywhere: Boolean(alarm.clickAnywhere)
   };
   let shown = 0;
   for (const tab of tabs) {
-    if (!tab.id) continue;
     try {
       await chrome.scripting.executeScript({ target: { tabId: tab.id, frameIds: [0] }, world: "ISOLATED", func: jiraAlarmPopupScript, args: [payload] });
       shown++;
     } catch (e) {
-      await log(LEVEL.DEBUG, "Jira alarm popup could not be injected.", SD.Utils.safeError(e), { siteId: site.id });
+      // Browser-internal pages and pages without granted host access cannot
+      // receive injected extension UI. Continue so every eligible web tab does.
+      await log(LEVEL.DEBUG, "Browser alarm popup could not be injected into a tab.", SD.Utils.safeError(e), { siteId: site?.id || meta.siteId || "" });
     }
   }
   return shown > 0;
 };
-const hideJiraAlarmPopup = async siteId => {
-  if (!siteId) return;
-  const state = await SD.Storage.ensureState(), site = state.jiraSites.find(s => s.id === siteId);
-  if (!site) return;
-  const tabs = await SD.JiraTabs.candidateTabs(site);
+const hideJiraAlarmPopup = async () => {
+  const tabs = await alarmPopupTabs();
   for (const tab of tabs) {
-    if (!tab.id) continue;
     try {
       await chrome.scripting.executeScript({ target: { tabId: tab.id, frameIds: [0] }, world: "ISOLATED", func: removeJiraAlarmPopupScript });
     } catch {}
@@ -283,8 +284,10 @@ SD.Audio = Object.freeze({
     if (alarm.stopMethod === "popup") await showJiraAlarmPopup({ ...alarm, showPagePopup: true }, meta);
     else if (alarm.stopMethod === "click-anywhere") await installAlarmClickStop(meta.siteId);
     else if (alarm.stopMethod === "keyboard") await installAlarmKeyboardStop(meta.siteId, alarm.keyboardShortcut);
-    const timed = alarm.stopMethod === "duration";
-    if (timed) await chrome.alarms.create(ALARMS.ALARM_STOP, { when: Date.now() + Math.max(1, Number(alarm.durationSeconds) || 12) * 1000 });
+    const durationSeconds = Number(alarm.durationSeconds);
+    if (Number.isFinite(durationSeconds) && durationSeconds > 0) {
+      await chrome.alarms.create(ALARMS.ALARM_STOP, { when: Date.now() + Math.max(1, durationSeconds) * 1000 });
+    }
     if (alarm.preset !== "system") {
       await ensureOffscreen();
       await chrome.runtime.sendMessage({ type: "SD_OFFSCREEN_PLAY", alarm }).catch(() => {});
@@ -307,7 +310,7 @@ SD.Audio = Object.freeze({
       }
     }
     if (clearNotification) await chrome.notifications.clear("sd-companion-active-alarm").catch(() => {});
-    if (active?.siteId) await hideJiraAlarmPopup(active.siteId);
+    await hideJiraAlarmPopup();
     await setAlarmRuntime(false);
     await setBadge().catch(() => {});
     try {
@@ -1145,6 +1148,14 @@ chrome.runtime.onStartup.addListener(async () => {
   await setBadge();
 });
 chrome.tabs.onUpdated.addListener(queueTabStatusRefresh);
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status !== 'complete' || !/^https?:\/\//i.test(String(tab?.url || ''))) return;
+  SD.Storage.ensureState().then(state => {
+    const active = state.runtime?.activeAlarm;
+    if (active?.active && active.stopMethod === 'popup') return showJiraAlarmPopup(active, active);
+    return null;
+  }).catch(() => {});
+});
 chrome.tabs.onRemoved.addListener(queueTabStatusRefresh);
 chrome.alarms.onAlarm.addListener(async a => {
   try {
@@ -1340,6 +1351,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         case MESSAGE.CLEAR_AUDIT:
           await requireRiskAuth(message, 'clear the audit journal');
           await SD.Storage.clearAudit();
+          return { ok: true };
+        case MESSAGE.CLEAR_ACTIVITY_JOURNAL:
+          await requireRiskAuth(message, 'clear the activity journal');
+          await Promise.all([SD.Storage.clearLogs(), SD.Storage.clearAudit()]);
           return { ok: true };
         case MESSAGE.CANCEL_OPERATION: return { ok: true, cancelled: SD.Operations.cancel(message.operationId) };
         case MESSAGE.ADD_SERVER:
