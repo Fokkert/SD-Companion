@@ -310,20 +310,21 @@
       `</label>` +
       `</div>${a.when?.enabled ? (A.RuleViews.actionConditionEditor?.(a, s) || '') : ''}`;
     return `<details class="action-card configured-object" data-action-card-id="${A.esc(a.id)}" ${actionIsOpen(a.id, index) ? 'open' : ''}><summary class="action-head">` +
-      `<div class="row">` +
+      `<div class="row action-summary-main">` +
       `<span class="sequence-number">${index + 1}</span>` +
       `<span class="action-type">${A.esc(actionLabel(a.type))}</span>` +
+      `</div>` +
+      `<div class="row action-summary-controls">` +
+      `<button class="btn btn-small btn-danger action-delete-button" data-action="delete-action" data-id="${a.id}" title="Delete action" aria-label="Delete action">×</button>` +
+      `<button class="btn btn-small action-move-button" data-action="move-action-up" data-id="${a.id}" ${index === 0 ? 'disabled' : ''} title="Move action up" aria-label="Move action up">↑</button>` +
+      `<button class="btn btn-small action-move-button" data-action="move-action-down" data-id="${a.id}" title="Move action down" aria-label="Move action down">↓</button>` +
       `<span class="toggle-caption">${a.enabled !== false ? 'Enabled' : 'Disabled'}</span>` +
-      `<label class="master-switch">` +
+      `<label class="master-switch action-enabled-switch">` +
       `<input type="checkbox" data-action-id="${a.id}" data-aprop="enabled" ${a.enabled !== false ? 'checked' : ''}>` +
       `<span>` +
       `</span>` +
       `</label>` +
-      `</div>` +
-      `<div class="row action-summary-controls">` +
-      `<button class="btn btn-small" data-action="move-action-up" data-id="${a.id}" ${index === 0 ? 'disabled' : ''}>↑</button>` +
-      `<button class="btn btn-small" data-action="move-action-down" data-id="${a.id}">↓</button>` +
-      `<button class="btn btn-small btn-danger" data-action="delete-action" data-id="${a.id}">Delete</button></div></summary><div class="action-card-body">${body}${poolEditor}${approval}${when}${delayEditor(a, index)}</div></details>`;
+      `</div></summary><div class="action-card-body">${body}${poolEditor}${approval}${when}${delayEditor(a, index)}</div></details>`;
   };
   A.RuleViews = { ...(A.RuleViews || {}), actionEditor, actionLabel, actionOptions, transitionChoices, relevantTransitionRows, targetStatusChoices, transitionMethod };
 })();

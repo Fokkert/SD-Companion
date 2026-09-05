@@ -12,7 +12,7 @@ const constants = read('src/shared/constants.js'),
   servers = read('src/ui/app/pages/servers.js'),
   worker = read('src/background/service-worker.js'),
   main = read('src/ui/app/app-main.js');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.5.1"'));
+assert(textIncludes(constants, 'BUILD_VERSION:"2.5.2"'));
 assert(textIncludes(constants, 'SCHEMA_VERSION:34'));
 // Schedule editor must be staged, not autosave on field/day click.
 assert(textIncludes(core, 'scheduleDraft:null') && textIncludes(core, 'beginScheduleEdit') && textIncludes(core, 'discardScheduleEdit'));

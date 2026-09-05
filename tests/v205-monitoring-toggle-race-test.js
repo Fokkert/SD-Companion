@@ -6,9 +6,9 @@ const manifest = JSON.parse(read('manifest.json')),
   core = read('src/ui/app/app-core.js'),
   events = read('src/ui/app/app-events.js'),
   worker = read('src/background/service-worker.js');
-assert.equal(manifest.version, '2.5.1');
+assert.equal(manifest.version, '2.5.2');
 assert.equal(manifest.version_name, 'V2');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.5.1"'));
+assert(textIncludes(constants, 'BUILD_VERSION:"2.5.2"'));
 // Monitoring is an atomic operational mutation, not a full-state SAVE_STATE write.
 assert(textIncludes(constants, 'SET_MONITORING:"SET_MONITORING"'));
 const monitorHandler = (events.match(/if\s*\(\s*el\.id\s*===\s*['"]homeMonitor['"]\s*\)\s*\{[\s\S]*?\n\s*\}(?=\s*if\s*\(\s*\['alarmPreset')/) || [''])[0];

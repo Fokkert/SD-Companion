@@ -8,7 +8,7 @@ globalThis.SDCompanion = {};
 load('src/shared/constants.js');
 load('src/shared/utils.js');
 const SD = SDCompanion, { ACTION, JOB } = SD.Constants;
-assert.equal(SD.Constants.BUILD_VERSION, '2.5.1');
+assert.equal(SD.Constants.BUILD_VERSION, '2.5.2');
 assert.equal(SD.Constants.SCHEMA_VERSION, 34);
 const appHtml = read('src/ui/app/app.html'),
   sideHtml = read('src/ui/app/sidepanel.html'),

@@ -1,11 +1,19 @@
-# V2 Build 2.5.1 Test Report
+# V2 Build 2.5.2 Test Report
 
 ## Result
 
-- JavaScript regression files: 71/71 passed.
+- JavaScript regression files: 72/72 passed.
 - Static architecture/security test: passed.
-- JavaScript syntax validation: 111/111 passed.
+- JavaScript syntax validation: 112/112 passed.
 - JSON parsing validation: passed.
+
+## V2.5.2 focused coverage
+
+- Action summary controls are vertically centered and use the requested control order: compact delete X, movement arrows, enable state, and the enable toggle at the far-right edge.
+- Action Completion Tone keeps a compact footprint while aligning vertically with the adjacent operational-feedback control.
+- Shared value/unit layouts use a deliberate gutter across Rule, Server and Settings time controls.
+- Searchable multi-select option rows retain normal height when filtering leaves a single visible result.
+- Release archives remain validated to ensure `SD-Companion-v2.5.2/` is the sole top-level folder.
 
 ## V2.5.1 focused coverage
 

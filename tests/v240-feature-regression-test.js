@@ -25,9 +25,9 @@ const css = read('src/ui/app/app.css');
 const readme = read('README.md');
 const sample = JSON.parse(read('sample-profile.json'));
 
-assert.equal(manifest.version, '2.5.1');
+assert.equal(manifest.version, '2.5.2');
 assert.equal(manifest.commands, undefined, 'alarm stop shortcut is now profile-configured, not a static extension command');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.5.1"'));
+assert(textIncludes(constants, 'BUILD_VERSION:"2.5.2"'));
 assert(textIncludes(constants, 'SCHEMA_VERSION:34'));
 for (const id of ['keyboard', 'duration', 'click-anywhere', 'popup']) assert(constants.includes(`id: "${id}"`));
 assert(!constants.includes('duration-or-controls'));

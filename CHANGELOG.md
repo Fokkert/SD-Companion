@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.5.2
+
+- Repaired Action-card summary controls so they are vertically centered and ordered with compact delete X, movement arrows, enable state and the enable toggle at the far-right edge.
+- Slightly increased and vertically centered the Action Completion Tone control after the v2.5.1 over-tightening.
+- Increased spacing between numeric/time value controls and their unit selectors across Rules, Server Settings and extension Settings.
+- Prevented searchable multi-select results from vertically stretching when a search leaves only one visible option.
+
 ## 2.5.1
 
 - Added navigation guards so pages collapse clean editors on exit while blocking navigation when a Rule, Schedule, Server, Settings, Appearance, Alarm Profile, or Profile edit still needs to be saved or discarded.
