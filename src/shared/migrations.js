@@ -305,7 +305,9 @@
       "ice-glass": "midnight-glass",
       "frost-light": "graphite-glass",
       "obsidian-glass": "graphite-glass",
-      "crimson-night": "crimson-glass"
+      "crimson-night": "crimson-glass",
+      "violet-glass": "aurora-glass",
+      "amber-glass": "slate-gold-glass"
     };
     if (retiredThemes[s.appearance.theme]) s.appearance.theme = retiredThemes[s.appearance.theme];
     s.system = { logLevel: 'info', activityRefreshSeconds: 3, activityRefreshUnit: 'seconds', completionToneEnabled: true, ...(s.system || {}), safety: globalSafety };
@@ -328,8 +330,17 @@
       if (!profile.defaultAlarmProfileId || !profile.alarmProfiles.some(x => x.id === profile.defaultAlarmProfileId)) profile.defaultAlarmProfileId = profile.alarmProfiles[0]?.id || '';
       delete profile.alarmDefaults;
       for (const rule of profile.rules || []) {
-        rule.source = { mode: rule.source?.mode === 'jql' || String(rule.source?.jql || '').trim() ? 'jql' : 'conditions', ...(rule.source || {}) };
-        if (rule.source.mode === 'jql') rule.source.filterIds = []; else rule.source.jql = '';
+        const hasJqlSource = Boolean(String(rule.source?.jql || '').trim() || (rule.source?.filterIds || []).length),
+          declaredSourceMode = ['jql', 'conditions'].includes(rule.source?.mode) ? rule.source.mode : '',
+          sourceMode = declaredSourceMode || (hasJqlSource ? 'jql' : 'conditions');
+        rule.source = { ...(rule.source || {}), mode: sourceMode };
+        rule.source.filterIds = Array.isArray(rule.source.filterIds) ? rule.source.filterIds.map(String).filter(Boolean) : [];
+        rule.source.jql = String(rule.source.jql || '');
+        if (sourceMode === 'jql') rule.logic = { operator: 'AND', groups: [] };
+        else {
+          rule.source.filterIds = [];
+          rule.source.jql = '';
+        }
         for (const action of rule.actions || []) if (action.type === root.Constants.ACTION.ALARM && !action.alarmProfileId) action.alarmProfileId = profile.defaultAlarmProfileId;
       }
     }

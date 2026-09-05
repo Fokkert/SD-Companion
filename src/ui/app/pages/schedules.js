@@ -18,7 +18,7 @@
         `${scheduleIcon()}` +
         `<div class="schedule-entry-copy">` +
         `<div class="list-title">${A.esc(x.name)}</div>` +
-        `<div class="schedule-entry-meta"><span class="list-meta">${A.esc(SD.Schedule.describe(x))}</span><span class="object-state schedule-state ${SD.Schedule.isActive(x) ? 'online' : 'idle'}" title="${SD.Schedule.isActive(x) ? 'Active now' : 'Inactive now'}"></span></div>` +
+        `<div class="schedule-entry-meta"><span class="object-state schedule-state ${SD.Schedule.isActive(x) ? 'online' : 'idle'}" title="${SD.Schedule.isActive(x) ? 'Active now' : 'Inactive now'}"></span><span class="list-meta">${A.esc(SD.Schedule.describe(x))}</span></div>` +
         `</div>` +
         `<button class="btn btn-small schedule-edit-button" data-action="edit-schedule" data-id="${x.id}">Edit</button></div>`).join('') || '<div class="empty">No schedules configured.</div>'}</div></div></div>${sc ? `<div class="card editor-card">` +
           `<div class="row-between">` +

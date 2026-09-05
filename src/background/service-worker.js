@@ -117,8 +117,10 @@ const alarmThemePalette = theme => ({
   "emerald-glass": { a: "#35d49a", b: "#0d9f72", glow: "rgba(53,212,154,.34)" },
   "midnight-glass": { a: "#6d9cff", b: "#355fcc", glow: "rgba(74,119,255,.30)" },
   "graphite-glass": { a: "#d0d5dc", b: "#8b939e", glow: "rgba(208,213,220,.18)" },
-  "violet-glass": { a: "#c58cff", b: "#8747d4", glow: "rgba(197,140,255,.30)" },
-  "amber-glass": { a: "#ffc45c", b: "#c97d12", glow: "rgba(255,196,92,.28)" },
+  "black-glass": { a: "#e8edf5", b: "#8b94a1", glow: "rgba(232,237,245,.16)" },
+  "aurora-glass": { a: "#57e6cf", b: "#7157ff", glow: "rgba(87,230,207,.28)" },
+  "cyber-glass": { a: "#51d9ff", b: "#ff5bbd", glow: "rgba(81,217,255,.28)" },
+  "slate-gold-glass": { a: "#e4b85a", b: "#506f97", glow: "rgba(228,184,90,.24)" },
   "crimson-glass": { a: "#ff6f86", b: "#b92f4d", glow: "rgba(255,83,111,.28)" },
   "ocean-glass": { a: "#4ed3e7", b: "#16869b", glow: "rgba(63,207,228,.26)" },
   "copper-glass": { a: "#e9874f", b: "#a74821", glow: "rgba(226,111,56,.27)" }

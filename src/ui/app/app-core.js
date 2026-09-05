@@ -17,6 +17,8 @@
     currentOperationId: "",
     serverAddOpen: false,
     serverEditId: "",
+    serverEditorDirty: false,
+    settingsDirty: false,
     settingsSection: "general",
     settingsAutomationSection: "sync",
     settingsBackTarget: null,
@@ -261,6 +263,84 @@
   A.resetSettingsDraft = () => {
     A.settingsDraft = A.makeSettingsDraft();
     return A.settingsDraft;
+  };
+  const sameConfig = (a, b) => {
+    try {
+      return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+    } catch {
+      return false;
+    }
+  };
+  A.navigationBlockReason = () => {
+    const page = A.page;
+    if (page === 'rules' && A.ruleDraft) {
+      const stored = A.profile()?.rules?.find(x => x.id === A.ruleDraft.id);
+      if (A.ruleDraftIsNew || !stored || !sameConfig(A.ruleDraft, stored)) return 'Save or cancel the rule before leaving Rules.';
+    }
+    if (page === 'schedules' && A.scheduleDraft) {
+      const stored = A.profile()?.schedules?.find(x => x.id === A.scheduleDraft.id);
+      if (A.scheduleDraftIsNew || !stored || !sameConfig(A.scheduleDraft, stored)) return 'Save or cancel the schedule before leaving Schedules.';
+    }
+    if (page === 'servers') {
+      if (A.serverEditorDirty) return 'Save the server settings or close the editor to discard the changes before leaving Jira Servers.';
+      const addName = A.$('newServerName')?.value?.trim() || '';
+      const addUrl = A.$('newServerUrl')?.value?.trim() || '';
+      const addPat = A.$('newServerPat')?.value?.trim() || '';
+      if (A.serverAddOpen && (addName || addUrl || addPat)) return 'Add the server or cancel the new-server form before leaving Jira Servers.';
+    }
+    if (page === 'settings' && A.settingsDirty) return 'Save or reset Settings before leaving.';
+    if (page === 'appearance' && A.appearanceDraftTheme && A.appearanceDraftTheme !== (A.state?.appearance?.theme || 'emerald-glass')) return 'Save or reset Appearance before leaving.';
+    if (page === 'alarms' && A.alarmDraft) {
+      const stored = A.profile()?.alarmProfiles?.find(x => x.id === A.alarmDraft.alarmProfileId);
+      const filePending = Boolean(A.$('alarmFile')?.files?.length),
+        defaultPending = Boolean(A.$('alarmDefaultProfile')?.checked && A.profile()?.defaultAlarmProfileId !== A.alarmDraft.alarmProfileId);
+      if (filePending || defaultPending || !stored || !sameConfig(A.alarmDraft.config, stored)) return 'Save or close the Alarm Profile editor before leaving.';
+    }
+    if (page === 'profiles') {
+      const profileName = A.$('profileNameEdit')?.value?.trim();
+      const currentName = A.profile()?.name || '';
+      if (profileName !== undefined && profileName && profileName !== currentName) return 'Rename the profile or restore its saved name before leaving Profiles.';
+      if (A.$('newProfileName')?.value?.trim()) return 'Create the new profile or clear its name before leaving Profiles.';
+    }
+    return '';
+  };
+  A.cleanupPageUiState = page => {
+    if (page === 'rules') A.discardRuleEdit?.();
+    if (page === 'schedules') A.discardScheduleEdit?.();
+    if (page === 'servers') {
+      A.serverAddOpen = false;
+      A.serverEditId = '';
+      A.serverEditorDirty = false;
+    }
+    if (page === 'settings') {
+      A.settingsDraft = null;
+      A.settingsDirty = false;
+    }
+    if (page === 'appearance') {
+      A.appearanceDraftTheme = null;
+      A.applyTheme?.();
+    }
+    if (page === 'alarms') {
+      A.alarmProfileDraftId = '';
+      A.alarmDraft = null;
+    }
+    if (page === 'bulk') {
+      A.bulkDraft = null;
+      A.bulkPreview = null;
+    }
+    if (page === 'profiles') A.pendingImport = null;
+  };
+  A.navigateToPage = p => {
+    if (!p || p === A.page) return true;
+    const reason = A.navigationBlockReason();
+    if (reason) {
+      A.toast(reason, 'warn');
+      return false;
+    }
+    const from = A.page;
+    A.cleanupPageUiState(from);
+    A.setPage(p);
+    return true;
   };
   A.toast = (message, type = "success") => {
     const text = String(message ?? '').trim();

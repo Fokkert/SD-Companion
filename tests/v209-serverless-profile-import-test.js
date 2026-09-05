@@ -18,7 +18,7 @@ for (const f of [
 ]) load(f);
 const SD = SDCompanion, A = SDApp;
 (async () => {
-  assert.equal(SD.Constants.BUILD_VERSION, '2.5.0');
+  assert.equal(SD.Constants.BUILD_VERSION, '2.5.1');
   A.state = { jiraSites: [], profiles: [], activeSiteId: '', activeProfileId: '', appearance: {}, system: {}, runtime: {} };
   let html = A.pageProfiles();
   assert(html.includes('Import Profile'), 'Profiles must expose Import with zero configured servers');

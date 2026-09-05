@@ -1,22 +1,22 @@
-# V2 Build 2.5.0 Test Report
+# V2 Build 2.5.1 Test Report
 
 ## Result
 
-- JavaScript regression files: 70/70 passed.
+- JavaScript regression files: 71/71 passed.
 - Static architecture/security test: passed.
-- JavaScript syntax validation: 110/110 passed.
+- JavaScript syntax validation: 111/111 passed.
 - JSON parsing validation: passed.
 
-## V2.5.0 focused coverage
+## V2.5.1 focused coverage
 
-- Browser-action badge state is source-regression tested for green `ON`, yellow `!`, red `ERR`, and an empty normal Monitoring-Off badge. Alarm playback refreshes the badge immediately.
-- Alarm Profile rows reuse Rule-card geometry, use a music-note icon, expose Edit/Close and Duplicate controls, and omit collapsed sound/stop/volume metadata.
-- Server behavior toggles follow text-left/switch-right layout; expanded discovery project cards keep a deliberate top content gutter; server health dots are compact and sit before URL metadata.
-- Manual condition-group `+ Condition` targets its owning group, and shared rule validation rejects any empty Manual condition group at save time.
-- Action cards preserve their actual expanded/collapsed state across rerenders; spacing around Timing, conditional actions, comment templates, notification fields, and transition fields is regression-covered.
-- API Data project/user entries use synchronized Jira avatar URLs again when available.
-- Help renders the exact build version, Profile cards use the same human icon as the top profile selector, and Schedule cards use a calendar icon with the activity dot after schedule metadata and Edit at the far right.
-- Release archives remain validated to ensure `SD-Companion-v2.5.0/` is the sole top-level folder.
+- Navigation regression coverage verifies that clean editors are collapsed/discarded when leaving their page while dirty Rule, Schedule, Server, Settings, Appearance, Alarm Profile, and Profile editors block page/context navigation until resolved.
+- JQL saved-filter migration preserves `filterIds`, filter-only legacy rules are inferred as JQL rules, and Manual/JQL is rendered as a single-choice select rather than concurrent tabs.
+- Method switching clears only the previous method configuration at the time of the switch: JQL sources are cleared when moving to Manual, and Manual condition logic is reset when moving to JQL.
+- Transition API Data rows no longer render the +/- disclosure bubble and use the standard compact metadata-row density.
+- Alarm Profile editing exposes a default-profile checkbox and preserves the invariant that every profile has exactly one default Alarm Profile.
+- Appearance includes Black, Aurora Night, Cyber Night, and Slate & Gold while Violet Dusk and Amber Smoke are retired and migrated to supported replacements.
+- Action Completion Tone uses a compact settings row and configured Schedule activity dots precede schedule description text.
+- Release archives remain validated to ensure `SD-Companion-v2.5.1/` is the sole top-level folder.
 
 ## V2.2.1 focused coverage
 

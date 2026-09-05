@@ -25,9 +25,9 @@ const css = read('src/ui/app/app.css');
 const readme = read('README.md');
 const sample = JSON.parse(read('sample-profile.json'));
 
-assert.equal(manifest.version, '2.5.0');
+assert.equal(manifest.version, '2.5.1');
 assert.equal(manifest.commands, undefined, 'alarm stop shortcut is now profile-configured, not a static extension command');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.5.0"'));
+assert(textIncludes(constants, 'BUILD_VERSION:"2.5.1"'));
 assert(textIncludes(constants, 'SCHEMA_VERSION:34'));
 for (const id of ['keyboard', 'duration', 'click-anywhere', 'popup']) assert(constants.includes(`id: "${id}"`));
 assert(!constants.includes('duration-or-controls'));
@@ -81,8 +81,10 @@ assert(css.includes('.rule-card.enabled .rule-entry-icon'));
 assert(!rules.includes('rule-editor-stats'));
 assert(rules.includes('Condition groups'));
 assert(rules.includes('Match all groups'));
-assert(rules.includes('>Manual</button>'));
-assert(rules.includes('>JQL</button>'));
+assert(rules.includes('data-rule-source-mode="true"'));
+assert(rules.includes('<option value="conditions"'));
+assert(rules.includes('>Manual</option>'));
+assert(rules.includes('>JQL</option>'));
 assert(actions.includes('<details class="action-card'));
 
 // Export template carries the new model and server exclusion policy.

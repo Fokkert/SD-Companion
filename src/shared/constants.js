@@ -3,7 +3,7 @@
   root.Constants = Object.freeze({
     APP_NAME: "SD Companion",
     DISPLAY_VERSION: "V2",
-    BUILD_VERSION: "2.5.0",
+    BUILD_VERSION: "2.5.1",
     SCHEMA_VERSION: 34,
     STORAGE_KEYS: Object.freeze({
       STATE: "sdCompanionState",
@@ -79,7 +79,7 @@
     ACTION: Object.freeze({ ASSIGN: "assign", COMMENT: "comment", TRANSITION: "transition", EDIT_FIELDS: "edit-fields", LABELS: "labels", PRIORITY: "priority", ALARM: "alarm", NOTIFICATION: "notification" }),
     ASSIGN_MODE: Object.freeze({ ME: "me", SPECIFIC: "specific", RANDOM: "random", UNASSIGN: "unassign" }),
     TRANSITION_METHOD: Object.freeze({ WORKFLOW_DESIGNER: "workflow-designer", ISSUE_EXTRACTION: "issue-extraction", TARGET_STATUS_RANDOM: "target-status-random", MANUAL_NAME: "manual-name" }),
-    THEME: Object.freeze({ EMERALD: "emerald-glass", MIDNIGHT: "midnight-glass", GRAPHITE: "graphite-glass", VIOLET: "violet-glass", AMBER: "amber-glass", CRIMSON: "crimson-glass", OCEAN: "ocean-glass", COPPER: "copper-glass" }),
+    THEME: Object.freeze({ EMERALD: "emerald-glass", MIDNIGHT: "midnight-glass", GRAPHITE: "graphite-glass", BLACK: "black-glass", AURORA: "aurora-glass", CYBER: "cyber-glass", SLATE_GOLD: "slate-gold-glass", CRIMSON: "crimson-glass", OCEAN: "ocean-glass", COPPER: "copper-glass" }),
     OPEN_TARGET: Object.freeze({ POPUP: "popup", SIDEPANEL: "sidepanel" }),
     API: Object.freeze({ VERSION: "2", PAGE_SIZE: 100, MAX_ISSUES: 1000, MAX_FILTERS: 5000, MAX_USERS: 20000, REQUEST_TIMEOUT_MS: 30000, MAX_RETRIES: 5, MAX_PROJECTS: 2500, MAX_TRANSITION_SAMPLES: 2000 }),
     LIMITS: Object.freeze({

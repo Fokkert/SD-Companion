@@ -26,7 +26,7 @@ assert(!textIncludes(home, 'classic-radar'));
 assert(!textIncludes(home, 'radar-world'));
 assert(!textIncludes(css, '.radar-world'));
 assert(textIncludes(css, '@media(prefers-reduced-motion:reduce)'));
-for (const t of ['emerald-glass', 'midnight-glass', 'graphite-glass', 'violet-glass', 'amber-glass', 'crimson-glass', 'ocean-glass', 'copper-glass'])
+for (const t of ['emerald-glass', 'midnight-glass', 'graphite-glass', 'black-glass', 'aurora-glass', 'cyber-glass', 'slate-gold-glass', 'crimson-glass', 'ocean-glass', 'copper-glass'])
   assert(textIncludes(theme, t));
 assert(textIncludes(actions, 'After previous action'));
 assert(textIncludes(actions, 'Conditional action'));

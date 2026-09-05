@@ -35,11 +35,11 @@
       `<div class="toggle-card-grid compact-toggle-grid section-gap">` +
       `<div class="toggle-card"><span><strong>Loop sound</strong></span><label class="master-switch"><input id="alarmLoop" type="checkbox" ${alarm.loop !== false ? 'checked' : ''}><span></span></label></div>` +
       `<div class="toggle-card"><span><strong>Use custom audio</strong></span><label class="master-switch"><input id="alarmUseCustom" type="checkbox" ${alarm.useCustom ? 'checked' : ''}><span></span></label></div>` +
+      `<div class="toggle-card alarm-default-toggle"><span><strong>Default Alarm Profile</strong></span><label class="master-switch"><input id="alarmDefaultProfile" type="checkbox" ${isDefault ? 'checked disabled' : ''}><span></span></label></div>` +
       `</div>` +
       `<div class="field alarm-file-field section-gap"><label>Custom audio</label><div class="alarm-file-picker"><span class="file-name">${A.esc(alarm.customName || 'No custom file')}</span><button class="btn btn-small" type="button" data-action="choose-alarm-file">Choose File</button><input id="alarmFile" type="file" accept="audio/*" hidden></div></div>` +
       `<div class="row alarm-settings-actions section-gap">` +
       `<button class="btn" data-action="test-alarm">Test Alarm</button>` +
-      `${!isDefault ? `<button class="btn" data-action="set-default-alarm-profile" data-id="${alarm.id}">Make Default</button>` : ''}` +
       `${alarm.customDataUrl ? `<button class="btn btn-small" data-action="clear-custom-alarm">Clear Custom Audio</button>` : ''}` +
       `<button class="btn btn-danger btn-small" data-action="delete-alarm-profile" ${A.profile()?.alarmProfiles?.length <= 1 ? 'disabled' : ''}>Delete</button>` +
       `</div>` +

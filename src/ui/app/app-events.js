@@ -282,23 +282,22 @@
     if (!target?.closest) return false;
     const b = target.closest('[data-page]');
     if (b) {
-      if (A.page === 'settings' && b.dataset.page !== 'settings') {
+      const next = b.dataset.page;
+      if (A.page === 'settings' && next !== 'settings') {
         A.settingsBackTarget = {
           section: A.settingsSection || 'general',
           automationSection: A.settingsAutomationSection || 'sync'
         };
       }
-      else if (b.dataset.page === 'settings') {
+      else if (next === 'settings') {
         A.settingsBackTarget = null;
       }
-      A.setPage(b.dataset.page);
-      return true;
+      return A.navigateToPage?.(next) !== false;
     }
     const n = target.closest('[data-nav]');
     if (n) {
       A.settingsBackTarget = null;
-      A.setPage(n.dataset.nav);
-      return true;
+      return A.navigateToPage?.(n.dataset.nav) !== false;
     }
     return false;
   };
@@ -373,6 +372,7 @@
       const el = e.target;
       if (el.matches?.('input[type="range"]')) updateRangeOutput(el);
       if (el.matches?.('.glass-multi-search')) applyGlassMultiSearch(el);
+      if (el.closest?.('.server-editor') && !el.dataset.projectDataset && !el.dataset.globalDataset && !el.matches?.('.glass-multi-search')) A.serverEditorDirty = true;
       if (['alarmVolume', 'alarmDuration'].includes(el.id)) storeAlarmDraft(alarmConfigFromControls());
       if (el.id === 'alarmVolume' && A.state?.runtime?.activeAlarm?.active) {
         A.send(MESSAGE.UPDATE_ALARM_VOLUME, { volume: Number(el.value) }).catch(() => {});
@@ -384,6 +384,7 @@
       }
       if (el.dataset.settingsProp) {
         setPath(A.ensureSettingsDraft(), el.dataset.settingsProp, typed(el));
+        A.settingsDirty = true;
       }
       if (el.dataset.ruleProp && ['input', 'textarea'].includes(el.tagName?.toLowerCase())) {
         const r = activeRule();
@@ -422,7 +423,15 @@
     document.addEventListener('change', async e => {
       const el = e.target;
       try {
+        if (el.closest?.('.server-editor') && !el.dataset.projectDataset && !el.dataset.globalDataset && !el.matches?.('.glass-multi-search')) A.serverEditorDirty = true;
         if (el.id === 'serverSelect') {
+          const block = A.navigationBlockReason?.();
+          if (block) {
+            el.value = A.site()?.id || '';
+            A.toast(block, 'warn');
+            return;
+          }
+          A.cleanupPageUiState?.(A.page);
           A.state = (await A.send(MESSAGE.SET_ACTIVE_SITE, { siteId: el.value })).state;
           A.discardRuleEdit();
           A.discardScheduleEdit?.();
@@ -434,6 +443,13 @@
           return;
         }
         if (el.id === 'profileSelect') {
+          const block = A.navigationBlockReason?.();
+          if (block) {
+            el.value = A.profile()?.id || '';
+            A.toast(block, 'warn');
+            return;
+          }
+          A.cleanupPageUiState?.(A.page);
           A.state = (await A.send(MESSAGE.SET_ACTIVE_PROFILE, { profileId: el.value })).state;
           A.discardRuleEdit();
           A.discardScheduleEdit?.();
@@ -482,6 +498,26 @@
           }
           return;
         }
+        if (el.dataset.ruleSourceMode) {
+          const r = activeRule();
+          if (!r) return;
+          const nextMode = el.value === 'jql' ? 'jql' : 'conditions';
+          const currentMode = r.source?.mode === 'jql' ? 'jql' : 'conditions';
+          if (nextMode !== currentMode) {
+            r.source = r.source || { mode: currentMode, filterIds: [], jql: '' };
+            if (nextMode === 'jql') {
+              r.logic = { operator: 'AND', groups: [] };
+            }
+            else {
+              r.source.filterIds = [];
+              r.source.jql = '';
+              r.logic = structuredClone(SD.Defaults.rule().logic);
+            }
+            r.source.mode = nextMode;
+          }
+          await saveRule(r, true);
+          return;
+        }
         if (el.dataset.settingsProp) {
           const d = A.ensureSettingsDraft(), path = el.dataset.settingsProp;
           if (path === 'autoSync.unit') {
@@ -503,6 +539,7 @@
             return;
           }
           setPath(d, path, typed(el));
+          A.settingsDirty = true;
           if (el.type === 'checkbox' || path === 'autoSync.enabled' || path === 'system.completionToneEnabled') A.renderPage();
           return;
         }
@@ -1036,11 +1073,13 @@
           }
           if (act === 'edit-server') {
             A.serverEditId = b.dataset.id;
+            A.serverEditorDirty = false;
             A.renderPage();
             return;
           }
           if (act === 'close-server-editor') {
             A.serverEditId = '';
+            A.serverEditorDirty = false;
             A.renderPage();
             return;
           }
@@ -1081,6 +1120,7 @@
             A.state = (await A.send(MESSAGE.UPDATE_SERVER, { siteId: s.id, baseUrl, name: A.$('serverNameEdit').value.trim() || s.name, icon, network, behavior, inventorySettings, securityAuthToken })).state;
             A.renderShell();
             A.serverEditId = s.id;
+            A.serverEditorDirty = false;
             A.renderPage();
             A.toast('Server settings saved.');
             return;
@@ -1137,12 +1177,6 @@
             A.inventorySearch = '';
             A.renderPage();
             return;
-          }
-          if (act === 'rule-source-mode') {
-            const r = activeRule(); if (!r) return;
-            r.source = r.source || {}; r.source.mode = b.dataset.value === 'jql' ? 'jql' : 'conditions';
-            if (r.source.mode === 'jql') { r.source.filterIds = []; } else { r.source.jql = ''; }
-            await saveRule(r, true); A.renderPage(); return;
           }
           if (act === 'add-condition-group') {
             const r = activeRule(); if (!r) return; r.logic = r.logic || { operator:'AND', groups:[] }; r.logic.groups = r.logic.groups || []; r.logic.groups.push(SD.Defaults.group()); await saveRule(r,true); A.renderPage(); return;
@@ -1384,11 +1418,13 @@
           }
           if (act === 'settings-target') {
             A.ensureSettingsDraft().appearance.openTarget = b.dataset.target === 'sidepanel' ? 'sidepanel' : 'popup';
+            A.settingsDirty = true;
             A.renderPage();
             return;
           }
           if (act === 'cancel-settings') {
             A.resetSettingsDraft();
+            A.settingsDirty = false;
             A.renderPage();
             return;
           }
@@ -1436,6 +1472,7 @@
             A.state = await commitSettingsDraft({ system, siteId: s?.id || '', profileId: p?.id || '', autoSync, alarm, openTarget: target });
             const sidePanelOpened = await sidePanelOpen;
             A.settingsDraft = null;
+            A.settingsDirty = false;
             A.scheduleHomeRefresh?.();
             A.renderShell();
             A.renderPage();
@@ -1468,19 +1505,10 @@
             A.toast(`Duplicated as ${copy.name}.`, 'success');
             return;
           }
-          if (act === 'set-default-alarm-profile') {
-            const profile = A.profile(), id = b.dataset.id || A.alarmProfileDraftId;
-            if (!profile?.alarmProfiles?.some(x => x.id === id)) return;
-            profile.defaultAlarmProfileId = id;
-            await A.save(false, 'none');
-            A.renderPage();
-            A.toast('Default Alarm Profile updated.');
-            return;
-          }
           if (act === 'save-alarm') {
             const profile=A.profile(); if(!profile) return; const cfg=alarmConfigFromControls(), file=A.$('alarmFile')?.files?.[0];
             if(file){ if(file.size>L.CUSTOM_SOUND_MAX_BYTES) throw new Error(`Custom sound must be ${L.CUSTOM_SOUND_MAX_BYTES/1024/1024} MB or smaller.`); cfg.customDataUrl=await A.fileDataUrl(file); cfg.customName=file.name; cfg.useCustom=true; }
-            profile.alarmProfiles=profile.alarmProfiles||[]; const i=profile.alarmProfiles.findIndex(x=>x.id===cfg.id); if(i>=0) profile.alarmProfiles[i]={...profile.alarmProfiles[i],...cfg}; else profile.alarmProfiles.push(cfg); if(!profile.defaultAlarmProfileId) profile.defaultAlarmProfileId=cfg.id; A.alarmProfileDraftId=cfg.id; A.alarmDraft=null; A.settingsDraft=null; await A.save(false,'none'); A.renderPage(); A.toast('Alarm Profile saved.'); return;
+            profile.alarmProfiles=profile.alarmProfiles||[]; const i=profile.alarmProfiles.findIndex(x=>x.id===cfg.id); if(i>=0) profile.alarmProfiles[i]={...profile.alarmProfiles[i],...cfg}; else profile.alarmProfiles.push(cfg); if(!profile.defaultAlarmProfileId || A.$('alarmDefaultProfile')?.checked) profile.defaultAlarmProfileId=cfg.id; A.alarmProfileDraftId=cfg.id; A.alarmDraft=null; A.settingsDraft=null; await A.save(false,'none'); A.renderPage(); A.toast('Alarm Profile saved.'); return;
           }
           if (act === 'choose-alarm-file') { A.$('alarmFile')?.click(); return; }
           if (act === 'new-alarm-profile') {
@@ -1605,7 +1633,7 @@
             A.settingsSection = target.section || 'general';
             A.settingsAutomationSection = target.automationSection || 'sync';
             A.settingsBackTarget = null;
-            A.setPage('settings');
+            A.navigateToPage?.('settings');
             return;
           }
           if (act === 'settings-section') {

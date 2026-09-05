@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.5.1
+
+- Added navigation guards so pages collapse clean editors on exit while blocking navigation when a Rule, Schedule, Server, Settings, Appearance, Alarm Profile, or Profile edit still needs to be saved or discarded.
+- Fixed JQL saved-filter persistence by removing destructive migration logic that cleared filter IDs, and changed Manual/JQL selection to a single-choice list. Switching methods now clears the previous method's configuration at the point of switching.
+- Removed the transition-card +/- disclosure bubble and normalized transition-row density with the rest of API Data.
+- Added an editor checkbox for making an Alarm Profile the profile default while preserving exactly one default.
+- Expanded dark appearance choices with Black, Aurora Night, Cyber Night, and Slate & Gold; retired Violet Dusk and Amber Smoke with migration mappings for existing users.
+- Tightened the Action Completion Tone card and moved configured Schedule status indicators to the start of their descriptive metadata.
+
 ## 2.5.0
 
 - Restored smart extension-action badges: green `ON` only for healthy active monitoring, no badge for normal Monitoring Off, yellow `!` for attention states (including active alarms), and red `ERR` for Jira connection failures.

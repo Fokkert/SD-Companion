@@ -7,8 +7,10 @@
         ['emerald-glass', 'Emerald Dark', '#45ef94', '#0d6a43'],
         ['midnight-glass', 'Midnight', '#6693ff', '#09142f'],
         ['graphite-glass', 'Graphite', '#d0d5dc', '#31343a'],
-        ['violet-glass', 'Violet Dusk', '#c58cff', '#4c276d'],
-        ['amber-glass', 'Amber Smoke', '#ffc45c', '#5a3711'],
+        ['black-glass', 'Black', '#e8edf5', '#050608'],
+        ['aurora-glass', 'Aurora Night', '#57e6cf', '#7157ff'],
+        ['cyber-glass', 'Cyber Night', '#51d9ff', '#ff5bbd'],
+        ['slate-gold-glass', 'Slate & Gold', '#e4b85a', '#374a67'],
         ['crimson-glass', 'Crimson Night', '#ff6f86', '#56101f'],
         ['ocean-glass', 'Ocean Night', '#4ed3e7', '#0b4a58'],
         ['copper-glass', 'Copper Night', '#e9874f', '#5a2613']

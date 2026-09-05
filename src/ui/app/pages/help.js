@@ -62,7 +62,7 @@ ${topic('rules', '5. Rule model', '<p>A rule defines what should match and what 
                 '<ul>' +
                 '<li>Priority determines evaluation order.</li>' +
                 '<li>Schedule is explicit: Always On or one or more selected schedules. When several schedules are mapped to a rule, the rule is eligible while any selected schedule is active.</li>' +
-                '<li>Choose exactly one detection method: JQL or Manual. JQL can use saved filters and/or Additional JQL; Manual use condition groups. The two methods are not evaluated concurrently.</li>' +
+                '<li>Choose exactly one detection method: JQL or Manual. JQL can use saved filters and/or Additional JQL; Manual uses condition groups. The two methods are not evaluated concurrently. Changing the detection method clears the previous method\'s configuration so only the selected method remains configured.</li>' +
                 '<li>Execution Policy controls whether actions occur once per issue, once per status, once per update, or repeat after an interval.</li>' +
                 '<li>Conflict Policy controls interaction with lower-priority rules.</li>' +
                 '<li>Rule-level timing controls the default randomized action delay; an individual action may override it or wait a configured delay after the previous planned action succeeds.</li>' +
@@ -74,7 +74,7 @@ ${topic('rules', '5. Rule model', '<p>A rule defines what should match and what 
                 '</ul>')}
 ${topic('bulk', '6. Bulk Operations', '<p>Rules → <b>Bulk Operations</b> is a one-time rule-style execution surface next to the + Rule control. It is not saved into the profile rules.</p>' +
                   '<ul>' +
-                  '<li>Choose either JQL targeting (saved filters and/or Additional JQL) or Manual; the two detection methods are not evaluated concurrently.</li>' +
+                  '<li>Choose either JQL targeting (saved filters and/or Additional JQL) or Manual; the two detection methods are not evaluated concurrently. Switching methods clears the previous method\'s configuration.</li>' +
                   '<li>Build the normal ordered action chain, including delays, After previous dependencies and optional Needs approval gates.</li>' +
                   '<li>Preview matches before execution, then Run now to queue the operation immediately.</li>' +
                   '<li>Global safety limits and execution-time Jira preflight still apply.</li>' +

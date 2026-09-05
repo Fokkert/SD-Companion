@@ -7944,3 +7944,49 @@ n.connection-policy-note {
     justify-self: end;
   }
 }
+
+/* V2.5.1 focused UI repairs ----------------------------------------------- */
+
+/* Transition rows use the same visual density as the other API Data rows. */
+.transition-card > summary::after {
+  display: none !important;
+  content: none !important;
+}
+.transition-card > summary {
+  min-height: 58px;
+  padding: 10px 14px !important;
+}
+
+/* Detection method is a single-choice list, not a tab strip. */
+.detection-method-field {
+  max-width: 320px;
+  margin-bottom: 12px;
+}
+.detection-method-field label {
+  margin-bottom: 6px;
+}
+.detection-method-select {
+  width: 100%;
+}
+
+/* Action Completion Tone should stay compact instead of stretching with its sibling. */
+.automation-feedback-grid {
+  align-items: start !important;
+}
+.automation-feedback-grid .setting-line-card {
+  height: auto !important;
+  min-height: 40px !important;
+  align-self: start !important;
+  padding-block: 6px !important;
+}
+
+/* Schedule status dot precedes the descriptive text. */
+.schedule-entry-meta {
+  justify-content: flex-start;
+}
+.schedule-entry-meta .schedule-state {
+  order: 0;
+}
+.schedule-entry-meta .list-meta {
+  order: 1;
+}

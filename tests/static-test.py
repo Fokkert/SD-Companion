@@ -23,7 +23,7 @@ def source_in(source, expected):
 manifest = json.loads(read('manifest.json'))
 
 assert manifest['manifest_version'] == 3
-assert manifest['version'] == '2.5.0'
+assert manifest['version'] == '2.5.1'
 assert manifest['version_name'] == 'V2'
 assert 'content_scripts' not in manifest
 assert 'options_page' not in manifest

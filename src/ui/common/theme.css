@@ -66,42 +66,80 @@ html[data-theme="graphite-glass"] {
   --on-primary: #17191c;
 }
 
-/* Purple dusk: visibly brighter surfaces and stronger chroma. */
+/* Pure black: minimal hue, high contrast, low glow. */
 
-html[data-theme="violet-glass"] {
+html[data-theme="black-glass"] {
   color-scheme: dark;
-  --bg: #140b20;
-  --bg2: #29123d;
-  --panel: rgba(46,24,69,.84);
-  --panel2: rgba(67,34,96,.95);
-  --line: rgba(226,192,255,.18);
-  --line2: rgba(193,126,255,.42);
-  --text: #fff5ff;
-  --muted: #c2a6d2;
-  --primary: #c58cff;
-  --primary2: #8747d4;
-  --accent: #f0c7ff;
-  --glow: rgba(197,140,255,.24);
-  --on-primary: #180823;
+  --bg: #000000;
+  --bg2: #050608;
+  --panel: rgba(7,8,10,.96);
+  --panel2: rgba(13,15,18,.99);
+  --line: rgba(230,236,245,.10);
+  --line2: rgba(198,207,220,.24);
+  --text: #f7f9fc;
+  --muted: #969da8;
+  --primary: #e8edf5;
+  --primary2: #8b94a1;
+  --accent: #ffffff;
+  --glow: rgba(232,237,245,.07);
+  --on-primary: #08090b;
 }
 
-/* Warm amber: brown/bronze surfaces instead of another nearly-black accent swap. */
+/* Aurora night: teal primary with violet secondary accents on navy-black glass. */
 
-html[data-theme="amber-glass"] {
+html[data-theme="aurora-glass"] {
   color-scheme: dark;
-  --bg: #1a1005;
-  --bg2: #35200b;
-  --panel: rgba(56,34,12,.86);
-  --panel2: rgba(76,47,16,.95);
-  --line: rgba(255,219,148,.17);
-  --line2: rgba(241,175,63,.42);
-  --text: #fff8e9;
-  --muted: #c9af82;
-  --primary: #ffc45c;
-  --primary2: #c97d12;
-  --accent: #ffe2a3;
-  --glow: rgba(255,188,75,.20);
-  --on-primary: #241502;
+  --bg: #02080d;
+  --bg2: #091323;
+  --panel: rgba(6,18,29,.94);
+  --panel2: rgba(10,27,43,.98);
+  --line: rgba(87,230,207,.13);
+  --line2: rgba(113,87,255,.34);
+  --text: #effffc;
+  --muted: #91adb2;
+  --primary: #57e6cf;
+  --primary2: #7157ff;
+  --accent: #b7a7ff;
+  --glow: rgba(87,230,207,.16);
+  --on-primary: #03110f;
+}
+
+/* Cyber night: cyan controls with magenta secondary accents over black-blue surfaces. */
+
+html[data-theme="cyber-glass"] {
+  color-scheme: dark;
+  --bg: #02050a;
+  --bg2: #090d18;
+  --panel: rgba(7,12,23,.95);
+  --panel2: rgba(12,18,33,.99);
+  --line: rgba(81,217,255,.14);
+  --line2: rgba(255,91,189,.32);
+  --text: #f4fbff;
+  --muted: #91a4b7;
+  --primary: #51d9ff;
+  --primary2: #ff5bbd;
+  --accent: #ff9ad5;
+  --glow: rgba(81,217,255,.15);
+  --on-primary: #031014;
+}
+
+/* Slate & Gold: cool slate surfaces with warm gold controls and blue secondary tones. */
+
+html[data-theme="slate-gold-glass"] {
+  color-scheme: dark;
+  --bg: #090b0f;
+  --bg2: #151b25;
+  --panel: rgba(20,25,34,.95);
+  --panel2: rgba(29,36,48,.99);
+  --line: rgba(228,184,90,.13);
+  --line2: rgba(80,111,151,.34);
+  --text: #f8f4ea;
+  --muted: #a9a38f;
+  --primary: #e4b85a;
+  --primary2: #506f97;
+  --accent: #8eb5e6;
+  --glow: rgba(228,184,90,.13);
+  --on-primary: #171105;
 }
 
 /* Deep crimson: warm red highlights over burgundy-black surfaces. */
