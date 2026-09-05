@@ -29,7 +29,15 @@
   };
   const normalizeRuleConditions = (r, s) => {
     for (const g of r?.logic?.groups || []) for (const c of g.conditions || []) R.normalizeCondition?.(c, s);
-    for (const a of r?.actions || []) if (a.when?.enabled) for (const g of a.when.logic?.groups || []) for (const c of g.conditions || []) R.normalizeCondition?.(c, s);
+    for (const a of r?.actions || []) {
+      const logic = a.when?.logic, groups = logic?.groups || [];
+      if (groups.length === 1) {
+        const op = groups[0].operator === 'OR' ? 'OR' : 'AND';
+        groups[0].operator = op;
+        logic.operator = op;
+      }
+      if (a.when?.enabled) for (const g of groups) for (const c of g.conditions || []) R.normalizeCondition?.(c, s);
+    }
   };
   const saveRule = async (r, render = true) => {
     const s = A.site();
@@ -738,9 +746,11 @@
           return;
         }
         if (el.dataset.actionWhenOp) {
-          const r = activeRule(), a = findAction(el.dataset.actionId), g = a?.when?.logic?.groups?.[0];
-          if (!r || !g) return;
-          g.operator = el.value === 'OR' ? 'OR' : 'AND';
+          const r = activeRule(), a = findAction(el.dataset.actionId), logic = a?.when?.logic, g = logic?.groups?.[0];
+          if (!r || !logic || !g) return;
+          const op = el.value === 'OR' ? 'OR' : 'AND';
+          g.operator = op;
+          logic.operator = op;
           await saveRule(r, true);
           return;
         }

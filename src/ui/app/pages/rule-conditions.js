@@ -77,13 +77,14 @@
   const conditionEditor = (g, s) => `<div class="condition-simple" data-group-id="${g.id}"><div class="condition-list">${conditionRows(g, s)}</div><button class="btn btn-small" data-action="add-condition" data-group="${g.id}">+ Condition</button></div>`;
   const actionConditionEditor = (a, s) => {
     const logic = a.when?.logic || { operator: 'AND', groups: [SD.Defaults.group()] },
-      g = logic.groups?.[0] || SD.Defaults.group();
+      g = logic.groups?.[0] || SD.Defaults.group(),
+      matchOperator = g.operator === 'OR' ? 'OR' : 'AND';
     return `<div class="action-conditions">` +
       `<div class="action-condition-head">` +
       `<label>Apply action when</label>` +
       `<select class="select compact-select action-condition-match" data-action-id="${a.id}" data-action-when-op="true">` +
-      `<option value="AND" ${g.operator !== 'OR' ? 'selected' : ''}>Match all</option>` +
-      `<option value="OR" ${g.operator === 'OR' ? 'selected' : ''}>Match any</option>` +
+      `<option value="AND" ${matchOperator !== 'OR' ? 'selected' : ''}>Match all</option>` +
+      `<option value="OR" ${matchOperator === 'OR' ? 'selected' : ''}>Match any</option>` +
       `</select>` +
       `</div>` +
       `<div class="condition-list">${conditionRows(g, s, 'action', a.id)}</div>` +

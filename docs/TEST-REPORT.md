@@ -1,11 +1,17 @@
-# V2 Build 2.6.2 Test Report
+# V2 Build 2.6.3 Test Report
 
 ## Result
 
-- JavaScript regression files: 77/77 passed.
+- JavaScript regression files: 78/78 passed.
 - Static architecture/security test: passed.
-- JavaScript syntax validation: 117/117 passed.
+- JavaScript syntax validation: 118/118 passed.
 - JSON parsing validation: passed.
+
+## V2.6.3 focused coverage
+
+- Action Conditions preserve **Match any** across draft rerenders, Rule Save, state migration, page changes and reopening the rule.
+- Single-group Action Condition logic keeps the stored group operator and its surrounding logic operator canonicalized so the editor and runtime matcher cannot disagree.
+- Release archives remain validated to ensure `SD-Companion-v2.6.3/` is the sole top-level folder.
 
 ## V2.6.2 focused coverage
 

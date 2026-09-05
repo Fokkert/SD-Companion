@@ -57,8 +57,14 @@
     const delayMode = ['inherit', 'override', 'after-previous'].includes(x.delay?.mode) ? x.delay.mode : 'inherit';
     x.delay = { mode: delayMode, minSeconds: Math.min(rawMin, rawMax), maxSeconds: Math.max(rawMin, rawMax), unit: normalizeUnit(x.delay?.unit, ruleDelay?.unit || 'seconds') };
     x.randomPoolId = String(x.randomPoolId || '');
-    const when = x.when && typeof x.when === 'object' ? x.when : {};
-    x.when = { enabled: Boolean(when.enabled), logic: normalizeLogic(when.logic || root.Defaults.group && { operator: 'AND', groups: [root.Defaults.group()] }) };
+    const when = x.when && typeof x.when === 'object' ? x.when : {},
+      logic = normalizeLogic(when.logic || root.Defaults.group && { operator: 'AND', groups: [root.Defaults.group()] });
+    if (logic?.groups?.length === 1) {
+      const op = logic.groups[0].operator === 'OR' ? 'OR' : 'AND';
+      logic.groups[0].operator = op;
+      logic.operator = op;
+    }
+    x.when = { enabled: Boolean(when.enabled), logic };
     return x;
   });
   const isFactoryRule = r => {

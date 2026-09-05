@@ -8,8 +8,8 @@ const constants = read('src/shared/constants.js');
 const actions = read('src/ui/app/pages/rule-actions.js');
 const css = read('src/ui/app/app.css');
 
-assert.equal(manifest.version, '2.6.2');
-assert(constants.includes('BUILD_VERSION: "2.6.2"'));
+assert.equal(manifest.version, '2.6.3');
+assert(constants.includes('BUILD_VERSION: "2.6.3"'));
 
 // Action summary controls: delete X, movement arrows, then the icon-only enable toggle at the far edge.
 const deletePos = actions.indexOf('class="btn btn-small btn-danger action-delete-button"');
@@ -36,4 +36,4 @@ assert(css.includes('.completion-tone-control.setting-line-card'));
 assert(css.includes('display: inline-flex;'));
 assert(css.includes('text-overflow: ellipsis;'));
 
-console.log('v2.6.2 action/layout spacing regression: OK');
+console.log('v2.6.3 action/layout spacing regression: OK');

@@ -12,8 +12,8 @@ const settings = read('src/ui/app/pages/logs-more.js');
 const help = read('src/ui/app/pages/help.js');
 const css = read('src/ui/app/app.css');
 
-assert.equal(manifest.version, '2.6.2');
-assert(constants.includes('BUILD_VERSION: "2.6.2"'));
+assert.equal(manifest.version, '2.6.3');
+assert(constants.includes('BUILD_VERSION: "2.6.3"'));
 
 // Alarm stop-method changes are live UI changes, not save/reopen changes.
 const stopHandler = events.indexOf("if (el.id === 'alarmStopMethod') {");
@@ -38,4 +38,4 @@ assert(css.includes('.automation-feedback-refresh {'));
 assert(help.includes('Action Complete Tone'));
 assert(help.includes('Settings → General'));
 
-console.log('v2.6.2 alarm/settings regression: OK');
+console.log('v2.6.3 alarm/settings regression: OK');

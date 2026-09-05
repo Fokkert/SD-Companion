@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.6.3
+
+- Fixed Action Conditions so **Match any** persists after saving, leaving the Rules page, and reopening the rule.
+- Canonicalized single-group Action Condition operators across the editor, save normalization, and state migration so the UI and execution engine cannot diverge between `AND` and `OR`.
+
 ## 2.6.2
 
 - Fixed Alarm Profile stop-method switching so the editor immediately rerenders the method-specific controls and clears stale Keyboard Shortcut values when the stop method changes.

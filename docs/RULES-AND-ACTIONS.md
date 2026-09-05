@@ -201,7 +201,9 @@ Actions:
 
 Each action can optionally have its own typed conditions. This lets one rule detect a broad issue
 set while individual actions apply only to the relevant project, issue type, status or other field
-values. Optional random action pools can select a configured number of matching actions from a pool.
+values. The Action Conditions selector chooses whether **Match all** or **Match any** of the configured
+conditions is required, and that choice is persisted with the action. Optional random action pools can
+select a configured number of matching actions from a pool.
 
 Each individual action also has an optional **Needs approval** gate. When enabled, the planner creates
 an `awaiting-approval` job instead of arming it for execution. Approval changes it to Pending without
