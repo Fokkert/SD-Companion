@@ -1,11 +1,18 @@
-# V2 Build 2.6.0 Test Report
+# V2 Build 2.6.1 Test Report
 
 ## Result
 
-- JavaScript regression files: 75/75 passed.
+- JavaScript regression files: 76/76 passed.
 - Static architecture/security test: passed.
-- JavaScript syntax validation: 115/115 passed.
+- JavaScript syntax validation: 116/116 passed.
 - JSON parsing validation: passed.
+
+## V2.6.1 focused coverage
+
+- Rules documentation enumerates the supported issue, project, user, Jira-field and time variables plus JSON expansion behavior.
+- Alarm Profile editing labels the timeout field simply **Duration** while blank duration remains unlimited.
+- Action Completion Tone is a bounded responsive settings card that shares the Operational Feedback row without colliding with Home history value/unit controls.
+- Release archives remain validated to ensure `SD-Companion-v2.6.1/` is the sole top-level folder.
 
 ## V2.6.0 focused coverage
 

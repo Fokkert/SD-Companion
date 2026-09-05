@@ -8292,3 +8292,77 @@ n.connection-policy-note {
   font-weight: 900;
   letter-spacing: .7px;
 }
+
+/* V2.6.1 documentation and Operational Feedback correction --------------- */
+
+/*
+ * Keep Home history refresh and Action Completion Tone side-by-side at normal
+ * popup/side-panel widths without allowing either control to overlap the other.
+ * The history value is the flexible column; its Unit selector keeps a bounded
+ * width. The completion tone is a real settings card again and owns only the
+ * space allocated by the parent grid.
+ */
+.automation-feedback-grid {
+  display: grid !important;
+  grid-template-columns: minmax(150px, 1fr) minmax(132px, 180px) !important;
+  align-items: end !important;
+  gap: 12px !important;
+  min-width: 0 !important;
+}
+
+.automation-feedback-grid > .time-value-row {
+  display: grid !important;
+  grid-template-columns: minmax(60px, 1fr) minmax(72px, 84px) !important;
+  gap: 8px !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+
+.completion-tone-control.setting-line-card {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  align-self: end !important;
+  gap: 10px !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  min-height: 40px !important;
+  height: 40px !important;
+  box-sizing: border-box !important;
+  padding: 0 10px !important;
+  margin: 0 !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 13px !important;
+  background: var(--surface-soft) !important;
+}
+
+.completion-tone-control.setting-line-card > span:first-child {
+  min-width: 0 !important;
+  max-width: none !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-size: var(--control-label-font-size) !important;
+  font-weight: 750 !important;
+}
+
+.completion-tone-control.setting-line-card > .master-switch {
+  justify-self: end !important;
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+}
+
+/* Below this point a single row cannot remain readable, so stack cleanly
+ * rather than letting either control collide or escape the settings card. */
+@container (max-width: 315px) {
+  .automation-feedback-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .completion-tone-control.setting-line-card {
+    width: min(100%, 180px) !important;
+  }
+}

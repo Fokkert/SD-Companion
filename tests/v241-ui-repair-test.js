@@ -14,8 +14,8 @@ const pages = read('src/ui/app/app-pages.js');
 const html = read('src/ui/app/app.html');
 const side = read('src/ui/app/sidepanel.html');
 
-assert.equal(manifest.version, '2.6.0');
-assert(constants.includes('BUILD_VERSION: "2.6.0"'));
+assert.equal(manifest.version, '2.6.1');
+assert(constants.includes('BUILD_VERSION: "2.6.1"'));
 assert(css.includes('.master-switch > span {\n  border-radius: 999px !important;'));
 assert(css.includes('.radar-monitor-controls .master-switch > span'));
 assert(!css.includes('.master-switch>span{border-radius:7px!important}'));
@@ -39,4 +39,4 @@ assert(alarms.includes('id="alarmDefaultProfile"'));
 assert(pages.includes('alarms: A.pageAlarms'));
 assert(html.includes('pages/alarms.js'));
 assert(side.includes('pages/alarms.js'));
-console.log('v2.6.0 UI repair regression: OK');
+console.log('v2.6.1 UI repair regression: OK');

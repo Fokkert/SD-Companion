@@ -1,4 +1,4 @@
-# Jira REST/API Map — V2 build 2.6.0
+# Jira REST/API Map — V2 build 2.6.1
 
 Normal Jira REST/API endpoints are called relative to the configured Jira base URL with the user's
 PAT. The sole browser-session request exists only in the default **Full Workflow Map (Recommended)**

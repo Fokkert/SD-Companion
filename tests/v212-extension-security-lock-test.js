@@ -36,7 +36,7 @@ for (const f of [
   vm.runInThisContext(read(f), { filename: f });
 (async () => {
   const SD = SDCompanion, K = SD.Constants.STORAGE_KEYS;
-  assert.equal(SD.Constants.BUILD_VERSION, '2.6.0');
+  assert.equal(SD.Constants.BUILD_VERSION, '2.6.1');
   let st = await SD.Storage.securityStatus();
   assert.equal(st.enabled, false);
   assert.equal(st.unlocked, true);
@@ -70,7 +70,7 @@ for (const f of [
     app = read('src/ui/app/app.html'),
     side = read('src/ui/app/sidepanel.html'),
     css = read('src/ui/app/app.css');
-  assert.equal(manifest.version, '2.6.0');
+  assert.equal(manifest.version, '2.6.1');
   for (const src of [app, side])
     assert(textIncludes(src, 'securityLockOverlay') && textIncludes(src, 'securityReauthOverlay'));
   assert(textIncludes(settings, "nav('security','Security')"));

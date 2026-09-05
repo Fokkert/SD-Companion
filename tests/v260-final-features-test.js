@@ -13,8 +13,8 @@ load('src/shared/utils.js');
 
 const SD = globalThis.SDCompanion;
 const manifest = JSON.parse(read('manifest.json'));
-assert.equal(manifest.version, '2.6.0');
-assert.equal(SD.Constants.BUILD_VERSION, '2.6.0');
+assert.equal(manifest.version, '2.6.1');
+assert.equal(SD.Constants.BUILD_VERSION, '2.6.1');
 
 // Variables are first-class for comments and JSON field edits.
 const issue = {
@@ -46,7 +46,7 @@ const alarms = read('src/ui/app/pages/alarms.js');
 const events = read('src/ui/app/app-events.js');
 const worker = read('src/background/service-worker.js');
 const offscreen = read('src/offscreen/alarm.js');
-assert(alarms.includes('Duration <span class="muted">optional</span>'));
+assert(alarms.includes('<label>Duration</label>'));
 assert(alarms.includes('placeholder="Unlimited"'));
 assert(!alarms.includes("alarm.stopMethod === 'duration' ? `<div class=\"field\"><label>Duration"));
 assert(events.includes("base.durationSeconds = rawDuration ? seconds(rawDuration, base.durationUnit || 'seconds', 1, 86400) : 0"));
@@ -77,4 +77,4 @@ assert(css.includes('grid-template-columns: minmax(210px, 254px) minmax(150px, m
 assert(css.includes('align-items: end !important;'));
 assert(css.includes('height: 40px !important;'));
 
-console.log('v2.6.0 final features regression: OK');
+console.log('v2.6.1 final features regression: OK');

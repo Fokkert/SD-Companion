@@ -11,8 +11,8 @@ const settings = read('src/ui/app/pages/logs-more.js');
 const actions = read('src/ui/app/pages/rule-actions.js');
 const css = read('src/ui/app/app.css');
 
-assert.equal(manifest.version, '2.6.0');
-assert(constants.includes('BUILD_VERSION: "2.6.0"'));
+assert.equal(manifest.version, '2.6.1');
+assert(constants.includes('BUILD_VERSION: "2.6.1"'));
 
 // Connection-loss pair is bounded rather than stretched across the card.
 assert(servers.includes('class="time-value-row connection-loss-duration-row"'));
@@ -20,10 +20,9 @@ assert(css.includes('grid-template-columns: minmax(112px, 160px) 96px !important
 assert(css.includes('width: min(100%, 268px) !important;'));
 assert(css.includes('padding-right: 2px;'));
 
-// Completion tone is plain inline content, not a setting card.
-assert(settings.includes('class="completion-tone-control"'));
-assert(!settings.includes('<div class="setting-line setting-line-card">` +\n          `<span>Action Completion Tone</span>'));
-assert(css.includes('.completion-tone-control {'));
+// Completion tone is a bounded setting card in the current UI.
+assert(settings.includes('completion-tone-control setting-line setting-line-card'));
+assert(css.includes('.completion-tone-control.setting-line-card'));
 assert(css.includes('grid-template-columns: minmax(0, 1fr) !important;'));
 
 // Action card itself no longer creates a hidden grid-row gap; summary is a centered flex row.
@@ -33,4 +32,4 @@ assert(css.includes('height: 56px !important;'));
 assert(css.includes('align-items: center !important;'));
 assert(!actions.includes('class="toggle-caption"'));
 
-console.log('v2.6.0 corrective layout regression: OK');
+console.log('v2.6.1 corrective layout regression: OK');

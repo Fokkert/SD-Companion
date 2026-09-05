@@ -16,9 +16,9 @@ const manifest = JSON.parse(read('manifest.json')),
   migrations = read('src/shared/migrations.js'),
   css = read('src/ui/app/app.css'),
   servers = read('src/ui/app/pages/servers.js');
-assert.equal(manifest.version, '2.6.0');
+assert.equal(manifest.version, '2.6.1');
 assert.equal(manifest.version_name, 'V2');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.6.0"'));
+assert(textIncludes(constants, 'BUILD_VERSION:"2.6.1"'));
 // Alarm configuration is profile-owned and actions reference Alarm Profiles.
 assert(textIncludes(settings, 'Alarm Profiles'));
 assert(textIncludes(alarms, 'id="alarmPreset"'));

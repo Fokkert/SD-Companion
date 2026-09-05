@@ -9,28 +9,139 @@ Every rule explicitly chooses one of:
 No schedule is created automatically. An enabled rule configured for schedules with no
 selected schedule fails validation / fails closed.
 
-## Detection source
+## Detection method
 
-A saved Jira filter is optional. Rules may use:
-- one or more synchronized filters;
-- raw JQL;
-- typed conditions that can be translated into JQL;
-- a combination of those sources.
+Each rule chooses exactly one detection method:
+- **Manual** — one or more condition groups built from synchronized Jira metadata; or
+- **JQL** — one or more synchronized saved filters and/or Additional JQL.
 
-If no safe query constraint can be generated, the rule is skipped rather than issuing a broad Jira
-scan.
+Switching detection method clears the configuration that belongs to the previous method. If no safe
+query constraint can be generated, the rule is skipped rather than issuing a broad Jira scan.
 
 ## Conditions
+
+Manual rules contain one or more condition groups. Each group independently uses **Match all** or
+**Match any**, and the rule independently chooses whether all groups or any group must match. Empty
+condition groups are invalid and block **Save Rule**.
 
 The condition registry determines valid operators, data source and cardinality from Jira field
 schema. Text, number, date/datetime, boolean, user/choice and array fields receive type-appropriate
 operators and editors. Single-value operators accept one value; set operators accept multiple
-values; existence operators accept none.
+values; existence operators accept none. Rule editing is staged locally and is not applied until
+**Save Rule** is pressed.
 
-Normal rule configuration uses **All** or **Any** condition matching rather than exposing internal
-nested group logic. Rule editing is staged locally and is not applied until **Save Rule** is
-pressed.
 
+## Action variables
+
+Comment templates, **Edit Fields** JSON, **Transition Fields JSON**, and Browser Notification title/message
+can reference values from the current Jira issue with `{{...}}` variables. Comment and field/transition
+JSON variables are expanded after the issue is re-fetched at execution time, so delayed Jira-write
+actions use the latest available issue values. Browser Notification title/message variables are
+expanded when the notification action is planned.
+
+### Primary issue variables
+
+| Variable | Value |
+| --- | --- |
+| `{{issue.id}}` | Jira issue ID |
+| `{{issue.key}}` | Issue key, for example `IT-42` |
+| `{{issue.filterId}}` | Synchronized saved-filter ID associated with the detection when available |
+| `{{issue.summary}}` | Summary |
+| `{{issue.description}}` | Description text when Jira exposes it as plain text |
+| `{{issue.issueType}}` | Issue type name |
+| `{{issue.issueTypeId}}` | Issue type ID |
+| `{{issue.status}}` | Status name |
+| `{{issue.statusId}}` | Status ID |
+| `{{issue.projectKey}}` | Project key |
+| `{{issue.projectId}}` | Project ID |
+| `{{issue.projectName}}` | Project name |
+| `{{issue.assignee}}` | Assignee display name |
+| `{{issue.reporter}}` | Reporter display name |
+| `{{issue.creator}}` | Creator display name |
+| `{{issue.priority}}` | Priority name |
+| `{{issue.priorityId}}` | Priority ID |
+| `{{issue.resolution}}` | Resolution name |
+| `{{issue.resolutionId}}` | Resolution ID |
+| `{{issue.created}}` | Jira creation timestamp |
+| `{{issue.updated}}` | Jira updated timestamp |
+| `{{issue.dueDate}}` | Due date |
+| `{{issue.labels}}` | Labels joined as comma-separated text in text templates |
+| `{{issue.components}}` | Components; object/array values are rendered to readable text where possible |
+| `{{issue.fields}}` | Complete fetched Jira fields object; mainly useful as an unquoted value in JSON templates |
+| `{{issue.url}}` | Jira API self URL for the issue |
+| `{{now}}` | Current ISO-8601 timestamp at variable-expansion time |
+
+### User details
+
+The normalized Assignee, Reporter, and Creator objects expose the following properties. Replace
+`assignee` with `reporter` or `creator` as required.
+
+| Variable | Value |
+| --- | --- |
+| `{{issue.assignee.displayName}}` | Display name |
+| `{{issue.assignee.name}}` | Jira username/name when available |
+| `{{issue.assignee.key}}` | Jira user key when available |
+| `{{issue.assignee.accountId}}` | Account ID when available |
+| `{{issue.assignee.emailAddress}}` | Email address when Jira exposes it |
+| `{{issue.assignee.active}}` | Active-state value |
+| `{{issue.assignee.avatarUrl}}` | Synchronized avatar URL |
+| `{{issue.assignee.source}}` | Internal normalization source label |
+| `{{issue.assignee.projectKeys}}` | Known project keys associated with the normalized user |
+
+The short aliases `{{assignee.displayName}}`, `{{reporter.displayName}}`, and
+`{{creator.displayName}}` are also accepted. `{{issue.assignee}}`, `{{issue.reporter}}`, and
+`{{issue.creator}}` automatically prefer the object's display name.
+
+### Project aliases
+
+These aliases resolve from the current issue:
+
+- `{{project.key}}` — project key;
+- `{{project.name}}` — project name;
+- `{{project.id}}` — project ID.
+
+### Jira fields and custom fields
+
+Any field present in the fetched Jira `fields` object can be referenced by path:
+
+```text
+{{issue.fields.<field-key>}}
+```
+
+Examples:
+
+```text
+{{issue.fields.customfield_12345}}
+{{issue.fields.customfield_12345.value}}
+{{issue.fields.assignee.displayName}}
+{{issue.fields.fixVersions}}
+```
+
+Custom fields referenced with `{{issue.fields.customfield_12345}}` are automatically added to the
+fields requested for rule evaluation/execution. Nested paths are supported when Jira returns an
+object for that field. Arrays become comma-separated text in normal text templates.
+
+### Shorthand paths
+
+For issue properties, the `issue.` prefix is optional. For example, `{{key}}` and
+`{{issue.key}}` resolve to the same value. The explicit `issue.` form is recommended in saved rules
+because it is easier to read and avoids ambiguity.
+
+### Variables inside JSON actions
+
+**Edit Fields** and **Transition Fields JSON** use JSON-safe expansion. A variable inside a quoted JSON
+string is escaped as text; an unquoted variable is serialized as its native JSON value when possible.
+For example:
+
+```json
+{
+  "description": "{{issue.key}} · {{issue.summary}}",
+  "customfield_12345": "{{issue.fields.customfield_12345}}"
+}
+```
+
+If a variable cannot be resolved, text templates receive an empty string. In JSON templates, an
+unquoted unresolved variable becomes `null`.
 
 ## One-time Bulk Operations
 

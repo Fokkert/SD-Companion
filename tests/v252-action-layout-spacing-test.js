@@ -8,8 +8,8 @@ const constants = read('src/shared/constants.js');
 const actions = read('src/ui/app/pages/rule-actions.js');
 const css = read('src/ui/app/app.css');
 
-assert.equal(manifest.version, '2.6.0');
-assert(constants.includes('BUILD_VERSION: "2.6.0"'));
+assert.equal(manifest.version, '2.6.1');
+assert(constants.includes('BUILD_VERSION: "2.6.1"'));
 
 // Action summary controls: delete X, movement arrows, then the icon-only enable toggle at the far edge.
 const deletePos = actions.indexOf('class="btn btn-small btn-danger action-delete-button"');
@@ -31,9 +31,9 @@ assert(css.includes('width: 30px;'));
 assert(css.includes('.time-value-row,\n.time-pair,\n.duration-control {\n  column-gap: 12px !important;'));
 assert(css.includes('.glass-multi {\n  align-content: start !important;\n  grid-auto-rows: max-content;'));
 
-// Completion tone is now plain inline content instead of a bordered setting card.
-assert(css.includes('.completion-tone-control {'));
+// Completion tone has a dedicated bounded card in the current UI.
+assert(css.includes('.completion-tone-control.setting-line-card'));
 assert(css.includes('display: inline-flex;'));
 assert(css.includes('text-overflow: ellipsis;'));
 
-console.log('v2.6.0 action/layout spacing regression: OK');
+console.log('v2.6.1 action/layout spacing regression: OK');

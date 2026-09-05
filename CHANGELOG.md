@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.6.1
+
+- Added a complete Rules documentation section for supported runtime variables, including normalized issue/user/project values, Jira `issue.fields.*` paths, aliases, shorthand paths and JSON-safe expansion behavior.
+- Renamed the Alarm Profile field label from `Duration optional` to the normal user-facing label **Duration** while keeping blank duration as unlimited behavior.
+- Restored Action Completion Tone as a bounded settings card beside Home history refresh, with responsive sizing and ellipsis protection so the card cannot collide with adjacent value/unit controls.
+
 ## 2.6.0
 
 - Made Alarm Profile duration an independent optional maximum for every stop method; blank duration means unlimited playback.

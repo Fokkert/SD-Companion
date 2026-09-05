@@ -1,0 +1,39 @@
+const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+const root = path.resolve(__dirname, '..');
+
+const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8'));
+const constants = fs.readFileSync(path.join(root, 'src/shared/constants.js'), 'utf8');
+const alarms = fs.readFileSync(path.join(root, 'src/ui/app/pages/alarms.js'), 'utf8');
+const settings = fs.readFileSync(path.join(root, 'src/ui/app/pages/logs-more.js'), 'utf8');
+const css = fs.readFileSync(path.join(root, 'src/ui/app/app.css'), 'utf8');
+const rulesDoc = fs.readFileSync(path.join(root, 'docs/RULES-AND-ACTIONS.md'), 'utf8');
+
+assert.equal(manifest.version, '2.6.1');
+assert(constants.includes('BUILD_VERSION: "2.6.1"'));
+
+// Alarm Profiles use the normal field name without UI commentary in the label.
+assert(alarms.includes('<label>Duration</label>'));
+assert(!alarms.includes('Duration <span class="muted">optional</span>'));
+
+// Completion Tone is a real bounded card again and cannot consume the history row.
+assert(settings.includes('completion-tone-control setting-line setting-line-card'));
+assert(css.includes('.completion-tone-control.setting-line-card'));
+assert(css.includes('grid-template-columns: minmax(150px, 1fr) minmax(132px, 180px)'));
+assert(css.includes('text-overflow: ellipsis'));
+
+// Rules documentation contains the complete public variable contract.
+for (const token of [
+  '{{issue.id}}', '{{issue.key}}', '{{issue.summary}}', '{{issue.description}}',
+  '{{issue.issueType}}', '{{issue.status}}', '{{issue.projectKey}}',
+  '{{issue.assignee}}', '{{issue.reporter}}', '{{issue.creator}}',
+  '{{issue.priority}}', '{{issue.resolution}}', '{{issue.created}}',
+  '{{issue.updated}}', '{{issue.dueDate}}', '{{issue.labels}}',
+  '{{issue.fields.<field-key>}}', '{{issue.fields.customfield_12345}}',
+  '{{project.key}}', '{{assignee.displayName}}', '{{now}}'
+]) assert(rulesDoc.includes(token), `Missing documented variable: ${token}`);
+assert(rulesDoc.includes('JSON-safe expansion'));
+assert(rulesDoc.includes('the `issue.` prefix is optional'));
+
+console.log('v2.6.1 documentation/settings regression: OK');

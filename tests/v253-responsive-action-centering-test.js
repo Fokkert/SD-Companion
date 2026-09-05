@@ -11,8 +11,8 @@ const settings = read('src/ui/app/pages/logs-more.js');
 const actions = read('src/ui/app/pages/rule-actions.js');
 const css = read('src/ui/app/app.css');
 
-assert.equal(manifest.version, '2.6.0');
-assert(constants.includes('BUILD_VERSION: "2.6.0"'));
+assert.equal(manifest.version, '2.6.1');
+assert(constants.includes('BUILD_VERSION: "2.6.1"'));
 
 // Connection-loss duration/unit pair is bounded and keeps a fixed unit gutter.
 assert(servers.includes('class="time-value-row connection-loss-duration-row"'));
@@ -22,7 +22,7 @@ assert(css.includes('grid-template-columns: minmax(112px, 160px) 96px !important
 assert(css.includes('width: min(100%, 268px) !important;'));
 
 // Operational Feedback stacks the refresh pair and plain Completion Tone control.
-assert(settings.includes('class="completion-tone-control"'));
+assert(settings.includes('completion-tone-control setting-line setting-line-card'));
 assert(settings.includes('<span>Action Completion Tone</span>'));
 assert(css.includes('.automation-feedback-grid {'));
 assert(css.includes('grid-template-columns: minmax(0, 1fr) !important;'));
@@ -42,4 +42,4 @@ assert(css.includes('padding: 0 14px !important;'));
 assert(css.includes('justify-content: space-between !important;'));
 assert(css.includes('.action-summary-main > *,\n.action-summary-controls > * {'));
 
-console.log('v2.6.0 responsive/action centering regression: OK');
+console.log('v2.6.1 responsive/action centering regression: OK');
