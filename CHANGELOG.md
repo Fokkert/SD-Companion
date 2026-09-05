@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.6.4
+
+- Fixed Rule Condition persistence so multiple condition groups, each group's own Match all/Match any operator, and the root Match all groups/Match any groups operator survive Save, page changes, extension reloads and normal state migration without being flattened into Group 1.
+- Removed the obsolete legacy Rule-logic simplification pass that was collapsing all Manual condition groups and forcing the root operator back to `AND`.
+- Made Monitoring schedule-aware at the worker boundary: when Monitoring is enabled but every enabled rule is currently outside its configured Schedule, rule scans, health checks and connection-loss monitoring do not send Jira API requests. Local monitor timers remain armed so monitoring resumes automatically when a Schedule becomes active.
+
 ## 2.6.3
 
 - Fixed Action Conditions so **Match any** persists after saving, leaving the Rules page, and reopening the rule.

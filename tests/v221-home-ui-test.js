@@ -13,8 +13,8 @@ const settings = fs.readFileSync('src/ui/app/pages/logs-more.js', 'utf8');
 const css = fs.readFileSync('src/ui/app/app.css', 'utf8');
 const readme = fs.readFileSync('README.md', 'utf8');
 
-assert.equal(manifest.version, '2.6.3');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.6.3"'));
+assert.equal(manifest.version, '2.6.4');
+assert(textIncludes(constants, 'BUILD_VERSION:"2.6.4"'));
 
 // Help disclosure rows use native clickable summaries without a custom arrow.
 assert(!help.includes('help-chevron'));

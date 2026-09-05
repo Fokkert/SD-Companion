@@ -1,18 +1,19 @@
-# V2 Build 2.6.3 Test Report
+# V2 Build 2.6.4 Test Report
 
 ## Result
 
-- JavaScript regression files: 78/78 passed.
+- JavaScript regression files: 79/79 passed.
 - Static architecture/security test: passed.
-- JavaScript syntax validation: 118/118 passed.
+- JavaScript syntax validation: 119/119 passed.
 - JSON parsing validation: passed.
 
-## V2.6.3 focused coverage
+## V2.6.4 focused coverage
 
-- Action Conditions preserve **Match any** across draft rerenders, Rule Save, state migration, page changes and reopening the rule.
-- Single-group Action Condition logic keeps the stored group operator and its surrounding logic operator canonicalized so the editor and runtime matcher cannot disagree.
-- Release archives remain validated to ensure `SD-Companion-v2.6.3/` is the sole top-level folder.
-
+- Manual Rule Conditions preserve multiple condition groups, per-group Match all/Match any operators, the root Match all groups/Match any groups operator, condition identities and condition membership across repeated state migration/load cycles.
+- The obsolete logic-flattening migration path is absent, preventing Group 2+ conditions from being merged into Group 1.
+- Monitoring, health checks and connection-loss tracking are gated by currently schedule-active enabled rules before Jira API work begins; always-on rules remain immediately active.
+- Local monitoring alarms remain configured while Monitoring is enabled so a future Schedule transition can resume Jira polling without user intervention.
+- Release archives remain validated to ensure `SD-Companion-v2.6.4/` is the sole top-level folder.
 ## V2.6.2 focused coverage
 
 - Alarm Profile stop-method changes rerender immediately, reveal/hide the Keyboard Shortcut control without requiring Save, and clear stale shortcut values whenever the method changes.

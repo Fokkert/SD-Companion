@@ -9,6 +9,11 @@ Every rule explicitly chooses one of:
 No schedule is created automatically. An enabled rule configured for schedules with no
 selected schedule fails validation / fails closed.
 
+Monitoring is also schedule-aware before Jira API work begins. If Monitoring is ON but every
+enabled rule is currently outside its configured Schedule, SD Companion keeps its local monitoring
+timer armed but does not send rule-scan, monitoring health-check, or connection-loss monitoring
+requests to Jira until at least one enabled rule becomes schedule-active.
+
 ## Detection method
 
 Each rule chooses exactly one detection method:

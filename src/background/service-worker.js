@@ -410,8 +410,10 @@ const configureMetadataSyncAlarm = async (state, credentialIds = null) => {
   if (due.length) await chrome.alarms.create(ALARMS.METADATA_SYNC, { when: Math.min(...due) });
 };
 const profileHasEnabledRules = profile => Boolean((profile?.rules || []).some(rule => rule.enabled));
+const profileHasActiveEnabledRules = (profile, at = new Date()) => Boolean(SD.RuleEngine.profileHasActiveEnabledRules(profile, at));
 const monitoringEnabledForSite = (state, siteId) => Boolean((state?.profiles || []).some(p => p.siteId === siteId && p.monitoring?.enabled && profileHasEnabledRules(p)));
-const monitoredSiteIds = state => new Set((state?.jiraSites || []).filter(s => s.auth?.configured && monitoringEnabledForSite(state, s.id)).map(s => s.id));
+const monitoringActiveForSite = (state, siteId, at = new Date()) => Boolean((state?.profiles || []).some(p => p.siteId === siteId && p.monitoring?.enabled && profileHasActiveEnabledRules(p, at)));
+const monitoredSiteIds = (state, at = new Date()) => new Set((state?.jiraSites || []).filter(s => s.auth?.configured && monitoringActiveForSite(state, s.id, at)).map(s => s.id));
 const configureAlarms = async (state = null) => {
   state = state || await SD.Storage.ensureState();
   const credentialIds = await credentialSiteIds(state);
@@ -493,7 +495,7 @@ const connectionLossDue = site => {
 };
 const maybePlayConnectionLossAlarm = async siteId => {
   const state = await SD.Storage.ensureState(), site = state.jiraSites.find(x => x.id === siteId);
-  if (!site || !await SD.Storage.hasCredential(siteId) || !monitoringEnabledForSite(state, siteId) || site.runtime?.connectionLossAlarmFiredAt || !connectionLossDue(site) || state.runtime?.activeAlarm?.active) return false;
+  if (!site || !await SD.Storage.hasCredential(siteId) || !monitoringActiveForSite(state, siteId) || site.runtime?.connectionLossAlarmFiredAt || !connectionLossDue(site) || state.runtime?.activeAlarm?.active) return false;
   const profile = state.profiles.find(p => p.id === site.activeProfileId && p.siteId === site.id && p.monitoring?.enabled) || state.profiles.find(p => p.siteId === site.id && p.monitoring?.enabled);
   if (!profile) return false;
   const cfg = { ...((profile.alarmProfiles || []).find(x => x.id === profile.defaultAlarmProfileId) || (profile.alarmProfiles || [])[0] || {}) },
@@ -586,7 +588,7 @@ const testConnection = async (siteId, { operationId = '' } = {}) => {
     if (e.code === 'OPERATION_CANCELLED') throw e;
     const authFailure = e.status === 401 || e.status === 403,
       at = SD.Utils.nowIso(),
-      watching = monitoringEnabledForSite(state, siteId);
+      watching = monitoringActiveForSite(state, siteId);
     await SD.Storage.updateState(latest => {
       const s = latest.jiraSites.find(x => x.id === siteId);
       if (!s) return;
@@ -893,6 +895,15 @@ const runCycle = async (siteId = null, profileId = null, { operationId = "", man
     }
     return { skipped: true, reason: 'no-enabled-rules', issues: [], plans: [], detections: [], newDetections: [] };
   }
+  if (!profileHasActiveEnabledRules(profile, new Date())) {
+    if (profile.runtime?.nextCycleAt) {
+      await SD.Storage.updateState(latest => {
+        const current = latest.profiles.find(item => item.id === profile.id);
+        if (current?.runtime) current.runtime.nextCycleAt = null;
+      }).catch(() => {});
+    }
+    return { skipped: true, reason: 'no-active-scheduled-rules', issues: [], plans: [], detections: [], newDetections: [] };
+  }
   SD.Operations.throwIfCancelled(operationId);
   const q = await queryRuleIssues(site, profile, { operationId, safety: state.system?.safety });
   SD.Operations.throwIfCancelled(operationId);
@@ -951,6 +962,15 @@ const monitorTick = async () => {
     if (!profile?.monitoring?.enabled) continue;
     const site = state.jiraSites.find(s => s.id === profile.siteId);
     if (!site || !await SD.Storage.hasCredential(site.id)) continue;
+    if (!profileHasActiveEnabledRules(profile, new Date())) {
+      if (profile.runtime?.nextCycleAt) {
+        await SD.Storage.updateState(latest => {
+          const current = latest.profiles.find(x => x.id === profile.id);
+          if (current?.runtime) current.runtime.nextCycleAt = null;
+        }).catch(() => {});
+      }
+      continue;
+    }
     const next = profile.runtime?.nextCycleAt ? new Date(profile.runtime.nextCycleAt).getTime() : 0;
     if (next && Date.now() < next) continue;
     try {
@@ -969,7 +989,7 @@ const monitorTick = async () => {
 const healthTick = async () => {
   await SD.Discovery.refreshBrowserStatus();
   const { state } = await reconcileCredentialTruth();
-  for (const site of state.jiraSites.filter(s => s.auth.configured && monitoringEnabledForSite(state, s.id))) {
+  for (const site of state.jiraSites.filter(s => s.auth.configured && monitoringActiveForSite(state, s.id))) {
     if (!await SD.Storage.hasCredential(site.id)) continue;
     const degraded = site.runtime?.healthState === 'degraded' || !site.runtime?.apiHealthy,
       watching = connectionLossSettings(site).enabled,

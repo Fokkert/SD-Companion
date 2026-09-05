@@ -11,8 +11,8 @@ const settings = read('src/ui/app/pages/logs-more.js');
 const actions = read('src/ui/app/pages/rule-actions.js');
 const css = read('src/ui/app/app.css');
 
-assert.equal(manifest.version, '2.6.3');
-assert(constants.includes('BUILD_VERSION: "2.6.3"'));
+assert.equal(manifest.version, '2.6.4');
+assert(constants.includes('BUILD_VERSION: "2.6.4"'));
 
 // Connection-loss duration/unit pair is bounded and keeps a fixed unit gutter.
 assert(servers.includes('class="time-value-row connection-loss-duration-row"'));
@@ -40,4 +40,4 @@ assert(css.includes('padding: 0 14px !important;'));
 assert(css.includes('justify-content: space-between !important;'));
 assert(css.includes('.action-summary-main > *,\n.action-summary-controls > * {'));
 
-console.log('v2.6.3 responsive/action centering regression: OK');
+console.log('v2.6.4 responsive/action centering regression: OK');

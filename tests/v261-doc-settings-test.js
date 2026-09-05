@@ -10,8 +10,8 @@ const settings = fs.readFileSync(path.join(root, 'src/ui/app/pages/logs-more.js'
 const css = fs.readFileSync(path.join(root, 'src/ui/app/app.css'), 'utf8');
 const rulesDoc = fs.readFileSync(path.join(root, 'docs/RULES-AND-ACTIONS.md'), 'utf8');
 
-assert.equal(manifest.version, '2.6.3');
-assert(constants.includes('BUILD_VERSION: "2.6.3"'));
+assert.equal(manifest.version, '2.6.4');
+assert(constants.includes('BUILD_VERSION: "2.6.4"'));
 
 // Alarm Profiles use the normal field name without UI commentary in the label.
 assert(alarms.includes('<label>Duration</label>'));
@@ -36,4 +36,4 @@ for (const token of [
 assert(rulesDoc.includes('JSON-safe expansion'));
 assert(rulesDoc.includes('the `issue.` prefix is optional'));
 
-console.log('v2.6.3 documentation/settings regression: OK');
+console.log('v2.6.4 documentation/settings regression: OK');

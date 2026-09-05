@@ -17,8 +17,8 @@ const help = fs.readFileSync('src/ui/app/pages/help.js', 'utf8');
 const worker = fs.readFileSync('src/background/service-worker.js', 'utf8');
 const css = fs.readFileSync('src/ui/app/app.css', 'utf8');
 
-assert.equal(manifest.version, '2.6.3');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.6.3"'));
+assert.equal(manifest.version, '2.6.4');
+assert(textIncludes(constants, 'BUILD_VERSION:"2.6.4"'));
 
 // Action choosers share one readable alphabetically sorted option source.
 assert(actions.includes('const actionOptions = () => Object.values(ACTION)'));

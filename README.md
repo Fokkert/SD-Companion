@@ -64,7 +64,7 @@ Extract the downloaded ZIP to a permanent location. The release archive contains
 top-level folder, for example:
 
 ```text
-C:\Users\<you>\Documents\SD-Companion-v2.6.3\
+C:\Users\<you>\Documents\SD-Companion-v2.6.4\
 ```
 
 Do not delete that folder while the extension is installed. Chrome/Edge loads the unpacked extension
@@ -152,7 +152,9 @@ Rules determine which Jira issues SD Companion should detect.
 Each rule chooses one detection method: **JQL** (saved filters and/or Additional JQL) or **Manual**. The two methods are not evaluated concurrently. Manual can be organized into condition groups, with Match all/Match any behavior both within groups and across groups.
 
 Rules can also be restricted by schedules so that monitoring or automation only applies during the
-intended operating periods.
+intended operating periods. Monitoring stays armed locally while scheduled rules are inactive, but
+SD Companion does not send Jira rule-scan or monitoring health-check requests until at least one
+enabled rule is currently inside its configured Schedule.
 
 SD Companion performs execution-time validation before writable Jira actions. Cached Jira metadata
 is used for configuration and discovery, but the target issue is rechecked before an action is

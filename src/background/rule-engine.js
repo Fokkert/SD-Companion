@@ -77,6 +77,8 @@
     const s = rule.schedule || { mode: (rule.scheduleIds || []).length ? 'scheduled' : 'always', scheduleIds: rule.scheduleIds || [] };
     return s.mode === 'always' ? true : root.Schedule.matchesAny(profile.schedules, s.scheduleIds, at);
   };
+  const activeEnabledRules = (profile, at = new Date()) => (profile?.rules || []).filter(rule => rule.enabled && ruleScheduleActive(profile, rule, at));
+  const profileHasActiveEnabledRules = (profile, at = new Date()) => activeEnabledRules(profile, at).length > 0;
   const chooseAssignee = (site, a) => {
     if (a.mode === ASSIGN_MODE.UNASSIGN) return null;
     if (a.mode === ASSIGN_MODE.ME) return site.auth?.user || null;
@@ -524,5 +526,5 @@
     }
     return [...new Set(base)];
   };
-  root.RuleEngine = Object.freeze({ planCycle, planOneTime, validateAction, matchesLogic, actionMatches, valuesFor, ruleScheduleActive, policyFingerprint, delayFor, requiredIssueFields, actionPrecondition });
+  root.RuleEngine = Object.freeze({ planCycle, planOneTime, validateAction, matchesLogic, actionMatches, valuesFor, ruleScheduleActive, activeEnabledRules, profileHasActiveEnabledRules, policyFingerprint, delayFor, requiredIssueFields, actionPrecondition });
 })();

@@ -12,8 +12,8 @@ const sw = read('src/background/service-worker.js'),
   theme = read('src/ui/common/theme.css'),
   events = read('src/ui/app/app-events.js'),
   api = read('src/api/jira-client.js');
-assert(textIncludes(sw, 'monitoringEnabledForSite(state,siteId)'));
-assert(textIncludes(sw, "filter(s=>s.auth.configured&&monitoringEnabledForSite(state,s.id))"));
+assert(textIncludes(sw, 'monitoringActiveForSite(state,siteId)'));
+assert(textIncludes(sw, "filter(s=>s.auth.configured&&monitoringActiveForSite(state,s.id))"));
 assert(textIncludes(sw, 'for(const id of started)await testConnection(id)'));
 assert(textIncludes(sw, "active.source==='Connection monitor'"));
 assert(textIncludes(home, 'Active Schedule'));

@@ -76,17 +76,35 @@
       actionTypes = (r.actions || []).map(a => a.type).sort().join(',');
     return sourceEmpty && hasFactoryComment && ['alarm,assign,comment', 'assign,comment', 'comment'].includes(actionTypes);
   };
-  const simplifyLogic = logic => {
-    const groups = Array.isArray(logic?.groups) ? logic.groups : [],
-      conditions = groups.flatMap(g => Array.isArray(g.conditions) ? g.conditions : []);
-    const complex = groups.length > 1 || groups.some(g => g.negate) || logic?.operator === 'OR';
-    const source = groups[0],
-      g = { ...root.Defaults.group(), ...(source || {}), operator: source?.operator === 'OR' ? 'OR' : 'AND', negate: false, conditions: conditions.length ? conditions : [root.Defaults.condition()] };
-    return { operator: 'AND', groups: [g], needsReview: Boolean(complex) };
-  };
   const normalizeLogic = logic => {
     for (const g of logic?.groups || []) for (const c of g.conditions || []) root.ConditionRegistry?.normalizeCondition?.(c);
     return logic;
+  };
+  const preserveRuleLogic = logic => {
+    const source = logic && typeof logic === 'object' ? structuredClone(logic) : {},
+      incomingGroups = Array.isArray(source.groups) ? source.groups : [],
+      groups = incomingGroups.map(group => {
+        const base = root.Defaults.group(),
+          incomingConditions = Array.isArray(group?.conditions) ? group.conditions : [];
+        return {
+          ...base,
+          ...(group || {}),
+          id: String(group?.id || base.id),
+          operator: group?.operator === 'OR' ? 'OR' : 'AND',
+          negate: Boolean(group?.negate),
+          conditions: incomingConditions.map(condition => {
+            const conditionBase = root.Defaults.condition();
+            return { ...conditionBase, ...(condition || {}), id: String(condition?.id || conditionBase.id) };
+          })
+        };
+      });
+    if (!groups.length) groups.push(root.Defaults.group());
+    return normalizeLogic({
+      ...source,
+      operator: source.operator === 'OR' ? 'OR' : 'AND',
+      groups,
+      needsReview: Boolean(source.needsReview)
+    });
   };
   const migrateRule = old => {
     const d = root.Defaults.rule(old.name || 'Rule'),
@@ -109,7 +127,7 @@
       ...old,
       enabled: Boolean(old.enabled),
       schedule,
-      logic: normalizeLogic(simplifyLogic(old.logic || d.logic)),
+      logic: preserveRuleLogic(old.logic || d.logic),
       executionPolicy: {
         ...d.executionPolicy,
         ...old.executionPolicy,

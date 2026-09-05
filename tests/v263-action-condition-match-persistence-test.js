@@ -16,8 +16,8 @@ load('src/shared/defaults.js');
 load('src/shared/migrations.js');
 
 const SD = SDCompanion;
-assert.equal(SD.Constants.BUILD_VERSION, '2.6.3');
-assert.equal(JSON.parse(read('manifest.json')).version, '2.6.3');
+assert.equal(SD.Constants.BUILD_VERSION, '2.6.4');
+assert.equal(JSON.parse(read('manifest.json')).version, '2.6.4');
 
 // A v2.6.2-style Action Condition that persisted Match any only on the sole
 // condition group must remain Match any after the normal state migration pass.
@@ -62,4 +62,4 @@ assert(events.includes("const op = groups[0].operator === 'OR' ? 'OR' : 'AND';")
 assert(conditions.includes("matchOperator = g.operator === 'OR' ? 'OR' : 'AND'"));
 assert(conditions.includes("${matchOperator === 'OR' ? 'selected' : ''}>Match any"));
 
-console.log('v2.6.3 action-condition Match any persistence regression: OK');
+console.log('v2.6.4 action-condition Match any persistence regression: OK');
