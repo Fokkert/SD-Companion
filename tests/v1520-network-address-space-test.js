@@ -7,7 +7,7 @@ SDCompanion.RequestScheduler = { before: async () => {}, after: () => {}, releas
 SDCompanion.Operations = { throwIfCancelled: () => {}, signal: () => null };
 load('src/api/jira-client.js');
 (async () => {
-  assert.equal(SDCompanion.Constants.BUILD_VERSION, '2.5.2');
+  assert.equal(SDCompanion.Constants.BUILD_VERSION, '2.5.3');
   const seen = [];
   globalThis.fetch = async (url, init) => {
     seen.push({ url: String(url), init });

@@ -318,8 +318,7 @@
       `<button class="btn btn-small btn-danger action-delete-button" data-action="delete-action" data-id="${a.id}" title="Delete action" aria-label="Delete action">×</button>` +
       `<button class="btn btn-small action-move-button" data-action="move-action-up" data-id="${a.id}" ${index === 0 ? 'disabled' : ''} title="Move action up" aria-label="Move action up">↑</button>` +
       `<button class="btn btn-small action-move-button" data-action="move-action-down" data-id="${a.id}" title="Move action down" aria-label="Move action down">↓</button>` +
-      `<span class="toggle-caption">${a.enabled !== false ? 'Enabled' : 'Disabled'}</span>` +
-      `<label class="master-switch action-enabled-switch">` +
+      `<label class="master-switch action-enabled-switch" title="${a.enabled !== false ? 'Disable action' : 'Enable action'}" aria-label="${a.enabled !== false ? 'Disable action' : 'Enable action'}">` +
       `<input type="checkbox" data-action-id="${a.id}" data-aprop="enabled" ${a.enabled !== false ? 'checked' : ''}>` +
       `<span>` +
       `</span>` +

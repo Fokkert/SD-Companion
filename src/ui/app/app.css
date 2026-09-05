@@ -8085,3 +8085,113 @@ n.connection-policy-note {
     display: none;
   }
 }
+
+/* V2.5.3 responsive control alignment repairs ----------------------------- */
+
+/*
+ * Connection-loss duration must remain a real value/unit pair even when the
+ * side panel is narrow. Spanning the full server grid prevents the nested
+ * pair from being squeezed into half of an already compact editor.
+ */
+.connection-loss-grid > .connection-loss-duration-row {
+  grid-column: 1 / -1 !important;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) minmax(96px, 110px) !important;
+  column-gap: 12px !important;
+}
+
+.connection-loss-duration-row > .field,
+.connection-loss-duration-row > .time-unit-field {
+  min-width: 0;
+}
+
+/*
+ * Operational Feedback stays on one row. Home refresh gets the smaller share;
+ * Action Completion Tone gets enough width for one-line text and truncates
+ * cleanly instead of wrapping when the side panel becomes narrow.
+ */
+.automation-feedback-grid {
+  grid-template-columns: minmax(138px, .82fr) minmax(0, 1.18fr) !important;
+  gap: 10px !important;
+  align-items: end !important;
+}
+
+.automation-feedback-grid > .time-value-row {
+  grid-template-columns: minmax(48px, 1fr) minmax(82px, 94px) !important;
+  column-gap: 9px !important;
+}
+
+.automation-feedback-grid .setting-line-card {
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  align-self: end !important;
+  padding: 0 10px !important;
+  box-sizing: border-box;
+}
+
+.automation-feedback-grid .setting-line-card > span:first-child {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap !important;
+}
+
+@container (max-width: 420px) {
+  .automation-feedback-grid {
+    grid-template-columns: minmax(126px, .78fr) minmax(0, 1.22fr) !important;
+    gap: 8px !important;
+  }
+
+  .automation-feedback-grid > .time-value-row {
+    grid-template-columns: minmax(42px, 1fr) 78px !important;
+    column-gap: 8px !important;
+  }
+
+  .connection-loss-grid > .connection-loss-duration-row {
+    grid-template-columns: minmax(0, 1fr) 94px !important;
+    column-gap: 10px !important;
+  }
+}
+
+/*
+ * Action headers use an explicit header height with zero vertical padding.
+ * This avoids the previous min-height + padding interaction that visually
+ * biased every control toward the top of the card. Both main and control
+ * groups fill the header and center their children against the exact same
+ * vertical axis.
+ */
+.action-card > summary.action-head {
+  height: 58px !important;
+  min-height: 58px !important;
+  box-sizing: border-box;
+  padding: 0 14px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center !important;
+  align-content: center !important;
+}
+
+.action-summary-main,
+.action-summary-controls {
+  height: 100%;
+  min-height: 0 !important;
+  align-items: center !important;
+  align-content: center !important;
+  align-self: center !important;
+}
+
+.action-summary-main > *,
+.action-summary-controls > * {
+  align-self: center !important;
+}
+
+.action-summary-controls .action-enabled-switch {
+  margin: 0 !important;
+}
+
+/* The action toggle is intentionally icon-only; no Enabled/Disabled caption. */
+.action-summary-controls .toggle-caption {
+  display: none !important;
+}

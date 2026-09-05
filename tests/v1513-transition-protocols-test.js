@@ -5,7 +5,7 @@ globalThis.SDCompanion = {};
 const load = f => vm.runInThisContext(fs.readFileSync(f, 'utf8'), { filename: f });
 for (const f of ['src/shared/constants.js', 'src/shared/utils.js', 'src/shared/schedule.js', 'src/shared/defaults.js']) load(f);
 const SD = SDCompanion;
-assert.equal(SD.Constants.BUILD_VERSION, '2.5.2');
+assert.equal(SD.Constants.BUILD_VERSION, '2.5.3');
 assert.equal(SD.Constants.SCHEMA_VERSION, 34);
 assert.equal(SD.Defaults.site().inventorySettings.transitionMethod, SD.Constants.TRANSITION_METHOD.WORKFLOW_DESIGNER, 'Workflow Designer must be the default protocol');
 const ta = SD.Defaults.action(SD.Constants.ACTION.TRANSITION);

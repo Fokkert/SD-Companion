@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.5.3
+
+- Fixed responsive Connection-loss Alarm duration/unit geometry in Server Settings so the controls do not collide in compact side-panel widths.
+- Rebalanced Operational Feedback so Home history refresh uses less width while Action Completion Tone remains single-line, ellipsizes when necessary, and aligns with the adjacent controls.
+- Removed the redundant Enabled/Disabled caption from Action headers and rebuilt the summary geometry around an explicit centered header height so the X, movement controls, and enable switch stay vertically centered.
+
 ## 2.5.2
 
 - Repaired Action-card summary controls so they are vertically centered and ordered with compact delete X, movement arrows, enable state and the enable toggle at the far-right edge.

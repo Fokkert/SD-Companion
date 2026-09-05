@@ -1,19 +1,19 @@
-# V2 Build 2.5.2 Test Report
+# V2 Build 2.5.3 Test Report
 
 ## Result
 
-- JavaScript regression files: 72/72 passed.
+- JavaScript regression files: 73/73 passed.
 - Static architecture/security test: passed.
-- JavaScript syntax validation: 112/112 passed.
+- JavaScript syntax validation: 113/113 passed.
 - JSON parsing validation: passed.
 
-## V2.5.2 focused coverage
+## V2.5.3 focused coverage
 
-- Action summary controls are vertically centered and use the requested control order: compact delete X, movement arrows, enable state, and the enable toggle at the far-right edge.
-- Action Completion Tone keeps a compact footprint while aligning vertically with the adjacent operational-feedback control.
-- Shared value/unit layouts use a deliberate gutter across Rule, Server and Settings time controls.
+- Connection-loss duration/unit controls span the complete Server connection-loss grid and keep a responsive fixed-width unit column so compact Side Panel widths cannot squeeze the two controls together.
+- Operational Feedback reserves more width for Action Completion Tone, keeps its label on one line with ellipsis at narrow widths, reduces the Home history refresh share, and bottom-aligns both controls to the same visual level.
+- Action headers remove the Enabled/Disabled text caption, keep the delete X and movement arrows before the rightmost enable switch, and use an explicit centered header height rather than min-height plus vertical padding.
 - Searchable multi-select option rows retain normal height when filtering leaves a single visible result.
-- Release archives remain validated to ensure `SD-Companion-v2.5.2/` is the sole top-level folder.
+- Release archives remain validated to ensure `SD-Companion-v2.5.3/` is the sole top-level folder.
 
 ## V2.5.1 focused coverage
 

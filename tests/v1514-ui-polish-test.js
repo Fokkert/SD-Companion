@@ -3,8 +3,8 @@ const fs = require('fs');
 const assert = require('assert');
 const constants = fs.readFileSync('src/shared/constants.js', 'utf8');
 const manifest = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
-assert(textIncludes(constants, 'BUILD_VERSION:"2.5.2"'));
-assert.equal(manifest.version, '2.5.2');
+assert(textIncludes(constants, 'BUILD_VERSION:"2.5.3"'));
+assert.equal(manifest.version, '2.5.3');
 const core = fs.readFileSync('src/ui/app/app-core.js', 'utf8'),
   events = fs.readFileSync('src/ui/app/app-events.js', 'utf8'),
   css = fs.readFileSync('src/ui/common/components.css', 'utf8') + fs.readFileSync('src/ui/app/app.css', 'utf8'),
