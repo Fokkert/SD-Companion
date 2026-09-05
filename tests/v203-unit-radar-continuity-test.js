@@ -6,15 +6,15 @@ const manifest = JSON.parse(read('manifest.json')),
   events = read('src/ui/app/app-events.js'),
   home = read('src/ui/app/pages/home.js'),
   css = read('src/ui/app/app.css');
-assert.equal(manifest.version, '2.6.1');
+assert.equal(manifest.version, '2.6.2');
 assert.equal(manifest.version_name, 'V2');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.6.1"'));
+assert(textIncludes(constants, 'BUILD_VERSION:"2.6.2"'));
 // Unit selectors must declare their working variables on the normal execution path.
 assert(textIncludes(events, "if(!key)return false;const u=el.value;if(key==='execution-repeat')"));
 assert(textIncludes(events, "if(!key)return false;const u=el.value,card=el.closest('.action-card')"));
 assert(!textIncludes(events, 'if(!key)return false,u=el.value'));
 // Monitoring starts visually immediately; saving must not force a full Home rerender.
-const monitorHandler = (events.match(/if\s*\(\s*el\.id\s*===\s*['"]homeMonitor['"]\s*\)\s*\{[\s\S]*?\n\s*\}(?=\s*if\s*\(\s*\['alarmPreset')/) || [''])[0];
+const monitorHandler = (events.match(/if\s*\(\s*el\.id\s*===\s*['"]homeMonitor['"]\s*\)\s*\{[\s\S]*?\n\s*\}(?=\s*if\s*\(\s*el\.id\s*===\s*['"]alarmStopMethod['"])/) || [''])[0];
 assert(textIncludes(monitorHandler, 'A.setHomeMonitoringVisual?.(enabled)'));
 assert(textIncludes(monitorHandler, 'MESSAGE.SET_MONITORING'));
 assert(!textIncludes(monitorHandler, 'A.save(false)'));

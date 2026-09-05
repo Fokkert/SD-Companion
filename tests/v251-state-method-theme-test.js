@@ -11,7 +11,7 @@ load('src/shared/defaults.js');
 load('src/shared/migrations.js');
 
 const SD = SDCompanion;
-assert.equal(SD.Constants.BUILD_VERSION, '2.6.1');
+assert.equal(SD.Constants.BUILD_VERSION, '2.6.2');
 
 // A filter-only legacy/JQL rule must retain its selected filter after migration/load.
 const state = SD.Defaults.state();
@@ -59,4 +59,4 @@ const dot = schedules.indexOf('schedule-state', meta);
 const text = schedules.indexOf('list-meta', meta);
 assert(dot >= 0 && text >= 0 && dot < text, 'schedule activity dot must precede description text');
 
-console.log('v2.6.1 state/method/theme regression: OK');
+console.log('v2.6.2 state/method/theme regression: OK');

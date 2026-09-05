@@ -8366,3 +8366,29 @@ n.connection-policy-note {
     width: min(100%, 180px) !important;
   }
 }
+
+/* V2.6.2 Alarm editor and General feedback placement ---------------------- */
+.general-action-complete-tone {
+  min-height: 46px;
+  padding: 9px 11px;
+}
+
+.general-action-complete-tone > span:first-child {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.general-action-complete-tone > .master-switch {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.automation-feedback-refresh {
+  width: min(320px, 100%);
+  margin: 0;
+}
+
+.alarm-stop-method-fields {
+  display: contents;
+}

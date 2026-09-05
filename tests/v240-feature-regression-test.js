@@ -25,9 +25,9 @@ const css = read('src/ui/app/app.css');
 const readme = read('README.md');
 const sample = JSON.parse(read('sample-profile.json'));
 
-assert.equal(manifest.version, '2.6.1');
+assert.equal(manifest.version, '2.6.2');
 assert.equal(manifest.commands, undefined, 'alarm stop shortcut is now profile-configured, not a static extension command');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.6.1"'));
+assert(textIncludes(constants, 'BUILD_VERSION:"2.6.2"'));
 assert(textIncludes(constants, 'SCHEMA_VERSION:34'));
 for (const id of ['keyboard', 'duration', 'click-anywhere', 'popup']) assert(constants.includes(`id: "${id}"`));
 assert(!constants.includes('duration-or-controls'));
@@ -64,7 +64,7 @@ assert(events.includes('MESSAGE.UPDATE_ALARM_VOLUME'));
 assert(offscreen.includes('SD_OFFSCREEN_VOLUME'));
 assert(appMain.includes("alarm.stopMethod === 'click-anywhere'"));
 assert(alarms.includes('data-action="choose-alarm-file"'));
-assert(settings.includes('<span>Action Completion Tone</span>'));
+assert(settings.includes('<span>Action Complete Tone</span>'));
 
 // Standard switches are circular; only Home Monitoring keeps cubic geometry.
 assert(textIncludes(css, '.master-switch>span{border-radius:999px!important}'));

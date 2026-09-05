@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.6.2
+
+- Fixed Alarm Profile stop-method switching so the editor immediately rerenders the method-specific controls and clears stale Keyboard Shortcut values when the stop method changes.
+- Moved the completion cue out of Automation → Operational Feedback and into General Settings as **Action Complete Tone**, using the standard text-left / toggle-right setting row.
+
 ## 2.6.1
 
 - Added a complete Rules documentation section for supported runtime variables, including normalized issue/user/project values, Jira `issue.fields.*` paths, aliases, shorthand paths and JSON-safe expansion behavior.

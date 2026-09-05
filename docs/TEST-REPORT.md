@@ -1,11 +1,17 @@
-# V2 Build 2.6.1 Test Report
+# V2 Build 2.6.2 Test Report
 
 ## Result
 
-- JavaScript regression files: 76/76 passed.
+- JavaScript regression files: 77/77 passed.
 - Static architecture/security test: passed.
-- JavaScript syntax validation: 116/116 passed.
+- JavaScript syntax validation: 117/117 passed.
 - JSON parsing validation: passed.
+
+## V2.6.2 focused coverage
+
+- Alarm Profile stop-method changes rerender immediately, reveal/hide the Keyboard Shortcut control without requiring Save, and clear stale shortcut values whenever the method changes.
+- **Action Complete Tone** is located in General Settings as a normal text-left / toggle-right row and is absent from Automation → Operational Feedback.
+- Release archives remain validated to ensure `SD-Companion-v2.6.2/` is the sole top-level folder.
 
 ## V2.6.1 focused coverage
 

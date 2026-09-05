@@ -85,6 +85,13 @@
         `</button>` +
         `</div>` +
         `</div>` +
+        `<div class="setting-line general-action-complete-tone">` +
+        `<span>Action Complete Tone</span>` +
+        `<label class="master-switch" title="Action Complete Tone">` +
+        `<input type="checkbox" data-settings-prop="system.completionToneEnabled" ${draft.system.completionToneEnabled !== false ? 'checked' : ''}>` +
+        `<span></span>` +
+        `</label>` +
+        `</div>` +
         `<div class="settings-tile-grid">${link('appearance', 'Appearance')}${link('profiles', 'Profiles')}${link('alarms', 'Alarm Profiles')}</div>` +
         '';
     }
@@ -127,8 +134,7 @@
           `<span class="settings-card-icon">${icon('automation')}</span>` +
           `<b>Operational feedback</b>` +
           `</div>` +
-          `<div class="automation-feedback-grid">` +
-          `<div class="time-value-row">` +
+          `<div class="time-value-row automation-feedback-refresh">` +
           `<div class="field">` +
           `<label>Home history refresh</label>` +
           `<input class="input" type="number" step="1" data-settings-prop="system.activityRefreshValue" min="${activityBounds.min}" max="${activityBounds.max}" value="${A.esc(activityValue)}">` +
@@ -136,14 +142,6 @@
           `<div class="field time-unit-field">` +
           `<label>Unit</label>` +
           `<select class="select" data-settings-prop="system.activityRefreshUnit">${unitOptions(activityUnit, ['seconds', 'minutes'])}</select>` +
-          `</div>` +
-          `</div>` +
-          `<div class="completion-tone-control setting-line setting-line-card">` +
-          `<span>Action Completion Tone</span>` +
-          `<label class="master-switch" title="Action Completion Tone">` +
-          `<input type="checkbox" data-settings-prop="system.completionToneEnabled" ${draft.system.completionToneEnabled !== false ? 'checked' : ''}>` +
-          `<span></span>` +
-          `</label>` +
           `</div>` +
           `</div>` +
           `</div>` +

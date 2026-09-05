@@ -221,6 +221,13 @@
     if (shortcut) base.keyboardShortcut = shortcut.value.trim();
     return base;
   };
+  const syncAlarmStopMethodFields = cfg => {
+    const slot = A.$('alarmStopMethodFields');
+    if (!slot) return;
+    slot.innerHTML = cfg.stopMethod === 'keyboard'
+      ? `<div class="field"><label>Keyboard shortcut</label><input id="alarmKeyboardShortcut" class="input" value="${A.esc(cfg.keyboardShortcut || '')}" placeholder="Ctrl+Shift+S"></div>`
+      : '';
+  };
   const storeAlarmDraft = cfg => {
     const p = A.profile();
     if (A.page === 'settings' && A.ensureSettingsDraft) {
@@ -494,7 +501,16 @@
           }
           return;
         }
-        if (['alarmPreset', 'alarmDurationUnit', 'alarmLoop', 'alarmUseCustom', 'alarmStopMethod'].includes(el.id)) {
+        if (el.id === 'alarmStopMethod') {
+          const previousMethod = A.ensureAlarmDraft?.()?.stopMethod || 'duration',
+            cfg = alarmConfigFromControls();
+          cfg.stopMethod = el.value;
+          if (cfg.stopMethod !== previousMethod) cfg.keyboardShortcut = '';
+          storeAlarmDraft(cfg);
+          syncAlarmStopMethodFields(cfg);
+          return;
+        }
+        if (['alarmPreset', 'alarmDurationUnit', 'alarmLoop', 'alarmUseCustom'].includes(el.id)) {
           const cfg = storeAlarmDraft(alarmConfigFromControls());
           if (el.id === 'alarmPreset' && A.state?.runtime?.activeAlarm?.active && A.state.runtime.activeAlarm.source === 'Alarm Settings Test') {
             await A.send(MESSAGE.PLAY_ALARM, { alarm: cfg, meta: alarmTestMeta() });
@@ -599,7 +615,6 @@
           await saveRule(r, true);
           return;
         }
-        if (el.id === 'alarmStopMethod') { const cfg=alarmConfigFromControls(); A.alarmDraft={profileId:A.profile()?.id||'',alarmProfileId:cfg.id,config:cfg}; A.renderPage(); return; }
         if (el.dataset.ruleRootOp) { const rr=activeRule(); if(!rr) return; rr.logic=rr.logic||{groups:[]}; rr.logic.operator=el.value==='OR'?'OR':'AND'; await saveRule(rr,true); return; }
         if (el.dataset.ruleEnabledId) {
           const stored = A.profile()?.rules?.find(x => x.id === el.dataset.ruleEnabledId);

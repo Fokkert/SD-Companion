@@ -17,8 +17,8 @@ const help = fs.readFileSync('src/ui/app/pages/help.js', 'utf8');
 const worker = fs.readFileSync('src/background/service-worker.js', 'utf8');
 const css = fs.readFileSync('src/ui/app/app.css', 'utf8');
 
-assert.equal(manifest.version, '2.6.1');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.6.1"'));
+assert.equal(manifest.version, '2.6.2');
+assert(textIncludes(constants, 'BUILD_VERSION:"2.6.2"'));
 
 // Action choosers share one readable alphabetically sorted option source.
 assert(actions.includes('const actionOptions = () => Object.values(ACTION)'));
@@ -32,9 +32,9 @@ assert(home.includes('class="monitor-section-divider"'));
 assert(css.includes('.radar-monitor-controls .master-switch > span::after'));
 assert(textIncludes(css, 'border-radius:4px!important'));
 
-// Action Completion Tone is the user-facing terminology.
-assert(settings.includes('<span>Action Completion Tone</span>'));
-assert(help.includes('Action Completion Tone'));
+// The completion cue is exposed in General Settings under its current name.
+assert(settings.includes('<span>Action Complete Tone</span>'));
+assert(help.includes('Action Complete Tone'));
 assert(!settings.includes('<span>Action Bell</span>'));
 
 // Server settings are deliberately grouped and no longer show the low-value failure counter copy.

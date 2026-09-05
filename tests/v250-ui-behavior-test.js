@@ -16,7 +16,7 @@ const profiles = read('src/ui/app/pages/profiles.js');
 const schedules = read('src/ui/app/pages/schedules.js');
 const css = read('src/ui/app/app.css');
 
-assert.equal(manifest.version, '2.6.1');
+assert.equal(manifest.version, '2.6.2');
 assert(worker.includes("text = 'ON'"));
 assert(worker.includes("text = 'ERR'"));
 assert(worker.includes("text = '!'"));
@@ -59,4 +59,4 @@ vm.runInNewContext(read('src/shared/validators.js'), context);
 const rule = { name: 'Empty group', priority: 100, enabled: false, source: { mode: 'conditions', jql: '' }, logic: { operator: 'AND', groups: [{ id: 'g1', conditions: [] }] }, schedule: { mode: 'always', scheduleIds: [] }, executionPolicy: { mode: 'once' }, conflict: {}, randomDelay: { minSeconds: 0, maxSeconds: 0 }, polling: { cursorOverlapSeconds: 0 }, actions: [], chainDependency: { cancelled:'continue', skipped:'continue', failed:'continue' }, manualProcess: { relativeSchedule:'update' }, alertThrottle: { enabled:false }, actionRandomness: { enabled:false, pools:[] } };
 const errors = context.globalThis.SDCompanion.Validators.validateRule(rule);
 assert(errors.some(x => /empty condition group/i.test(x)));
-console.log('v2.6.1 UI/behavior regression: OK');
+console.log('v2.6.2 UI/behavior regression: OK');

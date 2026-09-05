@@ -10,18 +10,18 @@ const settings = fs.readFileSync(path.join(root, 'src/ui/app/pages/logs-more.js'
 const css = fs.readFileSync(path.join(root, 'src/ui/app/app.css'), 'utf8');
 const rulesDoc = fs.readFileSync(path.join(root, 'docs/RULES-AND-ACTIONS.md'), 'utf8');
 
-assert.equal(manifest.version, '2.6.1');
-assert(constants.includes('BUILD_VERSION: "2.6.1"'));
+assert.equal(manifest.version, '2.6.2');
+assert(constants.includes('BUILD_VERSION: "2.6.2"'));
 
 // Alarm Profiles use the normal field name without UI commentary in the label.
 assert(alarms.includes('<label>Duration</label>'));
 assert(!alarms.includes('Duration <span class="muted">optional</span>'));
 
-// Completion Tone is a real bounded card again and cannot consume the history row.
-assert(settings.includes('completion-tone-control setting-line setting-line-card'));
-assert(css.includes('.completion-tone-control.setting-line-card'));
-assert(css.includes('grid-template-columns: minmax(150px, 1fr) minmax(132px, 180px)'));
-assert(css.includes('text-overflow: ellipsis'));
+// Completion cue now uses the standard General Settings row and no longer shares Operational Feedback.
+assert(settings.includes('general-action-complete-tone'));
+assert(settings.includes('<span>Action Complete Tone</span>'));
+assert(!settings.includes('completion-tone-control setting-line setting-line-card'));
+assert(css.includes('.general-action-complete-tone {'));
 
 // Rules documentation contains the complete public variable contract.
 for (const token of [
@@ -36,4 +36,4 @@ for (const token of [
 assert(rulesDoc.includes('JSON-safe expansion'));
 assert(rulesDoc.includes('the `issue.` prefix is optional'));
 
-console.log('v2.6.1 documentation/settings regression: OK');
+console.log('v2.6.2 documentation/settings regression: OK');
