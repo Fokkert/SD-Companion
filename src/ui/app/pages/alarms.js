@@ -8,8 +8,7 @@
     .map(x => A.option(x, x[0].toUpperCase() + x.slice(1), unit === x))
     .join('');
 
-  const presetName = id => SD.Constants.ALARM_PRESETS.find(x => x.id === id)?.name || 'Alarm';
-  const stopName = id => SD.Constants.ALARM_STOP_METHODS.find(x => x.id === id)?.name || 'Popup';
+  const alarmProfileIcon = () => `<span class="rule-entry-icon alarm-profile-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg></span>`;
 
   const profileEditor = (alarm, isDefault) => {
     const durationUnit = alarm.durationUnit || 'seconds';
@@ -66,13 +65,12 @@
       const isDefault = alarm.id === profile.defaultAlarmProfileId,
         isEditing = editing?.id === alarm.id;
       return `<div class="configured-object-stack">` +
-        `<div class="list-item configured-object alarm-profile-entry ${isEditing ? 'editing-object' : ''}">` +
-        `<div class="alarm-profile-entry-copy">` +
-        `<div class="row alarm-profile-title-row"><div class="list-title">${A.esc(alarm.name || 'Alarm Profile')}</div>${isDefault ? '<span class="freshness-chip good">Default</span>' : ''}</div>` +
-        `<div class="list-meta">${A.esc(presetName(alarm.preset))} · ${A.esc(stopName(alarm.stopMethod))} · ${Math.round((Number(alarm.volume) || 0) * 100)}%</div>` +
-        `</div>` +
-        `<div class="row alarm-profile-entry-actions"><button class="btn btn-small" data-action="${isEditing ? 'close-alarm-profile' : 'edit-alarm-profile'}" data-id="${alarm.id}">${isEditing ? 'Close' : 'Edit'}</button></div>` +
-        `</div>` +
+        `<div class="list-item rule-card alarm-profile-entry configured-object ${isEditing ? 'editing-object' : ''}" data-alarm-profile-id="${A.esc(alarm.id)}">` +
+        `<div class="rule-card-main"><div class="row rule-card-title-row">${alarmProfileIcon()}<div class="list-title">${A.esc(alarm.name || 'Alarm Profile')}</div>${isDefault ? '<span class="alarm-default-label">Default</span>' : ''}</div></div>` +
+        `<div class="row rule-card-actions alarm-profile-entry-actions">` +
+        `<button class="btn btn-small" data-action="${isEditing ? 'close-alarm-profile' : 'edit-alarm-profile'}" data-id="${alarm.id}">${isEditing ? 'Close' : 'Edit'}</button>` +
+        `<button class="btn btn-small" data-action="duplicate-alarm-profile" data-id="${alarm.id}">Duplicate</button>` +
+        `</div></div>` +
         `${isEditing ? profileEditor(A.ensureAlarmDraft(), isDefault) : ''}` +
         `</div>`;
     }).join('');

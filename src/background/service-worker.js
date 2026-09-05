@@ -75,10 +75,13 @@ const setAlarmRuntime = async (active, alarm = {}, meta = {}) => SD.Storage.upda
     keyboardShortcut: alarm.keyboardShortcut || ""
   } : { active: false, startedAt: null, siteId: "", profileId: "", issueKey: "", summary: "", ruleName: "", source: "", stopMethod: "", preset: "" };
 });
-const setNotificationPermission = level => SD.Storage.updateState(state => {
-  state.runtime = state.runtime || {};
-  state.runtime.notificationPermission = level || "unknown";
-}).catch(() => {});
+const setNotificationPermission = async level => {
+  await SD.Storage.updateState(state => {
+    state.runtime = state.runtime || {};
+    state.runtime.notificationPermission = level || "unknown";
+  }).catch(() => {});
+  await setBadge().catch(() => {});
+};
 const showAlarmNotification = async (alarm, meta = {}) => {
   if (alarm.showSystemNotification === false && alarm.preset !== "system") return false;
   let permission = "unknown";
@@ -271,6 +274,7 @@ SD.Audio = Object.freeze({
     await SD.Audio.stop(false);
     if (expectedGeneration !== null && expectedGeneration !== alarmPlaybackGeneration) return false;
     await setAlarmRuntime(true, alarm, meta);
+    await setBadge().catch(() => {});
     try {
       chrome.runtime.sendMessage({ type: "SD_ALARM_STATE", active: true, alarm: { ...alarm, ...meta } }).catch(() => {});
     } catch {}
@@ -416,35 +420,47 @@ const configureAlarms = async (state = null) => {
 const setBadge = async () => {
   const state = await SD.Storage.ensureState(),
     { site, profile } = getSiteProfile(state),
-    hasPat = site ? await SD.Storage.hasCredential(site.id) : false;
-  let color = '#64748b', status = 'Ready';
-  if (state.runtime?.activeAlarm?.active) {
-    color = '#ef4444';
-    status = 'Alarm active';
+    hasPat = site ? await SD.Storage.hasCredential(site.id) : false,
+    runtime = site?.runtime || {},
+    alarmActive = Boolean(state.runtime?.activeAlarm?.active),
+    errorState = Boolean(site && hasPat && (runtime.lastError || runtime.lastHealthError || ['authentication-failed', 'network-request-failed'].includes(runtime.connectionStatus))),
+    attentionRequired = Boolean(
+      (site && !hasPat) ||
+      runtime.connectionStatus === 'check-required' ||
+      runtime.connectionStatus === 'degraded' ||
+      runtime.healthState === 'degraded' ||
+      (site?.inventory?.warnings || []).length ||
+      state.runtime?.notificationPermission === 'denied'
+    ),
+    monitoringOn = Boolean(profile?.monitoring?.enabled && profileHasEnabledRules(profile));
+
+  let text = '', background = [0, 0, 0, 0], textColor = '#ffffff', status = 'Monitoring off';
+  if (alarmActive) {
+    text = '!';
+    background = '#eab308';
+    textColor = '#111827';
+    status = 'Attention required · alarm active';
   }
-  else if (site && !hasPat) {
-    color = '#d97706';
-    status = 'PAT missing';
-  }
-  else if (site?.runtime?.connectionStatus === 'authentication-failed' || (site && !site.runtime?.apiHealthy)) {
-    color = '#ef4444';
+  else if (errorState) {
+    text = 'ERR';
+    background = '#dc2626';
     status = 'Jira connection error';
   }
-  else if (profile?.monitoring?.enabled) {
-    color = '#16a36a';
+  else if (attentionRequired) {
+    text = '!';
+    background = '#eab308';
+    textColor = '#111827';
+    status = !hasPat && site ? 'Attention required · PAT missing' : 'Attention required';
+  }
+  else if (monitoringOn && (!site || (hasPat && runtime.apiHealthy))) {
+    text = 'ON';
+    background = '#16a36a';
     status = 'Monitoring on';
   }
-  else if (profile) {
-    color = '#64748b';
-    status = 'Monitoring off';
-  }
-  else if (!site) {
-    color = '#64748b';
-    status = 'No Jira server selected';
-  }
-  await chrome.action.setBadgeText({ text: '●' });
-  await chrome.action.setBadgeBackgroundColor({ color: [0, 0, 0, 0] });
-  if (chrome.action.setBadgeTextColor) await chrome.action.setBadgeTextColor({ color });
+
+  await chrome.action.setBadgeText({ text });
+  await chrome.action.setBadgeBackgroundColor({ color: background });
+  if (chrome.action.setBadgeTextColor) await chrome.action.setBadgeTextColor({ color: textColor });
   if (chrome.action.setTitle) await chrome.action.setTitle({ title: `SD Companion · ${status}` });
 };
 const mergeApiStats = (old = {}, stats = {}) => {
@@ -1346,6 +1362,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 sync = await SD.Discovery.discoverProjects(r.site.id, { operationId });
             }
             await configureAlarms(await SD.Storage.ensureState());
+            await setBadge().catch(() => {});
             return { ok: true, siteId: r.site.id, created: r.created, connection, sync };
           });
         case MESSAGE.UPDATE_SERVER: {
@@ -1430,6 +1447,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             await audit('server-url-changed', { from: previousBaseUrl, to: nextBaseUrl }, { siteId: message.siteId });
           }
           await configureAlarms(state);
+          await setBadge();
           return { ok: true, state };
         }
         case MESSAGE.DELETE_SITE: {
@@ -1444,6 +1462,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
           }, { configWrite: true });
           await configureAlarms(state);
+          await setBadge();
           return { ok: true, state };
         }
         case MESSAGE.DELETE_PROFILE: {
@@ -1467,11 +1486,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               s.activeProfileId = next?.id || s.profiles[0]?.id || '';
           }, { configWrite: true });
           await configureAlarms(state);
+          await setBadge();
           return { ok: true, state };
         }
         case MESSAGE.CLEAR_CACHE:
           await requireRiskAuth(message, 'clear synchronized Jira metadata');
-          return { ok: true, state: await SD.Storage.clearCache(message.siteId) };
+          {
+            const state = await SD.Storage.clearCache(message.siteId);
+            await setBadge();
+            return { ok: true, state };
+          }
         case MESSAGE.CLEAR_PROFILE_DATA:
           await requireRiskAuth(message, 'clear profile runtime data');
           await SD.Storage.clearProfileData(message.profileId);
@@ -1492,6 +1516,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             state.activeSiteId = s.id;
             state.activeProfileId = s.activeProfileId || state.profiles.find(p => p.siteId === s.id)?.id || state.activeProfileId;
           });
+          await setBadge();
           return { ok: true, state };
         }
         case MESSAGE.SET_ACTIVE_PROFILE: {
@@ -1506,6 +1531,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             if (s)
               s.activeProfileId = p.id;
           });
+          await setBadge();
           return { ok: true, state };
         }
         case MESSAGE.SAVE_CREDENTIAL:
@@ -1521,6 +1547,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }, { configWrite: true });
             await configureAlarms(state);
           }
+          await setBadge();
           return { ok: true };
         case MESSAGE.DELETE_CREDENTIAL:
           await requireRiskAuth(message, 'remove a Jira PAT');
@@ -1547,9 +1574,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }, { configWrite: true });
             await configureAlarms(state);
           }
+          await setBadge();
           return { ok: true };
-        case MESSAGE.TEST_CONNECTION: return await withOperation(message, 'test-connection', async (operationId) => ({ ok: true, ...await testConnection(message.siteId, { operationId }) }));
-        case MESSAGE.DISCOVER_PROJECTS: return await withOperation(message, 'discover-projects', async (operationId) => ({ ok: true, site: await SD.Discovery.discoverProjects(message.siteId, { operationId }) }));
+        case MESSAGE.TEST_CONNECTION: return await withOperation(message, 'test-connection', async operationId => {
+          try {
+            return { ok: true, ...await testConnection(message.siteId, { operationId }) };
+          } finally {
+            await setBadge().catch(() => {});
+          }
+        });
+        case MESSAGE.DISCOVER_PROJECTS: return await withOperation(message, 'discover-projects', async operationId => {
+          try {
+            return { ok: true, site: await SD.Discovery.discoverProjects(message.siteId, { operationId }) };
+          } finally {
+            await setBadge().catch(() => {});
+          }
+        });
         case MESSAGE.SYNC_SITE: return await withOperation(message, 'sync-site', async (operationId) => {
           const beforeSync = await SD.Storage.ensureState(), beforeSite = beforeSync.jiraSites.find(x => x.id === message.siteId);
           if (beforeSite?.inventorySettings?.restoreExcludedOnRefresh) await SD.Storage.updateState(st => { const x = st.jiraSites.find(v => v.id === message.siteId); if (x) x.inventorySettings.excludedData = { projects: [], filters: [], users: [], issueTypes: [], statuses: [], transitions: [], fields: [], priorities: [], resolutions: [] }; }, { configWrite: true });
@@ -1564,9 +1604,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               }
             });
           await configureMetadataSyncAlarm(await SD.Storage.ensureState());
+          await setBadge().catch(() => {});
           return { ok: true, site: (await SD.Storage.ensureState()).jiraSites.find(x => x.id === message.siteId) };
         });
-        case MESSAGE.REFRESH_HEALTH: return await withOperation(message, 'health', async (operationId) => ({ ok: true, ...await testConnection(message.siteId, { operationId }) }));
+        case MESSAGE.REFRESH_HEALTH: return await withOperation(message, 'health', async operationId => {
+          try {
+            return { ok: true, ...await testConnection(message.siteId, { operationId }) };
+          } finally {
+            await setBadge().catch(() => {});
+          }
+        });
         case MESSAGE.REFRESH_TAB_STATUS: return { ok: true, sites: await SD.Discovery.refreshBrowserStatus(message.siteId) };
         case MESSAGE.RUN_CYCLE: return await withOperation(message, 'run-cycle', async (operationId) => ({ ok: true, ...await runCycle(message.siteId, message.profileId, { operationId, manual: true }) }));
         case MESSAGE.REFRESH_CURRENT_MATCHES: return await withOperation(message, 'current-matches', async (operationId) => ({ ok: true, ...await scanCurrentMatches(message.siteId, message.profileId, { operationId }) }));

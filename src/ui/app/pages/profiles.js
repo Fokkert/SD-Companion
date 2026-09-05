@@ -1,6 +1,7 @@
 (() => {
   const A = globalThis.SDApp, { head } = A.View;
   const chips = (items, empty = 'None') => items?.length ? `<div class="import-chip-list">${items.map(x => `<span class="import-chip">${A.esc(x)}</span>`).join('')}</div>` : `<span class="muted">${A.esc(empty)}</span>`;
+  const profileIcon = () => `<span class="profile-card-icon profile-context-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"></circle><path d="M5.5 19c.8-4 3.1-6 6.5-6s5.7 2 6.5 6"></path></svg></span>`;
   const importPreview = d => {
     if (!d) return '';
     const authCopy = d.includesPat ? 'PAT included in encrypted backup' : 'PAT not included — configure it later in Jira Servers';
@@ -74,6 +75,7 @@
       `<div class="section-kicker">Profiles on ${A.esc(s.name)}</div>` +
       `<div class="card">` +
       `<div class="list profile-list">${profiles.map(x => `<div class="list-item configured-object profile-list-item ${x.id === p?.id ? 'active-object' : ''}">` +
+        `${profileIcon()}` +
         `<div class="profile-card-copy">` +
         `<div class="list-title">${A.esc(x.name)}</div>` +
         `<div class="list-meta">${(x.rules || []).length} rules · ${(x.schedules || []).length} schedules</div>` +

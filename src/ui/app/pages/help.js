@@ -1,5 +1,5 @@
 (() => {
-  const A = globalThis.SDApp, { head } = A.View;
+  const A = globalThis.SDApp, SD = globalThis.SDCompanion, { head } = A.View;
   const topic = (id, title, html) => `<details class="help-topic" id="help-${id}"><summary><span>${title}</span></summary><div class="help-body">${html}</div></details>`;
   A.pageHelp = () => {
     const index = [
@@ -23,7 +23,7 @@
       ['trouble', 'Troubleshooting']
     ];
     return `<section class="page help-page">${head('Help & Reference')}<div class="card help-intro">` +
-      `<div class="section-title">SD Companion V2</div>` +
+      `<div class="help-version-row"><div class="section-title">SD Companion V2</div><span class="freshness-chip">Version ${A.esc(SD.Constants.BUILD_VERSION)}</span></div>` +
       `<div class="help-index">${index.map(([id, n]) => `<button class="help-chip" data-action="help-jump" data-id="${id}">${n}</button>`).join('')}</div></div>
 ${topic('start', '1. Initial setup', '<ol>' +
         '<li>Add a Jira server with its base URL, a friendly name and a Personal Access Token.</li>' +

@@ -78,8 +78,7 @@
       tm = s.inventorySettings?.transitionMethod || TRANSITION_METHOD.WORKFLOW_DESIGNER,
       cl = { enabled: true, trigger: 'either', durationSeconds: 300, durationUnit: 'minutes', failedChecks: 5, ...(s.behavior?.connectionLossAlarm || {}) },
       clu = cl.durationUnit || 'minutes',
-      clv = SD.Utils.timeFromSeconds(cl.durationSeconds || 300, clu),
-      connectionLabel = !hasPat ? 'PAT missing' : s.runtime?.apiHealthy ? 'API online' : 'Check required';
+      clv = SD.Utils.timeFromSeconds(cl.durationSeconds || 300, clu);
     return `<div class="card editor-card server-editor">` +
       `<div class="server-editor-head">` +
       `<div class="server-editor-identity">` +
@@ -90,7 +89,6 @@
       `</div>` +
       `</div>` +
       `<div class="row server-editor-head-actions">` +
-      `<span class="freshness-chip ${!hasPat || !s.runtime?.apiHealthy ? 'warn' : ''}">${connectionLabel}</span>` +
       `<button class="btn btn-small" data-action="close-server-editor">Done</button>` +
       `</div>` +
       `</div>` +
@@ -98,7 +96,6 @@
       `<details class="glass-disclosure server-settings-section server-connection-section" open>` +
       `<summary>` +
       `<span>Connection & behavior</span>` +
-      `<span class="disclosure-meta">${connectionLabel}</span>` +
       `</summary>` +
       `<div class="disclosure-body">${hasPat ? '' : `<div class="notice warn credential-missing-notice">` +
         `<b>PAT missing</b>` +
@@ -128,18 +125,18 @@
       `<div class="server-settings-group-title">Detection behavior</div>` +
       `<div class="connection-behavior-grid">` +
       `<div class="toggle-card server-behavior-toggle" title="Refresh Jira tab on new detection">` +
+      `<span><strong>Refresh Jira tab on new detection</strong></span>` +
       `<label class="master-switch">` +
       `<input id="autoRefreshOnDetection" type="checkbox" ${s.behavior?.autoRefreshJiraTabsOnDetection ? 'checked' : ''}>` +
       `<span></span>` +
       `</label>` +
-      `<span><strong>Refresh Jira tab on new detection</strong></span>` +
       `</div>` +
       `<div class="toggle-card server-behavior-toggle" title="Focus Jira tab on new detection">` +
+      `<span><strong>Focus Jira tab on detection</strong></span>` +
       `<label class="master-switch">` +
       `<input id="focusJiraTabOnDetection" type="checkbox" ${s.behavior?.focusJiraTabOnDetection ? 'checked' : ''}>` +
       `<span></span>` +
       `</label>` +
-      `<span><strong>Focus Jira tab on detection</strong></span>` +
       `</div>` +
       `</div>` +
       `</div>` +
@@ -299,13 +296,11 @@
       return `<div class="configured-object-stack">` +
         `<div class="list-item server-card configured-object ${s.id === A.site()?.id ? 'active-object' : ''} ${editing ? 'editing-object' : ''}">` +
         `<span class="server-icon">${iconFor(s)}</span>` +
-        `<div>` +
+        `<div class="server-card-copy">` +
         `<div class="list-title">${A.esc(s.name)}</div>` +
-        `<div class="list-meta">${A.esc(s.baseUrl)} · ${scopeCount(s)} projects configured</div>` +
+        `<div class="list-meta server-card-meta"><span class="object-state ${hasPat && s.runtime?.apiHealthy ? 'online' : hasPat ? 'offline' : 'missing'}" title="${hasPat ? (s.runtime?.apiHealthy ? 'API online' : 'API offline') : 'PAT missing'}"></span><span>${A.esc(s.baseUrl)} · ${scopeCount(s)} projects configured</span></div>` +
         `</div>` +
         `<div class="row">` +
-        `<span class="object-state ${hasPat && s.runtime?.apiHealthy ? 'online' : hasPat ? 'offline' : 'missing'}" title="${hasPat ? (s.runtime?.apiHealthy ? 'API online' : 'API offline') : 'PAT missing'}">` +
-        `</span>` +
         `<button class="btn btn-small" data-action="select-server" data-id="${s.id}">${s.id === A.site()?.id ? 'Selected' : 'Use'}</button>` +
         `<button class="btn btn-small" data-action="${editing ? 'close-server-editor' : 'edit-server'}" data-id="${s.id}">${editing ? 'Done' : 'Edit'}</button></div></div>${editing ? editor(s) : ''}</div>`;
     }).join('');

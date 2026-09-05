@@ -13,6 +13,14 @@
     [ACTION.TRANSITION]: 'Transition'
   });
   const actionLabel = type => actionLabels[type] || String(type || 'Action');
+  const actionIsOpen = (actionId, index) => {
+    if (typeof document !== 'undefined') {
+      const current = [...document.querySelectorAll('details.action-card[data-action-card-id]')]
+        .find(node => node.dataset.actionCardId === String(actionId));
+      if (current) return Boolean(current.open);
+    }
+    return index === 0;
+  };
   const actionOptions = () => Object.values(ACTION)
     .map(value => ({ value, label: actionLabel(value) }))
     .sort((a, b) => a.label.localeCompare(b.label))
@@ -301,7 +309,7 @@
       `</span>` +
       `</label>` +
       `</div>${a.when?.enabled ? (A.RuleViews.actionConditionEditor?.(a, s) || '') : ''}`;
-    return `<details class="action-card configured-object" ${index === 0 ? 'open' : ''}><summary class="action-head">` +
+    return `<details class="action-card configured-object" data-action-card-id="${A.esc(a.id)}" ${actionIsOpen(a.id, index) ? 'open' : ''}><summary class="action-head">` +
       `<div class="row">` +
       `<span class="sequence-number">${index + 1}</span>` +
       `<span class="action-type">${A.esc(actionLabel(a.type))}</span>` +

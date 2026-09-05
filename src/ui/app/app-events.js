@@ -1241,7 +1241,10 @@
             return;
           }
           if (act === 'add-condition') {
-            r.logic.groups[0]?.conditions.push(SD.Defaults.condition());
+            const group = r?.logic?.groups?.find(x => x.id === b.dataset.group);
+            if (!group) throw new Error('Condition group was not found.');
+            group.conditions = group.conditions || [];
+            group.conditions.push(SD.Defaults.condition());
             await saveRule(r, true);
             return;
           }
@@ -1451,6 +1454,18 @@
             A.alarmProfileDraftId = '';
             A.alarmDraft = null;
             A.renderPage();
+            return;
+          }
+          if (act === 'duplicate-alarm-profile') {
+            const profile = A.profile(), source = profile?.alarmProfiles?.find(x => x.id === b.dataset.id);
+            if (!profile || !source) return;
+            const copy = structuredClone(source);
+            copy.id = crypto.randomUUID();
+            copy.name = `${source.name || 'Alarm Profile'} Copy`;
+            profile.alarmProfiles = [...(profile.alarmProfiles || []), copy];
+            await A.save(false, 'none');
+            A.renderPage();
+            A.toast(`Duplicated as ${copy.name}.`, 'success');
             return;
           }
           if (act === 'set-default-alarm-profile') {

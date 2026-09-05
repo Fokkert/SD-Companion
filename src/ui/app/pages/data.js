@@ -1,7 +1,7 @@
 (() => {
   const A = globalThis.SDApp,
     SD = globalThis.SDCompanion,
-    { head, noServer, avatar, projectLogo, freshness } = A.View;
+    { head, noServer, avatar, avatarUrl, projectLogo, freshness } = A.View;
   const transitionItems = s => {
     const rows = [];
     for (const ctx of s.transitionCatalog || []) for (const t of ctx.transitions || []) rows.push({
@@ -101,8 +101,8 @@
     document.querySelectorAll('#inventoryResults [data-entity-icon]').forEach(img => img.addEventListener('error', () => img.remove(), { once: true }));
   };
   const row = (x, type) => {
-    if (type === 'projects') return genericDetailsRow(x, type, 'generic', x.name || x.key, `${x.key || ''} · ${x.projectTypeKey || 'project'}`);
-    if (type === 'users') return genericDetailsRow(x, type, 'generic', x.displayName || x.name || 'User', x.key || x.accountId || x.name || '');
+    if (type === 'projects') return genericDetailsRow(x, type, 'generic', x.name || x.key, `${x.key || ''} · ${x.projectTypeKey || 'project'}`, avatarUrl(x));
+    if (type === 'users') return genericDetailsRow(x, type, 'generic', x.displayName || x.name || 'User', x.key || x.accountId || x.name || '', avatarUrl(x));
     if (type === 'filters') return genericDetailsRow(x, type, 'filter', x.name || 'Filter', `#${x.id || ''} · ${x.owner?.displayName || 'Accessible filter'}`);
     if (type === 'issueTypes') return genericDetailsRow(x, type, 'issueType', x.name || 'Issue Type', `${x.projectKey || 'Global'} · ${x.id || ''}`, x.iconUrl || '');
     if (type === 'statuses') return genericDetailsRow(x, type, 'status', x.statusName || x.name || 'Status', `${x.projectKey || ''} · ${x.issueTypeName || ''} · ${x.statusCategory || ''}`);

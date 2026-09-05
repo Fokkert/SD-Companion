@@ -41,6 +41,13 @@
     if (r.executionPolicy?.mode === root.Constants.EXECUTION_POLICY.REPEAT) num(r.executionPolicy?.repeatSeconds, L.REPEAT_SECONDS_MIN, L.REPEAT_SECONDS_MAX, `Rule '${r.name}' repeat interval`, errors);
     if (r.conflict?.mode === root.Constants.CONFLICT_MODE.EXCLUSIVE && !String(r.conflict?.group || '').trim()) errors.push(`Rule '${r.name}' needs an exclusive-group name.`);
     if (String(r.source?.jql || '').length > L.JQL_MAX_CHARS) errors.push(`Rule '${r.name}' JQL is too long.`);
+    if (r.source?.mode !== 'jql') {
+      const groups = r.logic?.groups || [];
+      if (!groups.length) errors.push(`Rule '${r.name}' needs at least one condition group in Manual mode.`);
+      groups.forEach((group, index) => {
+        if (!(group?.conditions || []).length) errors.push(`Rule '${r.name}' has an empty condition group (Group ${index + 1}). Add a condition or remove the group before saving.`);
+      });
+    }
     num(r.randomDelay?.minSeconds, 0, L.ACTION_DELAY_MAX_SECONDS, `Rule '${r.name}' minimum delay`, errors);
     num(r.randomDelay?.maxSeconds, 0, L.ACTION_DELAY_MAX_SECONDS, `Rule '${r.name}' maximum delay`, errors);
     if (Number(r.randomDelay?.maxSeconds) < Number(r.randomDelay?.minSeconds)) errors.push(`Rule '${r.name}' maximum delay must be >= minimum delay.`);

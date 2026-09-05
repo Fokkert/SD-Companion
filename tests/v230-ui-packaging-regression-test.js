@@ -17,8 +17,8 @@ const help = fs.readFileSync('src/ui/app/pages/help.js', 'utf8');
 const worker = fs.readFileSync('src/background/service-worker.js', 'utf8');
 const css = fs.readFileSync('src/ui/app/app.css', 'utf8');
 
-assert.equal(manifest.version, '2.4.1');
-assert(textIncludes(constants, 'BUILD_VERSION:"2.4.1"'));
+assert.equal(manifest.version, '2.5.0');
+assert(textIncludes(constants, 'BUILD_VERSION:"2.5.0"'));
 
 // Action choosers share one readable alphabetically sorted option source.
 assert(actions.includes('const actionOptions = () => Object.values(ACTION)'));
@@ -50,11 +50,11 @@ assert(!rules.includes('Choose whether an After previous action continues when t
 assert(help.includes('Local alert rate limiting caps Alarm/Notification actions'));
 assert(help.includes('Chained action dependency decides separately'));
 
-// Extension action indicator is a small colored dot rather than ON/OFF/ERR/PAT text.
-assert(textIncludes(worker, "setBadgeText({text:'●'})"));
-assert(textIncludes(worker, 'setBadgeTextColor({color})'));
-assert(!textIncludes(worker, "text='ERR'"));
-assert(!textIncludes(worker, "text='OFF'"));
-assert(!textIncludes(worker, "text='ON'"));
+// Extension action indicator uses compact semantic badge states.
+assert(textIncludes(worker, "text='ON'"));
+assert(textIncludes(worker, "text='ERR'"));
+assert(textIncludes(worker, "text='!'"));
+assert(textIncludes(worker, 'setBadgeText({text})'));
+assert(textIncludes(worker, 'setBadgeBackgroundColor({color:background})'));
 
 console.log('v230-ui-packaging-regression-test: PASS');

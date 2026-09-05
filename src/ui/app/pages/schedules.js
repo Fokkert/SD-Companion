@@ -4,6 +4,7 @@
     { DAYS } = SD.Constants,
     { head, noServer } = A.View;
   const units = u => ['seconds', 'minutes', 'hours'].map(x => A.option(x, x[0].toUpperCase() + x.slice(1), u === x)).join('');
+  const scheduleIcon = () => `<span class="schedule-entry-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10h16"/><path d="m9 15 2 2 4-4"/></svg></span>`;
   A.pageSchedules = () => {
     const p = A.profile();
     if (!p) return noServer();
@@ -13,15 +14,13 @@
     return `<section class="page schedules-page">${head('Schedules', '', `<button class="btn btn-primary btn-small" data-action="new-schedule">+ Schedule</button>`)}<div class="configured-section">` +
       `<div class="section-kicker">Configured schedules</div>` +
       `<div class="card compact-configured-card">` +
-      `<div class="list">${p.schedules.map(x => `<div class="list-item configured-object ${SD.Schedule.isActive(x) ? 'active-object' : ''} ${x.id === A.selectedScheduleId ? 'editing-object' : ''}">` +
-        `<div>` +
+      `<div class="list schedule-list">${p.schedules.map(x => `<div class="list-item configured-object schedule-list-item ${SD.Schedule.isActive(x) ? 'active-object' : ''} ${x.id === A.selectedScheduleId ? 'editing-object' : ''}">` +
+        `${scheduleIcon()}` +
+        `<div class="schedule-entry-copy">` +
         `<div class="list-title">${A.esc(x.name)}</div>` +
-        `<div class="list-meta">${A.esc(SD.Schedule.describe(x))}</div>` +
+        `<div class="schedule-entry-meta"><span class="list-meta">${A.esc(SD.Schedule.describe(x))}</span><span class="object-state schedule-state ${SD.Schedule.isActive(x) ? 'online' : 'idle'}" title="${SD.Schedule.isActive(x) ? 'Active now' : 'Inactive now'}"></span></div>` +
         `</div>` +
-        `<div class="row">` +
-        `<span class="object-state ${SD.Schedule.isActive(x) ? 'online' : 'idle'}">` +
-        `</span>` +
-        `<button class="btn btn-small" data-action="edit-schedule" data-id="${x.id}">Edit</button></div></div>`).join('') || '<div class="empty">No schedules configured.</div>'}</div></div></div>${sc ? `<div class="card editor-card">` +
+        `<button class="btn btn-small schedule-edit-button" data-action="edit-schedule" data-id="${x.id}">Edit</button></div>`).join('') || '<div class="empty">No schedules configured.</div>'}</div></div></div>${sc ? `<div class="card editor-card">` +
           `<div class="row-between">` +
           `<div class="section-title">${A.esc(sc.name)}</div>` +
           `<div class="row">` +

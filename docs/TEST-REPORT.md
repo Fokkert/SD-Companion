@@ -1,25 +1,22 @@
-# V2 Build 2.4.1 Test Report
+# V2 Build 2.5.0 Test Report
 
 ## Result
 
-- JavaScript regression files: 68/68 passed.
+- JavaScript regression files: 70/70 passed.
 - Static architecture/security test: passed.
-- JavaScript syntax validation: 108/108 passed.
+- JavaScript syntax validation: 110/110 passed.
 - JSON parsing validation: passed.
 
-## V2.4.1 focused coverage
+## V2.5.0 focused coverage
 
-- Show completed text is non-interactive; only its switch changes the completed-history filter.
-- Server discovery uses expandable project cards and the Transitions label is no longer constrained by the old table layout.
-- API Data categories use expandable details, persistent per-item exclusions, manual restore controls and optional restore-on-refresh behavior.
-- Alarm Profiles are profile-owned, are selectable by Alarm actions, migrate from legacy alarm settings, duplicate with remapped IDs, and are included in profile exports/backups.
-- Alarm stop methods are limited to Keyboard Shortcut, Duration, Click anywhere and Popup; Browser Notification remains a separate rule action.
-- Alarm test volume updates are applied live, custom-file selection is button-only, and Action Completion Tone terminology is restored.
-- All extension switches use cubic geometry and soft-select menus prefer below-button placement whenever sufficient space exists.
-- Rules use card-level enable switches, selectable cards and top-level duplication; enabled rule icons glow and runtime summary data lives in the expanded editor.
-- JQL and Manual are mutually exclusive detection methods; Manual support multiple Match all/Match any groups.
-- Rule and Bulk action chains render as collapsible action cards.
-- Release archives remain validated to ensure `SD-Companion-v2.4.1/` is the sole top-level folder.
+- Browser-action badge state is source-regression tested for green `ON`, yellow `!`, red `ERR`, and an empty normal Monitoring-Off badge. Alarm playback refreshes the badge immediately.
+- Alarm Profile rows reuse Rule-card geometry, use a music-note icon, expose Edit/Close and Duplicate controls, and omit collapsed sound/stop/volume metadata.
+- Server behavior toggles follow text-left/switch-right layout; expanded discovery project cards keep a deliberate top content gutter; server health dots are compact and sit before URL metadata.
+- Manual condition-group `+ Condition` targets its owning group, and shared rule validation rejects any empty Manual condition group at save time.
+- Action cards preserve their actual expanded/collapsed state across rerenders; spacing around Timing, conditional actions, comment templates, notification fields, and transition fields is regression-covered.
+- API Data project/user entries use synchronized Jira avatar URLs again when available.
+- Help renders the exact build version, Profile cards use the same human icon as the top profile selector, and Schedule cards use a calendar icon with the activity dot after schedule metadata and Edit at the far right.
+- Release archives remain validated to ensure `SD-Companion-v2.5.0/` is the sole top-level folder.
 
 ## V2.2.1 focused coverage
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.5.0
+
+- Restored smart extension-action badges: green `ON` only for healthy active monitoring, no badge for normal Monitoring Off, yellow `!` for attention states (including active alarms), and red `ERR` for Jira connection failures.
+- Reworked Alarm Profile rows to match Rule-card geometry, added the common music-note identity and per-card duplication, and removed secondary sound/volume metadata from collapsed rows.
+- Finished Server Settings alignment: behavior switches use text-left/switch-right, project dataset cards have a full expanded-content gutter, and the compact API status dot now sits before the server URL instead of beside the Selected button.
+- Fixed Manual condition-group editing so + Condition targets the group that owns the button and empty groups block Save with a validation error.
+- Preserved each Action card's actual expanded/collapsed state across edits and corrected spacing around Timing, conditional actions, comments, notifications and transitions.
+- Restored synchronized Jira project/user avatars in API Data cards when Jira provides them.
+- Added the exact extension version to Help, profile-card user icons, and schedule-card calendar icons with compact inline activity indicators.
+
+
 ## 2.4.1
 
 - Restored circular toggles throughout the extension while keeping the Home Monitoring toggle cubic.
